@@ -1,60 +1,65 @@
-Nerdvana
+# 🧠 Nerdvana
 
-AI-powered search + conversation platform for deep, structured, nerd-focused exploration.
+> AI-powered search + conversation platform for structured, context-aware exploration.
 
-Nerdvana combines real-time web search with conversational AI to create a Perplexity-style experience — you search first, then dive deeper with intelligent follow-ups.
+Nerdvana combines real-time web search with conversational AI in a **search-first → follow-up** experience (Perplexity-style).
 
-🚀 Live Demo
+---
 
-https://nerdvana.vercel.app
+## 🚀 Live Demo  
+https://nerdvana.vercel.app  
 
+---
 
-✨ Features
+## 📸 Screenshots  
 
-🔍 Search-first Interface
-Get structured, fast search results instantly
-💬 Conversational Follow-ups
-Ask deeper questions based on previous results
-🧠 Context-aware Responses
-Maintains continuity across queries
-🎬 Spoiler-aware System
-Handles movie/TV discussions intelligently
-⚡ Fast & Lightweight UI
-Minimal, responsive, nerd-themed interface
+### 🏠 Home  
+<img src="./public/assets/home.jpg" width="100%" />
 
-🧠 Built with AI (Codex)
+### 🔍 Search  
+<img src="./public/assets/search.jpg" width="100%" />
 
-Nerdvana was developed with the help of OpenAI Codex acting as a software engineering assistant.
+### 💬 Follow-ups  
+<img src="./public/assets/chat.jpg" width="100%" />
 
-It was used to:
+---
 
-Generate React + TypeScript components
-Debug async flows and API handling
-Structure parts of the frontend and backend
-Speed up development iterations
+## ✨ Features  
 
-🏗️ Tech Stack
+- 🔍 Search-first interface  
+- 💬 Conversational follow-ups  
+- 🧠 Context-aware responses  
+- 🎬 Spoiler-aware handling  
+- ⚡ Fast, lightweight UI  
 
-Frontend
-React (Vite), Tailwind CSS
+---
 
-Backend
-Firebase Auth, Firestore
+## 🧠 Built with Codex  
 
-Search Infrastructure
-Serper API (Google Search API)
+Used OpenAI Codex to:
+- Generate React + TypeScript components  
+- Debug async flows  
+- Structure app logic  
+- Speed up development  
 
-AI Layer
-Gemini 2.5 Flash
+---
 
-Deployment
-Vercel (Full-stack deployment)
+## 🏗️ Tech Stack  
 
-🧩 Architecture Overview
+- **Frontend:** React (Vite), Tailwind CSS  
+- **Backend:** Firebase Auth, Firestore  
+- **Search:** Serper API (Google Search API)  
+- **AI:** Gemini 2.5 Flash  
+- **Deployment:** Vercel  
 
-User → Nerdvana UI (React)
-→ Serper API (Search backend)
-→ Structured results
-→ AI layer (Gemini)
-→ Contextual answers + follow-ups
+---
 
+## 🧩 Architecture  
+
+User → UI → Serper API → AI → Response  
+
+---
+
+## 📜 License  
+
+MIT  
