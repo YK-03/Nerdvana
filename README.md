@@ -53,13 +53,3 @@ Used OpenAI Codex to:
 - **Deployment:** Vercel  
 
 ---
-
-## 🧩 Architecture  
-
-User → UI → Serper API → AI → Response  
-
----
-
-## 📜 License  
-
-MIT  
