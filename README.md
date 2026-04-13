@@ -1,13 +1,12 @@
-# 🧠 Nerdvana
+# Nerdvana
 
-> AI-powered search + conversation platform for structured, context-aware exploration.
 
 Nerdvana combines real-time web search with conversational AI in a **search-first → follow-up** experience (Perplexity-style).
 
 ---
 
 ## 🚀 Live Demo  
-https://nerdvana.vercel.app  
+https://nerdvana-murex.vercel.app  
 
 ---
 
@@ -32,15 +31,6 @@ https://nerdvana.vercel.app
 - 🎬 Spoiler-aware handling  
 - ⚡ Fast, lightweight UI  
 
----
-
-## 🧠 Built with Codex  
-
-Used OpenAI Codex to:
-- Generate React + TypeScript components  
-- Debug async flows  
-- Structure app logic  
-- Speed up development  
 
 ---
 
