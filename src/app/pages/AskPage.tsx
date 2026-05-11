@@ -6,6 +6,7 @@ import ChatBubble from "../components/ChatBubble";
 import AIResponse from "../components/AIResponse";
 import ThinkingScreen from "../components/ThinkingScreen";
 import SourcesPanel from "../components/SourcesPanel";
+import VisualPanel from "../pages/VisualPanel";
 import { motion } from "motion/react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -17,7 +18,7 @@ import { saveCase } from "../utils/caseStorage";
 import { saveCaseCloud } from "../utils/caseCloud";
 import type { MockAnswer } from "../mockAnswers";
 import { applyIdentityStabilization, isContextValid, resolveContext } from "../itemResolver";
-import { auth, db } from "@/firebase";
+import { auth, db } from "../lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 
 interface AskPageProps {
@@ -33,6 +34,21 @@ interface ConversationMessage {
 interface ResponseData {
   answer: MockAnswer;
   results: ResultLink[];
+}
+
+export interface VisualContext {
+  entity: string;
+  entityType: "movie" | "tv" | "anime" | "game" | "character" | "unknown";
+  year: number | null;
+  changed: boolean;
+  gameVisuals?: {
+    title: string;
+    image: string | null;
+    year: number | null;
+    rating: number | null;
+    genres: string[];
+    studio: string | null;
+  };
 }
 
 function readAskQueryParams() {
@@ -115,6 +131,9 @@ export default function AskPage({
   const [followUpQuery, setFollowUpQuery] = useState("");
   const [isGeneratingFollowUp, setIsGeneratingFollowUp] = useState(false);
 
+  // Visual context state
+  const [visualContext, setVisualContext] = useState<VisualContext | null>(null);
+
   const handleSaveLorebook = async () => {
     if (!user) {
       alert("Please sign in to save lorebooks.");
@@ -158,6 +177,7 @@ export default function AskPage({
           results: restoredResults
         });
         setConversation(parsed.conversation || []);
+        if (parsed.visualContext) setVisualContext(parsed.visualContext);
       }
     } catch (e) {
       console.error("Failed to restore session", e);
@@ -173,10 +193,11 @@ export default function AskPage({
         topic: fullQuestion,
         answer,
         results,
-        conversation
+        conversation,
+        visualContext
       })
     );
-  }, [fullQuestion, answer, results, conversation]);
+  }, [fullQuestion, answer, results, conversation, visualContext]);
 
   useEffect(() => {
     const syncSearch = () => setSearch(window.location.search);
@@ -226,7 +247,8 @@ export default function AskPage({
           body: JSON.stringify({
             query: normalizedQuestion,
             spoilerMode: chatSpoilers,
-            conversation: []
+            conversation: [],
+            previousEntity: null
           })
         });
 
@@ -262,6 +284,14 @@ export default function AskPage({
         setResults(rawResults);
         setAnswer(nextAnswer);
         setResponseData({ answer: nextAnswer, results: rawResults });
+
+        // Set visual context from initial query (always update on fresh search)
+        if (payload?.visualContext) {
+          setVisualContext({
+            ...payload.visualContext,
+            gameVisuals: payload.gameVisuals,
+          });
+        }
 
         if (user && normalizedQuestion) {
           const historyState = window.history.state || {};
@@ -408,7 +438,8 @@ export default function AskPage({
             { role: "user", content: fullQuestion },
             { role: "assistant", content: answer.summary || "No answer available" },
             ...conversation
-          ]
+          ],
+          previousEntity: visualContext?.entity ?? null
         })
       });
 
@@ -419,6 +450,14 @@ export default function AskPage({
 
       const payload = await response.json();
       fullAssistantAnswer = payload?.answer ?? "";
+
+      // Update visual context only if topic changed
+      if (payload?.visualContext?.changed) {
+        setVisualContext({
+          ...payload.visualContext,
+          gameVisuals: payload.gameVisuals,
+        });
+      }
 
       const rawData = Array.isArray(payload?.sources) ? payload.sources : [];
       if (rawData.length > 0) {
@@ -443,7 +482,6 @@ export default function AskPage({
           })
           .filter((item) => Boolean(item.url));
 
-        // Keep existing search results and only append unseen sources from follow-ups.
         const seen = new Set(results.map((r) => r.url));
         const mergedResults = [...results];
         for (const result of rawResults) {
@@ -496,7 +534,6 @@ export default function AskPage({
           conversation: finalConversation
         }).catch(err => console.error("Failed to update history conversation", err));
       }
-
     }
   };
 
@@ -602,113 +639,125 @@ export default function AskPage({
               </div>
             )}
 
-            {!isLoading && fullQuestion && (
-              <motion.div
-                key={responseData ? `${fullQuestion}-${responseData.answer.summary.length}` : `empty-${fullQuestion}`}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-              >
-                <AIResponse
-                  text={answer.summary}
-                  isLoading={false}
-                  disableProgressiveReveal
-                />
-                <SourcesPanel
-                  sources={results.map((result) => ({
-                    title: result.title,
-                    link: result.url
-                  }))}
-                />
-              </motion.div>
-            )}
-
-            {!isLoading && fullQuestion && (
-              <div className="mt-12 border-t-2 pt-8" style={{ borderColor: "var(--nerdvana-border)" }}>
-                <form onSubmit={handleFollowUpSubmit}>
-                  <div
-                    className="border-[2px] p-[2px]"
-                    style={{
-                      borderColor: "var(--nerdvana-border)",
-                      backgroundColor: "var(--nerdvana-surface)"
-                    }}
+            {/* Main content + Visual Panel side by side */}
+            <div className="flex gap-8 items-start">
+              <div className="flex-1 min-w-0">
+                {!isLoading && fullQuestion && (
+                  <motion.div
+                    key={responseData ? `${fullQuestion}-${responseData.answer.summary.length}` : `empty-${fullQuestion}`}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
                   >
-                    <input
-                      value={followUpQuery}
-                      onChange={(e) => setFollowUpQuery(e.target.value)}
-                      placeholder="Ask a follow-up about this topic..."
-                      disabled={isGeneratingFollowUp}
-                      className="followUpInput w-full px-3 sm:px-4 py-3 text-[0.98rem] sm:text-[1rem] md:text-[1.08rem] focus:outline-none"
-                      spellCheck={false}
-                      autoComplete="off"
-                      style={{
-                        fontFamily: '"Times New Roman", serif',
-                        backgroundColor: "var(--nerdvana-surface)",
-                        color: "var(--nerdvana-text)",
-                        opacity: isGeneratingFollowUp ? 0.6 : 1
-                      }}
+                    <AIResponse
+                      text={answer.summary}
+                      isLoading={false}
+                      disableProgressiveReveal
                     />
-                  </div>
-                  {isGeneratingFollowUp && (
-                    <p
-                      className="mt-2 text-[0.68rem] uppercase tracking-[0.12em]"
-                      style={{ fontFamily: '"Courier New", monospace', opacity: 0.7, color: "var(--nerdvana-text)" }}
-                    >
-                      Generating response...
-                    </p>
-                  )}
-                </form>
-              </div>
-            )}
+                    <SourcesPanel
+                      sources={results.map((result) => ({
+                        title: result.title,
+                        link: result.url
+                      }))}
+                    />
+                  </motion.div>
+                )}
 
-            {!isLoading && conversation.length > 0 && (
-              <div className="mt-6 border-t pt-6" style={{ borderColor: "var(--nerdvana-border)" }}>
-                <h3
-                  className="mb-4 text-[0.66rem] md:text-[0.72rem] uppercase tracking-[0.18em] sm:tracking-[3px]"
-                  style={{
-                    fontFamily: '"Special Elite", monospace',
-                    color: "var(--nerdvana-text)",
-                    opacity: 0.96
-                  }}
-                >
-                  CONVERSATION
-                </h3>
-
-                <div className="space-y-2">
-                  {conversation.map((msg, index) => {
-                    const suggestions =
-                      msg.role === "assistant" && index === conversation.length - 1
-                        ? generateFollowUps(msg.content, fullQuestion)
-                        : undefined;
-
-                    const prevMsg = index > 0 ? conversation[index - 1] : null;
-                    const userQueryContext = prevMsg?.role === "user" ? prevMsg.content : "";
-
-                    const spoilerKeywords = /\b(die|dies|death|dead|ending|kills|killed|final scene|spoiler|plot twist)\b/i;
-                    const isRisky = spoilerKeywords.test(msg.content) || spoilerKeywords.test(userQueryContext);
-                    const showWarning = !chatSpoilers && isRisky && msg.role === "assistant";
-
-                    const isLast = index === conversation.length - 1;
-                    const isBubbleLoading = isGeneratingFollowUp && isLast && msg.role === "assistant";
-
-                    return (
-                      <ChatBubble
-                        key={index}
-                        role={msg.role}
-                        content={msg.content}
-                        suggestions={suggestions}
-                        onSuggestionClick={(s) => {
-                          setFollowUpQuery(s);
-                          handleFollowUpSubmit(undefined, s);
+                {!isLoading && fullQuestion && (
+                  <div className="mt-12 border-t-2 pt-8" style={{ borderColor: "var(--nerdvana-border)" }}>
+                    <form onSubmit={handleFollowUpSubmit}>
+                      <div
+                        className="border-[2px] p-[2px]"
+                        style={{
+                          borderColor: "var(--nerdvana-border)",
+                          backgroundColor: "var(--nerdvana-surface)"
                         }}
-                        warning={showWarning}
-                        isLoading={isBubbleLoading}
-                      />
-                    );
-                  })}
-                </div>
+                      >
+                        <input
+                          value={followUpQuery}
+                          onChange={(e) => setFollowUpQuery(e.target.value)}
+                          placeholder="Ask a follow-up about this topic..."
+                          disabled={isGeneratingFollowUp}
+                          className="followUpInput w-full px-3 sm:px-4 py-3 text-[0.98rem] sm:text-[1rem] md:text-[1.08rem] focus:outline-none"
+                          spellCheck={false}
+                          autoComplete="off"
+                          style={{
+                            fontFamily: '"Times New Roman", serif',
+                            backgroundColor: "var(--nerdvana-surface)",
+                            color: "var(--nerdvana-text)",
+                            opacity: isGeneratingFollowUp ? 0.6 : 1
+                          }}
+                        />
+                      </div>
+                      {isGeneratingFollowUp && (
+                        <p
+                          className="mt-2 text-[0.68rem] uppercase tracking-[0.12em]"
+                          style={{ fontFamily: '"Courier New", monospace', opacity: 0.7, color: "var(--nerdvana-text)" }}
+                        >
+                          Generating response...
+                        </p>
+                      )}
+                    </form>
+                  </div>
+                )}
+
+                {!isLoading && conversation.length > 0 && (
+                  <div className="mt-6 border-t pt-6" style={{ borderColor: "var(--nerdvana-border)" }}>
+                    <h3
+                      className="mb-4 text-[0.66rem] md:text-[0.72rem] uppercase tracking-[0.18em] sm:tracking-[3px]"
+                      style={{
+                        fontFamily: '"Special Elite", monospace',
+                        color: "var(--nerdvana-text)",
+                        opacity: 0.96
+                      }}
+                    >
+                      CONVERSATION
+                    </h3>
+
+                    <div className="space-y-2">
+                      {conversation.map((msg, index) => {
+                        const suggestions =
+                          msg.role === "assistant" && index === conversation.length - 1
+                            ? generateFollowUps(msg.content, fullQuestion)
+                            : undefined;
+
+                        const prevMsg = index > 0 ? conversation[index - 1] : null;
+                        const userQueryContext = prevMsg?.role === "user" ? prevMsg.content : "";
+
+                        const spoilerKeywords = /\b(die|dies|death|dead|ending|kills|killed|final scene|spoiler|plot twist)\b/i;
+                        const isRisky = spoilerKeywords.test(msg.content) || spoilerKeywords.test(userQueryContext);
+                        const showWarning = !chatSpoilers && isRisky && msg.role === "assistant";
+
+                        const isLast = index === conversation.length - 1;
+                        const isBubbleLoading = isGeneratingFollowUp && isLast && msg.role === "assistant";
+
+                        return (
+                          <ChatBubble
+                            key={index}
+                            role={msg.role}
+                            content={msg.content}
+                            suggestions={suggestions}
+                            onSuggestionClick={(s) => {
+                              setFollowUpQuery(s);
+                              handleFollowUpSubmit(undefined, s);
+                            }}
+                            warning={showWarning}
+                            isLoading={isBubbleLoading}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Visual Panel — sticky sidebar */}
+              {visualContext && !isLoading && (
+                <div className="hidden lg:block w-72 flex-shrink-0 sticky top-24">
+                  <VisualPanel context={visualContext} />
+                </div>
+              )}
+            </div>
 
           </article>
         </main>

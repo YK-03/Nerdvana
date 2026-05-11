@@ -7,9 +7,73 @@ body,
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Crect x='2' y='9' width='10' height='8' rx='2' fill='%231a1918'/%3E%3Crect x='18' y='9' width='10' height='8' rx='2' fill='%231a1918'/%3E%3Crect x='12' y='11' width='6' height='4' fill='%238c1c13'/%3E%3Crect x='5' y='12' width='4' height='2' fill='%23ebe8df'/%3E%3Crect x='21' y='12' width='4' height='2' fill='%23ebe8df'/%3E%3Cpath d='M12 20 L18 20 L15 26 Z' fill='%238c1c13'/%3E%3C/svg%3E") 4 4, auto;
 }
 
+/* ─── CUSTOM CURSOR — applied universally, no exceptions ─────────────────── */
+
+/* Light mode — every single element */
+*,
+*::before,
+*::after,
+html,
+body,
+img,
+svg,
+video,
+canvas,
+iframe {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Crect x='2' y='9' width='10' height='8' rx='2' fill='%231a1918'/%3E%3Crect x='18' y='9' width='10' height='8' rx='2' fill='%231a1918'/%3E%3Crect x='12' y='11' width='6' height='4' fill='%238c1c13'/%3E%3Crect x='5' y='12' width='4' height='2' fill='%23ebe8df'/%3E%3Crect x='21' y='12' width='4' height='2' fill='%23ebe8df'/%3E%3Cpath d='M12 20 L18 20 L15 26 Z' fill='%238c1c13'/%3E%3C/svg%3E") 4 4, auto !important;
+}
+
+/* Dark mode — every single element */
+.dark *,
+.dark *::before,
+.dark *::after,
+.dark html,
+.dark body,
+.dark img,
+.dark svg,
+.dark video,
+.dark canvas,
+.dark iframe {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Crect x='2' y='9' width='10' height='8' rx='2' fill='%234a4845'/%3E%3Crect x='18' y='9' width='10' height='8' rx='2' fill='%234a4845'/%3E%3Crect x='12' y='11' width='6' height='4' fill='%23a83228'/%3E%3Crect x='5' y='12' width='4' height='2' fill='%23f5f1e8'/%3E%3Crect x='21' y='12' width='4' height='2' fill='%23f5f1e8'/%3E%3Cpath d='M12 20 L18 20 L15 26 Z' fill='%23a83228'/%3E%3C/svg%3E") 4 4, auto !important;
+}
+
+/* Interactive elements — pointer variant, light mode */
+button,
+a,
+input,
+textarea,
+select,
+label,
+[role="button"],
+[role="link"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+[tabindex],
+.nerdvana-clickable {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Crect x='2' y='9' width='10' height='8' rx='2' fill='%238c1c13'/%3E%3Crect x='18' y='9' width='10' height='8' rx='2' fill='%238c1c13'/%3E%3Crect x='12' y='11' width='6' height='4' fill='%231a1918'/%3E%3Crect x='5' y='12' width='4' height='2' fill='%23fff8dc'/%3E%3Crect x='21' y='12' width='4' height='2' fill='%23fff8dc'/%3E%3Cpath d='M15 2 L18 9 L12 9 Z' fill='%231a1918'/%3E%3C/svg%3E") 4 4, pointer !important;
+}
+
+/* Interactive elements — pointer variant, dark mode */
+.dark button,
+.dark a,
+.dark input,
+.dark textarea,
+.dark select,
+.dark label,
+.dark [role="button"],
+.dark [role="link"],
+.dark [role="tab"],
+.dark [role="menuitem"],
+.dark [role="option"],
+.dark [tabindex],
+.dark .nerdvana-clickable {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Crect x='2' y='9' width='10' height='8' rx='2' fill='%23a83228'/%3E%3Crect x='18' y='9' width='10' height='8' rx='2' fill='%23a83228'/%3E%3Crect x='12' y='11' width='6' height='4' fill='%234a4845'/%3E%3Crect x='5' y='12' width='4' height='2' fill='%23f5f1e8'/%3E%3Crect x='21' y='12' width='4' height='2' fill='%23f5f1e8'/%3E%3Cpath d='M15 2 L18 9 L12 9 Z' fill='%234a4845'/%3E%3C/svg%3E") 4 4, pointer !important;
+}
+
+/* ─── MEDIA SIZING ───────────────────────────────────────────────────────── */
 img,
 svg,
 video,
@@ -18,49 +82,15 @@ canvas {
   height: auto;
 }
 
-.dark html,
-.dark body,
-.dark #root {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Crect x='2' y='9' width='10' height='8' rx='2' fill='%234a4845'/%3E%3Crect x='18' y='9' width='10' height='8' rx='2' fill='%234a4845'/%3E%3Crect x='12' y='11' width='6' height='4' fill='%23a83228'/%3E%3Crect x='5' y='12' width='4' height='2' fill='%23f5f1e8'/%3E%3Crect x='21' y='12' width='4' height='2' fill='%23f5f1e8'/%3E%3Cpath d='M12 20 L18 20 L15 26 Z' fill='%23a83228'/%3E%3C/svg%3E") 4 4, auto;
-}
-
-button,
-a,
-input,
-textarea,
-select,
-[role="button"],
-.nerdvana-clickable {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Crect x='2' y='9' width='10' height='8' rx='2' fill='%238c1c13'/%3E%3Crect x='18' y='9' width='10' height='8' rx='2' fill='%238c1c13'/%3E%3Crect x='12' y='11' width='6' height='4' fill='%231a1918'/%3E%3Crect x='5' y='12' width='4' height='2' fill='%23fff8dc'/%3E%3Crect x='21' y='12' width='4' height='2' fill='%23fff8dc'/%3E%3Cpath d='M15 2 L18 9 L12 9 Z' fill='%231a1918'/%3E%3C/svg%3E") 4 4, pointer !important;
-}
-
-.dark button,
-.dark a,
-.dark input,
-.dark textarea,
-.dark select,
-.dark [role="button"],
-.dark .nerdvana-clickable {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Crect x='2' y='9' width='10' height='8' rx='2' fill='%23a83228'/%3E%3Crect x='18' y='9' width='10' height='8' rx='2' fill='%23a83228'/%3E%3Crect x='12' y='11' width='6' height='4' fill='%234a4845'/%3E%3Crect x='5' y='12' width='4' height='2' fill='%23f5f1e8'/%3E%3Crect x='21' y='12' width='4' height='2' fill='%23f5f1e8'/%3E%3Cpath d='M15 2 L18 9 L12 9 Z' fill='%234a4845'/%3E%3C/svg%3E") 4 4, pointer !important;
-}
-
+/* ─── ANIMATIONS ─────────────────────────────────────────────────────────── */
 @keyframes thinking-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 @keyframes thinking-pulse {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 0 rgba(140, 28, 19, 0));
-  }
-  50% {
-    filter: drop-shadow(0 0 8px rgba(140, 28, 19, 0.28));
-  }
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(140, 28, 19, 0)); }
+  50%       { filter: drop-shadow(0 0 8px rgba(140, 28, 19, 0.28)); }
 }
 
 .animate-thinking-spin {
