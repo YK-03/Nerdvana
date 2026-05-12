@@ -1,5 +1,4 @@
 import { DEFAULT_MEDIA_LENS, normalizeMediaLens, type MediaLens } from "./mediaLens";
-
 export type VisualEntityType =
   | "movie"
   | "tv"
