@@ -1,5 +1,5 @@
-import { normalizeMediaLens, DEFAULT_MEDIA_LENS, type MediaLens } from '../src/app/mediaLens'
-import { normalizeVisualContext } from '../src/app/visualContext'
+import { normalizeMediaLens, DEFAULT_MEDIA_LENS, type MediaLens } from "../src/app/mediaLens.js";
+import { normalizeVisualContext } from "../src/app/visualContext.js";
 
 type ConversationMessage = {
   role: "user" | "assistant";

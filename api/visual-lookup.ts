@@ -1,4 +1,4 @@
-import { normalizeMediaLens } from '../src/app/mediaLens'
+import { normalizeMediaLens } from "../src/app/mediaLens.js";
 
 interface VisualData {
   poster: string | null;
