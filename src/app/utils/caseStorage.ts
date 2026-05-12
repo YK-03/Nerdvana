@@ -1,9 +1,12 @@
+import type { MediaLens } from "../mediaLens";
+
 export type CaseFile = {
   id: string;
   query: string;
   item: string | null;
   intent: string;
   timestamp: number;
+  mediaLens?: MediaLens;
 };
 
 const CASE_STORAGE_KEY = "nerdvana_cases";

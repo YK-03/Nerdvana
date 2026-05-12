@@ -1,10 +1,15 @@
+import { DEFAULT_MEDIA_LENS, type MediaLens } from "./mediaLens";
+
 export const itemAliasMap: Record<string, string[]> = {
   inception: ["inception", "cobb", "spinning top", "dream", "totem"],
   interstellar: ["interstellar", "bookshelf", "cooper", "wormhole", "tesseract"],
   "jujutsu-kaisen": ["jjk", "jujutsu", "gojo", "cursed binding", "sukuna"],
   "attack-on-titan": ["attack titan", "attack on titan", "aot", "eren", "shingeki", "titan"],
   dune: ["dune", "arrakis", "paul atreides", "spice"],
-  batman: ["batman", "gotham", "bruce wayne", "joker"]
+  batman: ["batman", "gotham", "bruce wayne", "joker", "dark knight", "wayne"],
+  superman: ["superman", "clark kent", "man of steel", "kal el", "krypton"],
+  "dragon-ball": ["dragon ball", "goku", "saiyan", "kakarot", "dbz"],
+  "god-of-war": ["god of war", "kratos", "atreus", "spartan ghost", "playstation"]
 };
 
 export type ContextSource =
@@ -31,13 +36,24 @@ export interface ResolvedContext {
 }
 
 const GENERIC_ALIASES = new Set(["dream", "titan", "ending", "themes", "plot"]);
-const ITEM_METADATA: Record<string, { label: string; type: string }> = {
+const ITEM_METADATA: Record<string, { label: string; type: string; lenses?: Partial<Record<MediaLens, number>> }> = {
   inception: { label: "Inception", type: "Movie" },
   interstellar: { label: "Interstellar", type: "Movie" },
-  "jujutsu-kaisen": { label: "Jujutsu Kaisen", type: "Anime" },
-  "attack-on-titan": { label: "Attack on Titan", type: "Anime" },
-  dune: { label: "Dune", type: "Franchise" },
-  batman: { label: "Batman", type: "Franchise" }
+  "jujutsu-kaisen": { label: "Jujutsu Kaisen", type: "Anime", lenses: { anime: 3, tv: 1 } },
+  "attack-on-titan": { label: "Attack on Titan", type: "Anime", lenses: { anime: 3, tv: 1 } },
+  dune: { label: "Dune", type: "Franchise", lenses: { movies: 2, comics: 1 } },
+  batman: { label: "Batman", type: "Franchise", lenses: { comics: 3, movies: 2, games: 1, tv: 1 } },
+  superman: { label: "Superman", type: "Franchise", lenses: { comics: 3, movies: 2, tv: 1 } },
+  "dragon-ball": { label: "Dragon Ball", type: "Anime Franchise", lenses: { anime: 4, games: 1 } },
+  "god-of-war": { label: "God of War", type: "Game Franchise", lenses: { games: 4 } }
+};
+
+const LENS_QUERY_SIGNALS: Record<MediaLens, string[]> = {
+  movies: ["movie", "film", "cinematic", "live action", "actor", "poster"],
+  tv: ["tv", "television", "series", "season", "episode", "showrunner"],
+  anime: ["anime", "manga", "arc", "canon", "ova", "opening"],
+  games: ["game", "gaming", "boss", "quest", "playstation", "xbox", "ending"],
+  comics: ["comic", "comics", "run", "issue", "dc", "marvel", "canon", "continuity"]
 };
 
 function normalize(value: string) {
@@ -83,7 +99,17 @@ function scoreAliasMatch(question: string, alias: string) {
   return hits > 0 ? 2 * hits : 0;
 }
 
-function computeBestAliasMatch(question: string) {
+function scoreLensAlignment(id: string, lens: MediaLens, question: string) {
+  const metadata = ITEM_METADATA[id];
+  const metadataBoost = metadata?.lenses?.[lens] ?? 0;
+  const signalBoost = LENS_QUERY_SIGNALS[lens].reduce((score, signal) => {
+    if (!question.includes(signal)) return score;
+    return score + (signal.includes(" ") ? 0.5 : 0.25);
+  }, 0);
+  return metadataBoost + signalBoost;
+}
+
+function computeBestAliasMatch(question: string, lens: MediaLens = DEFAULT_MEDIA_LENS) {
   const normalizedQuestion = normalize(question);
   const scoredCandidates: Array<{
     id: string;
@@ -111,6 +137,7 @@ function computeBestAliasMatch(question: string) {
     }
 
     if (totalScore > 0) {
+      totalScore += scoreLensAlignment(slug, lens, normalizedQuestion);
       scoredCandidates.push({
         id: slug,
         score: totalScore,
@@ -154,7 +181,7 @@ function computeBestAliasMatch(question: string) {
   };
 }
 
-function resolveFromQuery(question: string): ResolvedContext {
+function resolveFromQuery(question: string, lens: MediaLens = DEFAULT_MEDIA_LENS): ResolvedContext {
   const normalizedQuestion = normalize(question);
   if (!normalizedQuestion) {
     return {
@@ -165,7 +192,7 @@ function resolveFromQuery(question: string): ResolvedContext {
     };
   }
 
-  const match = computeBestAliasMatch(normalizedQuestion);
+  const match = computeBestAliasMatch(normalizedQuestion, lens);
   if (!match.item) {
     return {
       item: null,
@@ -211,7 +238,11 @@ function resolveFromQuery(question: string): ResolvedContext {
   };
 }
 
-export function resolveContext(question: string, explicitItem?: string): ResolvedContext {
+export function resolveContext(
+  question: string,
+  explicitItem?: string,
+  mediaLens: MediaLens = DEFAULT_MEDIA_LENS
+): ResolvedContext {
   const normalizedExplicit = normalize(explicitItem ?? "");
   if (normalizedExplicit) {
     return {
@@ -222,11 +253,15 @@ export function resolveContext(question: string, explicitItem?: string): Resolve
     };
   }
 
-  return resolveFromQuery(question);
+  return resolveFromQuery(question, mediaLens);
 }
 
-export function resolveItemFromQuestion(question: string, explicitItem?: string) {
-  return resolveContext(question, explicitItem).item ?? "";
+export function resolveItemFromQuestion(
+  question: string,
+  explicitItem?: string,
+  mediaLens: MediaLens = DEFAULT_MEDIA_LENS
+) {
+  return resolveContext(question, explicitItem, mediaLens).item ?? "";
 }
 
 export function isContextValid(context: ResolvedContext) {

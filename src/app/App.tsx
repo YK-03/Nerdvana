@@ -13,8 +13,15 @@ import SavedLorebooks from "./pages/SavedLorebooks";
 import ProfilePage from "./profile/page";
 import MarketingPage from "./(marketing)/page";
 import { useAuth } from "./hooks/useAuth";
-
-type Universe = "Movies" | "TV" | "Anime" | "Games" | "Comics";
+import {
+  buildAskUrl,
+  mediaLensToUniverse,
+  persistMediaLens,
+  readMediaLensFromSearch,
+  readStoredMediaLens,
+  type Universe,
+  universeToMediaLens,
+} from "./mediaLens";
 
 const UNIVERSE_TAGLINES = [
   "The Story Ended. The Questions Didn't.",
@@ -339,7 +346,10 @@ export default function App() {
   const [isFocused, setIsFocused] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [taglineIndex, setTaglineIndex] = useState(0);
-  const [selectedUniverse, setSelectedUniverse] = useState<Universe>("Movies");
+  const [selectedUniverse, setSelectedUniverse] = useState<Universe>(() => {
+    const lensFromUrl = readMediaLensFromSearch(window.location.search, readStoredMediaLens());
+    return mediaLensToUniverse(lensFromUrl);
+  });
   const [pathname, setPathname] = useState(() => window.location.pathname);
   const [question, setQuestion] = useState(() => readQuestionFromUrl());
   const { user, loading } = useAuth();
@@ -350,11 +360,16 @@ export default function App() {
     const onPopState = () => {
       setPathname(window.location.pathname);
       setQuestion(readQuestionFromUrl());
+      setSelectedUniverse(mediaLensToUniverse(readMediaLensFromSearch(window.location.search, readStoredMediaLens())));
     };
 
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+
+  useEffect(() => {
+    persistMediaLens(universeToMediaLens(selectedUniverse));
+  }, [selectedUniverse]);
 
   useEffect(() => {
     if (loading) return;
@@ -422,8 +437,8 @@ export default function App() {
   const navigateToAsk = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return;
-    const encoded = encodeURIComponent(trimmed);
-    window.history.pushState({}, "", `/ask?q=${encoded}`);
+    const mediaLens = universeToMediaLens(selectedUniverse);
+    window.history.pushState({ mediaLens }, "", buildAskUrl(trimmed, { lens: mediaLens }));
     setPathname("/ask");
     setQuestion(trimmed);
     setEntry("");

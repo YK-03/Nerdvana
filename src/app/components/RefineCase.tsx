@@ -1,5 +1,6 @@
 import type { AnswerCategory } from "../mockAnswers";
 import { useInvestigationMemory } from "../hooks/useInvestigationMemory";
+import { buildAskUrl, readStoredMediaLens } from "../mediaLens";
 
 interface RefineCaseProps {
   query: string;
@@ -73,10 +74,9 @@ export default function RefineCase({ query, categories, item }: RefineCaseProps)
 
   const onRefine = (suggestion: string) => {
     const refinedQuery = `${query.trim()} ${suggestion}`.trim();
-    const encodedQuery = encodeURIComponent(refinedQuery);
-    const encodedItem = item ? encodeURIComponent(item) : "";
-    const nextUrl = item ? `/ask?q=${encodedQuery}&item=${encodedItem}` : `/ask?q=${encodedQuery}`;
-    window.history.pushState({ item: item ?? "" }, "", nextUrl);
+    const mediaLens = readStoredMediaLens();
+    const nextUrl = buildAskUrl(refinedQuery, { item, lens: mediaLens });
+    window.history.pushState({ item: item ?? "", mediaLens }, "", nextUrl);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 

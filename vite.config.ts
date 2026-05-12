@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import nerdvanaAnswerHandler from './api/nerdvana-answer'
 import searchHandler from './api/search'
+import visualLookupHandler from './api/visual-lookup'
 
 export default defineConfig(({ mode }) => {
   const frontendEnv = loadEnv(mode, process.cwd(), '')
@@ -17,9 +18,8 @@ export default defineConfig(({ mode }) => {
     process.env.GEMINI_API_KEY = mergedEnv.VITE_GEMINI_API_KEY
   }
   if (!process.env.SERPER_API_KEY && mergedEnv.SERPER_API_KEY) {
-  process.env.SERPER_API_KEY = mergedEnv.SERPER_API_KEY
-}
-
+    process.env.SERPER_API_KEY = mergedEnv.SERPER_API_KEY
+  }
 
   return {
     plugins: [
@@ -36,7 +36,8 @@ export default defineConfig(({ mode }) => {
 
             if (
               !req.url.startsWith('/api/nerdvana-answer') &&
-              !req.url.startsWith('/api/search')
+              !req.url.startsWith('/api/search') &&
+              !req.url.startsWith('/api/visual-lookup')
             ) {
               next()
               return
@@ -79,6 +80,8 @@ export default defineConfig(({ mode }) => {
 
               if (req.url.startsWith('/api/search')) {
                 response = await searchHandler(request)
+              } else if (req.url.startsWith('/api/visual-lookup')) {
+                response = await visualLookupHandler(request)
               } else {
                 response = await nerdvanaAnswerHandler(request)
               }

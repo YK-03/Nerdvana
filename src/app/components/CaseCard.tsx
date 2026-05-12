@@ -1,4 +1,5 @@
 import type { CaseFile } from "../utils/caseStorage";
+import { buildAskUrl } from "../mediaLens";
 
 interface CaseCardProps {
   caseFile: CaseFile;
@@ -26,12 +27,11 @@ function toItemLabel(item: string | null) {
 
 export default function CaseCard({ caseFile }: CaseCardProps) {
   const onOpenCase = () => {
-    const encodedQuery = encodeURIComponent(caseFile.query);
-    const encodedItem = caseFile.item ? encodeURIComponent(caseFile.item) : "";
-    const nextUrl = caseFile.item
-      ? `/ask?q=${encodedQuery}&item=${encodedItem}`
-      : `/ask?q=${encodedQuery}`;
-    window.history.pushState({ item: caseFile.item ?? "" }, "", nextUrl);
+    const nextUrl = buildAskUrl(caseFile.query, {
+      item: caseFile.item ?? "",
+      lens: caseFile.mediaLens
+    });
+    window.history.pushState({ item: caseFile.item ?? "", mediaLens: caseFile.mediaLens }, "", nextUrl);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 

@@ -18,6 +18,8 @@ import { saveCase } from "../utils/caseStorage";
 import { saveCaseCloud } from "../utils/caseCloud";
 import type { MockAnswer } from "../mockAnswers";
 import { applyIdentityStabilization, isContextValid, resolveContext } from "../itemResolver";
+import { buildAskUrl, DEFAULT_MEDIA_LENS, normalizeMediaLens } from "../mediaLens";
+import { createOptimisticVisualContext, normalizeVisualContext, type VisualContext } from "../visualContext";
 import { auth, db } from "../lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 
@@ -36,31 +38,26 @@ interface ResponseData {
   results: ResultLink[];
 }
 
-export interface VisualContext {
-  entity: string;
-  entityType: "movie" | "tv" | "anime" | "game" | "character" | "unknown";
-  year: number | null;
-  changed: boolean;
-  gameVisuals?: {
-    title: string;
-    image: string | null;
-    year: number | null;
-    rating: number | null;
-    genres: string[];
-    studio: string | null;
-  };
+function mergeVisualContext(payload: any, mediaLens: string): VisualContext | null {
+  return normalizeVisualContext(payload?.visualContext, mediaLens, payload?.gameVisuals ?? null);
 }
 
 function readAskQueryParams() {
   const params = new URLSearchParams(window.location.search);
   const urlItem = params.get("item")?.trim() ?? "";
+  const urlLens = params.get("lens")?.trim() ?? "";
   const stateItem =
     window.history.state && typeof window.history.state.item === "string"
       ? window.history.state.item.trim()
       : "";
+  const stateLens =
+    window.history.state && typeof window.history.state.mediaLens === "string"
+      ? window.history.state.mediaLens.trim()
+      : "";
   const item = urlItem || stateItem;
   return {
-    item
+    item,
+    mediaLens: normalizeMediaLens(urlLens || stateLens || DEFAULT_MEDIA_LENS)
   };
 }
 
@@ -71,11 +68,11 @@ export default function AskPage({
   const [search, setSearch] = useState(() => window.location.search);
   const location = useMemo(() => ({ search }), [search]);
   const queryFromURL = new URLSearchParams(location.search).get("q") || "";
-  const { item: queryItem } = readAskQueryParams();
+  const { item: queryItem, mediaLens } = readAskQueryParams();
   const fullQuestion = queryFromURL.trim();
   const inferredContext = useMemo(
-    () => resolveContext(fullQuestion, queryItem),
-    [fullQuestion, queryItem]
+    () => resolveContext(fullQuestion, queryItem, mediaLens),
+    [fullQuestion, mediaLens, queryItem]
   );
   const { dominantItem } = useIdentityIntent();
   const resolvedContext = useMemo(
@@ -97,6 +94,14 @@ export default function AskPage({
   const resolvedItem = resolvedContext.item;
   const isAmbiguous = resolvedContext.source === "ambiguous";
   const contextIsValid = useMemo(() => isContextValid(resolvedContext), [resolvedContext]);
+  const optimisticVisualContext = useMemo(() => {
+    if (!fullQuestion) return null;
+    return createOptimisticVisualContext(
+      fullQuestion,
+      mediaLens,
+      contextIsValid && !isAmbiguous ? resolvedItem : null,
+    );
+  }, [contextIsValid, fullQuestion, isAmbiguous, mediaLens, resolvedItem]);
 
   const historyState = typeof window !== "undefined" ? window.history.state : {};
   const isRestored = historyState?.rehydrated === true;
@@ -130,9 +135,11 @@ export default function AskPage({
   );
   const [followUpQuery, setFollowUpQuery] = useState("");
   const [isGeneratingFollowUp, setIsGeneratingFollowUp] = useState(false);
+  const [chatSpoilers, setChatSpoilers] = useState(false);
 
   // Visual context state
   const [visualContext, setVisualContext] = useState<VisualContext | null>(null);
+  const displayVisualContext = visualContext ?? optimisticVisualContext;
 
   const handleSaveLorebook = async () => {
     if (!user) {
@@ -149,6 +156,7 @@ export default function AskPage({
     try {
       await addDoc(collection(db, "users", user.uid, "lorebooks"), {
         topic: fullQuestion,
+        mediaLens,
         conversation: fullSession,
         results: results.map(s => ({ title: s.title, url: s.url })),
         createdAt: serverTimestamp()
@@ -177,12 +185,29 @@ export default function AskPage({
           results: restoredResults
         });
         setConversation(parsed.conversation || []);
-        if (parsed.visualContext) setVisualContext(parsed.visualContext);
+        if (parsed.visualContext) {
+          setVisualContext(
+            normalizeVisualContext(
+              parsed.visualContext,
+              parsed.visualContext.mediaLens ?? parsed.mediaLens ?? mediaLens,
+              parsed.visualContext.gameVisuals ?? null
+            )
+          );
+        }
+        if (!new URLSearchParams(window.location.search).get("lens") && parsed.mediaLens) {
+          const restoredLens = normalizeMediaLens(parsed.mediaLens);
+          window.history.replaceState(
+            { ...(window.history.state || {}), mediaLens: restoredLens },
+            "",
+            buildAskUrl(fullQuestion, { item: queryItem, lens: restoredLens })
+          );
+          setSearch(window.location.search);
+        }
       }
     } catch (e) {
       console.error("Failed to restore session", e);
     }
-  }, []);
+  }, [fullQuestion, queryItem]);
 
   useEffect(() => {
     if (!fullQuestion) return;
@@ -194,10 +219,11 @@ export default function AskPage({
         answer,
         results,
         conversation,
-        visualContext
+        visualContext,
+        mediaLens
       })
     );
-  }, [fullQuestion, answer, results, conversation, visualContext]);
+  }, [fullQuestion, answer, results, conversation, mediaLens, visualContext]);
 
   useEffect(() => {
     const syncSearch = () => setSearch(window.location.search);
@@ -220,6 +246,20 @@ export default function AskPage({
       window.removeEventListener("popstate", syncSearch);
     };
   }, []);
+
+  useEffect(() => {
+    if (!fullQuestion) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("lens")) return;
+
+    window.history.replaceState(
+      { ...(window.history.state || {}), mediaLens },
+      "",
+      buildAskUrl(fullQuestion, { item: queryItem, lens: mediaLens })
+    );
+    setSearch(window.location.search);
+  }, [fullQuestion, mediaLens, queryItem]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -246,6 +286,7 @@ export default function AskPage({
           },
           body: JSON.stringify({
             query: normalizedQuestion,
+            mediaLens,
             spoilerMode: chatSpoilers,
             conversation: [],
             previousEntity: null
@@ -287,10 +328,7 @@ export default function AskPage({
 
         // Set visual context from initial query (always update on fresh search)
         if (payload?.visualContext) {
-          setVisualContext({
-            ...payload.visualContext,
-            gameVisuals: payload.gameVisuals,
-          });
+          setVisualContext(mergeVisualContext(payload, mediaLens));
         }
 
         if (user && normalizedQuestion) {
@@ -320,6 +358,7 @@ export default function AskPage({
             try {
               const docRef = await addDoc(collection(db, "users", user.uid, "history"), {
                 query: normalizedQuestion,
+                mediaLens,
                 conversation: [],
                 results: rawResults.map((r: any) => ({ title: r.title, url: r.url })),
                 createdAt: serverTimestamp()
@@ -333,7 +372,8 @@ export default function AskPage({
                 ...historyState,
                 historySaved: true,
                 historyId: docRef.id,
-                query: normalizedQuestion
+                query: normalizedQuestion,
+                mediaLens
               }, "");
             } catch (error) {
               console.error("Failed to save history session", error);
@@ -357,9 +397,8 @@ export default function AskPage({
     return () => {
       isCancelled = true;
     };
-  }, [fullQuestion, user]);
+  }, [chatSpoilers, fullQuestion, mediaLens, user]);
 
-  const [chatSpoilers, setChatSpoilers] = useState(false);
   useEffect(() => {
     if (!contextIsValid || isAmbiguous || !resolvedItem) {
       return;
@@ -380,7 +419,8 @@ export default function AskPage({
       query: fullQuestion,
       item: resolvedItem,
       intent: buildIntentPhrase(fullQuestion),
-      timestamp: now
+      timestamp: now,
+      mediaLens
     });
 
     saveCaseMemory({
@@ -402,7 +442,7 @@ export default function AskPage({
     }
 
     lastSavedCaseKey.current = caseKey;
-  }, [answer.summary, contextIsValid, fullQuestion, isAmbiguous, resolvedItem, saveCaseMemory, user]);
+  }, [answer.summary, contextIsValid, fullQuestion, isAmbiguous, mediaLens, resolvedItem, saveCaseMemory, user]);
 
   const handleFollowUpSubmit = async (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
@@ -433,6 +473,7 @@ export default function AskPage({
         },
         body: JSON.stringify({
           query: trimmedQuery,
+          mediaLens,
           spoilerMode: chatSpoilers,
           conversation: [
             { role: "user", content: fullQuestion },
@@ -453,10 +494,7 @@ export default function AskPage({
 
       // Update visual context only if topic changed
       if (payload?.visualContext?.changed) {
-        setVisualContext({
-          ...payload.visualContext,
-          gameVisuals: payload.gameVisuals,
-        });
+        setVisualContext(mergeVisualContext(payload, mediaLens));
       }
 
       const rawData = Array.isArray(payload?.sources) ? payload.sources : [];
@@ -573,6 +611,7 @@ export default function AskPage({
                   }}
                 />
                 {resolvedItem && <input type="hidden" name="item" value={resolvedItem} />}
+                <input type="hidden" name="lens" value={mediaLens} />
               </div>
             </form>
 
@@ -752,9 +791,9 @@ export default function AskPage({
               </div>
 
               {/* Visual Panel — sticky sidebar */}
-              {visualContext && !isLoading && (
+              {displayVisualContext && (
                 <div className="hidden lg:block w-72 flex-shrink-0 sticky top-24">
-                  <VisualPanel context={visualContext} />
+                  <VisualPanel context={displayVisualContext} />
                 </div>
               )}
             </div>

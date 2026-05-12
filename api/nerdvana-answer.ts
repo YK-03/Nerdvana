@@ -1,3 +1,6 @@
+import { DEFAULT_MEDIA_LENS, normalizeMediaLens, type MediaLens } from "../src/app/mediaLens";
+import { normalizeVisualContext } from "../src/app/visualContext";
+
 type ConversationMessage = {
   role: "user" | "assistant";
   content: string;
@@ -16,6 +19,28 @@ type GameVisualData = {
   genres: string[];
   studio: string | null;
 };
+
+function scoreGameCandidate(name: string, searchTerm: string) {
+  const normalizedName = name.trim().toLowerCase();
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const searchWords = normalizedSearch.split(/\s+/).filter(Boolean);
+
+  let score = 0;
+  if (normalizedName === normalizedSearch) score += 8;
+  if (normalizedName.startsWith(normalizedSearch)) score += 5;
+  if (normalizedName.includes(normalizedSearch)) score += 3;
+  score += searchWords.filter((word) => normalizedName.includes(word)).length;
+
+  if (!/\b(skin|skins|pack|bundle|dlc|costume|season pass|add-?on|addon|movie skin)\b/i.test(name)) {
+    score += 4;
+  } else {
+    score -= 8;
+  }
+
+  if (!/ - /.test(name)) score += 2;
+
+  return score;
+}
 
 let cachedIGDBToken: string | null = null;
 let igdbTokenExpiry = 0;
@@ -73,6 +98,7 @@ function buildPrompt(
   query: string,
   conversation: ConversationMessage[],
   spoilerMode: boolean,
+  mediaLens: MediaLens,
   previousEntity?: string,
 ) {
   let activeTopic = query;
@@ -85,18 +111,35 @@ function buildPrompt(
     if (lastUserMsg) activeTopic = lastUserMsg.content;
   }
 
+  const lensRules: Record<MediaLens, string> = {
+    movies:
+      "Prioritize cinematic and live-action continuity, film canon, actors, and movie posters. Avoid comic-first interpretations unless the user explicitly asks for comics.",
+    tv:
+      "Prioritize television continuity, series canon, seasons, episodes, and TV cast context. Avoid defaulting to film continuity unless the user explicitly switches.",
+    anime:
+      "Prioritize anime canon, the main anime series, core arcs, and official anime visuals. Avoid random specials, side OVAs, or movie detours unless the user asks for them.",
+    games:
+      "Prioritize game franchises, canonical game entries, platform-specific franchise context, and game visuals. Avoid generic mythology or non-game explanations unless the user explicitly changes context.",
+    comics:
+      "Prioritize comic canon, comic continuity, runs, issues, and comic artwork. Avoid live-action adaptation bias unless the user explicitly asks about a film or show adaptation.",
+  };
+
   const systemRole = `You are Nerdvana, a nerd-focused AI assistant specializing in pop culture.
 
 ACTIVE DISCUSSION TOPIC: ${activeTopic}
+ACTIVE MEDIA LENS: ${mediaLens}
 
 IMPORTANT GUIDELINES:
 - Assume follow-ups refer to ACTIVE DISCUSSION TOPIC unless user switches.
+- Treat ACTIVE MEDIA LENS as a hard contextual weight across the whole answer. Only override it if the user explicitly changes media context.
 - Provide concise answers in EXACTLY 2 paragraphs. Each paragraph 3-4 sentences max. Be thorough but brief.
 - Prioritize canon facts but mention theories when relevant.
 - Do not greet the user.
 - Do not start with phrases like "Sure", "Great question", "Hey", "Hi", or "Hello".
 - Start immediately with the answer content.
 - You MUST always append the complete <visual_context> JSON block at the very end. Never truncate or skip it.
+- MEDIA LENS RULES: ${lensRules[mediaLens]}
+- Keep media classification separate from subject classification. A comics character is still entityKind "character" with mediaType "comics"; do not rewrite it into a comic title unless the query is actually about a comic title, run, or issue.
 `;
 
   const spoilerRule = spoilerMode
@@ -122,6 +165,8 @@ Return a JSON block in this exact format, wrapped in <visual_context> tags:
 {
   "entity": "<primary subject of this query — use the most well-known official title>",
   "entityType": "<MUST be exactly one of: movie | tv | anime | game | comic | character | unknown. Rules: use 'anime' ONLY for Japanese animated series/films. Use 'movie' for live-action or animated films. Use 'tv' for live-action series. Use 'game' for video games. Use 'comic' for comics/manga. Use 'character' only if the query is specifically about a fictional person, not the franchise. When in doubt between movie and tv, pick 'movie' for film franchises.>",
+  "mediaType": "<MUST be exactly one of: movies | tv | anime | games | comics | unknown. This is the dominant canon or media context for the answer and should usually match ACTIVE MEDIA LENS unless the user explicitly changed context.>",
+  "entityKind": "<MUST be exactly one of: title | franchise | character | team | issue | run | creator | location | event | unknown. This describes what the subject is independently of mediaType.>",
   "year": <original release year as number or null>,
   "changed": <true if entity differs from "${previousEntity ?? ""}", else false>
 }
@@ -375,7 +420,7 @@ async function fetchGameVisuals(
             rating,
             genres.name,
             involved_companies.company.name;
-          limit 1;
+          limit 5;
         `,
     });
 
@@ -386,7 +431,15 @@ async function fetchGameVisuals(
 
     const data = await response.json();
 
-    const game = data?.[0];
+    const rows = Array.isArray(data) ? data : [];
+    const game =
+      rows
+        .filter((entry: any) => entry?.name)
+        .sort((a: any, b: any) => {
+          const aScore = scoreGameCandidate(String(a?.name ?? ""), gameName) + (a?.cover?.url ? 2 : 0);
+          const bScore = scoreGameCandidate(String(b?.name ?? ""), gameName) + (b?.cover?.url ? 2 : 0);
+          return bScore - aScore;
+        })[0] ?? null;
 
     if (!game) return null;
 
@@ -412,14 +465,37 @@ async function fetchGameVisuals(
   }
 }
 
+async function fetchBestGameVisuals(
+  searchTerms: string[],
+  env: Record<string, string | undefined>,
+): Promise<GameVisualData | null> {
+  const uniqueTerms = [...new Set(searchTerms.map((term) => term.trim()).filter(Boolean))];
+
+  for (const term of uniqueTerms) {
+    const result = await fetchGameVisuals(term, env);
+    if (result) return result;
+  }
+
+  return null;
+}
+
 async function fetchSources(
   query: string,
+  mediaLens: MediaLens,
   env: Record<string, string | undefined>,
 ) {
+  const lensSearchQuery = (() => {
+    if (mediaLens === "movies") return `${query} movie live action canon`;
+    if (mediaLens === "tv") return `${query} tv series canon`;
+    if (mediaLens === "anime") return `${query} anime canon main series`;
+    if (mediaLens === "games") return `${query} video game canon franchise`;
+    return `${query} comics canon continuity`;
+  })();
+
   const serperKey = env.SERPER_API_KEY;
   if (serperKey) {
     try {
-      return await fetchSerperSources(query, serperKey);
+      return await fetchSerperSources(lensSearchQuery, serperKey);
     } catch (error) {
       console.warn("[Nerdvana] Serper source fetch failed", error);
     }
@@ -428,7 +504,7 @@ async function fetchSources(
   const whoogleBaseUrl = env.WHOOGLE_BASE_URL;
   if (whoogleBaseUrl) {
     try {
-      return await fetchWhoogleSources(query, whoogleBaseUrl);
+      return await fetchWhoogleSources(lensSearchQuery, whoogleBaseUrl);
     } catch (error) {
       console.warn("[Nerdvana] Whoogle source fetch failed", error);
     }
@@ -463,6 +539,7 @@ export default async function handler(req: any, res?: any) {
         : Boolean(body?.allowSpoilers);
     const previousEntity =
       String(body?.previousEntity ?? "").trim() || undefined;
+    const mediaLens = normalizeMediaLens(body?.mediaLens ?? DEFAULT_MEDIA_LENS);
 
     if (!query) {
       return jsonResponse({ error: "Query is required" }, 400, res);
@@ -486,15 +563,15 @@ export default async function handler(req: any, res?: any) {
     }
 
     const groqKey = env.GROQ_API_KEY;
-    console.log("[Nerdvana] All env keys:", Object.keys(env));
     const prompt = buildPrompt(
       query,
       conversation,
       spoilerMode,
+      mediaLens,
       previousEntity,
     );
     const answerPromise = generateAnswer(prompt, apiKey, groqKey);
-    const sourcesPromise = fetchSources(query, env);
+    const sourcesPromise = fetchSources(query, mediaLens, env);
 
     const [rawAnswer, sources] = await Promise.all([
       answerPromise,
@@ -533,10 +610,24 @@ export default async function handler(req: any, res?: any) {
       }
     }
 
+    const normalizedVisualContext = normalizeVisualContext(
+      visualContext,
+      mediaLens,
+      null,
+    );
+
     let gameVisuals: GameVisualData | null = null;
 
-    if (visualContext?.entityType === "game") {
-      gameVisuals = await fetchGameVisuals(visualContext.entity, env);
+    if (normalizedVisualContext?.mediaType === "games") {
+      gameVisuals = await fetchBestGameVisuals(
+        [
+          `${query} game`,
+          query,
+          `${normalizedVisualContext.entity} game`,
+          normalizedVisualContext.entity,
+        ],
+        env,
+      );
     }
     // Strip ALL visual_context remnants from answer (complete or partial)
     const answer = rawAnswer
@@ -555,7 +646,7 @@ export default async function handler(req: any, res?: any) {
           link: source.link,
         })),
         followups,
-        visualContext,
+        visualContext: normalizedVisualContext,
         gameVisuals,
       },
       200,

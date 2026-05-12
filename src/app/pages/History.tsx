@@ -4,6 +4,7 @@ import { collection, deleteDoc, doc, onSnapshot, orderBy, query, writeBatch } fr
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
+import { buildAskUrl, normalizeMediaLens, type MediaLens } from "../mediaLens";
 import { auth, db } from "@/firebase";
 
 interface HistoryPageProps {
@@ -17,6 +18,7 @@ interface HistoryItem {
   conversation?: any[];
   results?: any[];
   timestamp?: number;
+  mediaLens?: MediaLens;
 }
 
 function formatCreatedAt(value: unknown) {
@@ -44,7 +46,7 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
     const unsubscribe = onSnapshot(historyQuery, (snapshot) => {
       const next = snapshot.docs
         .map((entry) => {
-          const data = entry.data() as { query?: unknown; createdAt?: unknown; conversation?: any[]; results?: any[] };
+          const data = entry.data() as { query?: unknown; createdAt?: unknown; conversation?: any[]; results?: any[]; mediaLens?: unknown };
           if (typeof data.query !== "string" || !data.query.trim()) {
             return null;
           }
@@ -54,7 +56,8 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
             createdAtText: formatCreatedAt(data.createdAt),
             conversation: data.conversation || [],
             results: data.results || [],
-            timestamp: (data.createdAt as any)?.toMillis?.() || Date.now()
+            timestamp: (data.createdAt as any)?.toMillis?.() || Date.now(),
+            mediaLens: normalizeMediaLens(data.mediaLens)
           } as HistoryItem;
         })
         .filter((entry): entry is HistoryItem => Boolean(entry));
@@ -90,16 +93,16 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
 
   const handleHistoryClick = (item: HistoryItem) => {
     // Push state with conversation and results to permit restoration without re-fetching
-    const encoded = encodeURIComponent(item.query);
     const stateToPush = {
       query: item.query,
       conversation: item.conversation,
       results: item.results,
       rehydrated: true,
-      historyId: item.id
+      historyId: item.id,
+      mediaLens: item.mediaLens
     };
 
-    window.history.pushState(stateToPush, "", `/ask?q=${encoded}`);
+    window.history.pushState(stateToPush, "", buildAskUrl(item.query, { lens: item.mediaLens }));
     // Notify App
     window.dispatchEvent(new PopStateEvent("popstate"));
   };

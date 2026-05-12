@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { ContextCandidate } from "../itemResolver";
+import { buildAskUrl, readStoredMediaLens } from "../mediaLens";
 
 interface DisambiguationPanelProps {
   query: string;
@@ -16,9 +17,12 @@ export default function DisambiguationPanel({ query, candidates }: Disambiguatio
   );
 
   const pushAskRoute = (itemId: string) => {
-    const encodedQuery = encodeURIComponent(query);
-    const encodedItem = encodeURIComponent(itemId);
-    window.history.pushState({ item: itemId }, "", `/ask?q=${encodedQuery}&item=${encodedItem}`);
+    const mediaLens = readStoredMediaLens();
+    window.history.pushState(
+      { item: itemId, mediaLens },
+      "",
+      buildAskUrl(query, { item: itemId, lens: mediaLens })
+    );
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 

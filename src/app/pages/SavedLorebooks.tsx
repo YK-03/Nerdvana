@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
+import { buildAskUrl, normalizeMediaLens, type MediaLens } from "../mediaLens";
 import { auth, db } from "@/firebase";
 
 interface SavedLorebooksProps {
@@ -17,6 +18,7 @@ interface LorebookItem {
   conversation: { role: "user" | "assistant"; content: string }[];
   results: any[];
   createdAt: any;
+  mediaLens?: MediaLens;
 }
 
 export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) {
@@ -48,8 +50,6 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
 
   const handleLorebookClick = (item: LorebookItem) => {
     // Navigate to search with this topic AND restore state
-    const encoded = encodeURIComponent(item.topic);
-
     // Deconstruct conversation to restore state
     // We assume:
     // [0] = User Query (Implicit)
@@ -87,10 +87,15 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
       conversation: restoredConversation,
       results: item.results,
       answer: restoredAnswer,
-      rehydrated: true
+      rehydrated: true,
+      mediaLens: normalizeMediaLens(item.mediaLens)
     };
 
-    window.history.pushState(stateToPush, "", `/ask?q=${encoded}`);
+    window.history.pushState(
+      stateToPush,
+      "",
+      buildAskUrl(item.topic, { lens: normalizeMediaLens(item.mediaLens) })
+    );
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
