@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { RENDER_CONTRACTS } from "../../lib/resolver/renderContracts.js";
 
 interface AIResponseProps {
   text: string;
@@ -9,14 +10,27 @@ interface AIResponseProps {
   disableProgressiveReveal?: boolean;
 }
 
+import { ENABLE_NERDVANA_TELEMETRY } from "../../config/debug";
+
 export default function AIResponse({
   text,
   isLoading,
   onFirstTokenRendered,
   disableProgressiveReveal = false
 }: AIResponseProps) {
-  const [visibleText, setVisibleText] = useState("");
+  const [visibleText, setVisibleText] = useState(() => disableProgressiveReveal ? text : "");
   const firstTokenEmittedRef = useRef(false);
+
+  useEffect(() => {
+    if (ENABLE_NERDVANA_TELEMETRY) {
+      console.log("[AIResponse] mounted");
+    }
+    return () => {
+      if (ENABLE_NERDVANA_TELEMETRY) {
+        console.log("[AIResponse] unmounted");
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!text.trim()) {
@@ -52,11 +66,23 @@ export default function AIResponse({
   }, [onFirstTokenRendered, visibleText]);
 
   if (!isLoading && !visibleText.trim()) {
-    return null;
-  }
-
   return (
-    <section className="mt-4">
+    <section
+      className={`${RENDER_CONTRACTS.classes.aiResponse} mt-4 w-full min-h-[3rem]`}
+      data-render-contract={RENDER_CONTRACTS.classes.aiResponse}
+    >
+      <div style={{ opacity: 0.6 }}>
+        Preparing response...
+      </div>
+    </section>
+  );
+}
+  return (
+    <section
+      className={`${RENDER_CONTRACTS.classes.aiResponse} mt-4 w-full min-h-[3rem]`}
+      data-render-contract={RENDER_CONTRACTS.classes.aiResponse}
+      aria-live="polite"
+    >
       <h2
         className="text-[0.68rem] md:text-[0.72rem] uppercase tracking-[0.16em]"
         style={{
@@ -68,7 +94,7 @@ export default function AIResponse({
         Answer
       </h2>
       <div
-        className="mt-2 whitespace-pre-wrap text-[0.92rem] leading-7"
+        className={`${RENDER_CONTRACTS.classes.markdownBody} ${RENDER_CONTRACTS.classes.prose} mt-2 whitespace-pre-wrap text-[0.92rem] leading-7`}
         style={{
           fontFamily: '"Times New Roman", serif',
           color: "var(--nerdvana-text)",

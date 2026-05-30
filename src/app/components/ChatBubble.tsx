@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { RENDER_CONTRACTS } from "../../lib/resolver/renderContracts.js";
 
 interface ChatBubbleProps {
     role: "user" | "assistant";
@@ -9,6 +10,7 @@ interface ChatBubbleProps {
     isLoading?: boolean;
     warning?: boolean;
     sources?: { title: string; url: string; }[];
+    onWarningClick?: () => void;
 }
 
 export default function ChatBubble({
@@ -18,17 +20,22 @@ export default function ChatBubble({
     onSuggestionClick,
     isLoading,
     warning,
-    sources
+    sources,
+    onWarningClick
 }: ChatBubbleProps) {
     const isUser = role === "user";
+    const safeSuggestions = suggestions ?? [];
 
     return (
         <div
-            className={`mb-4 flex flex-col ${isUser ? "items-end" : "items-start"}`}
+            className={`${RENDER_CONTRACTS.classes.chatBubble} mb-4 flex flex-col ${isUser ? "items-end" : "items-start"}`}
+            data-render-contract={RENDER_CONTRACTS.classes.chatBubble}
+            data-role={role}
         >
             <div
-                className={`w-full max-w-[96%] sm:max-w-[90%] md:max-w-[78%] border px-4 sm:px-5 py-3.5 ${isUser ? "ml-auto" : "mr-auto"
-                    }`}
+                className={`w-full max-w-[96%] sm:max-w-[90%] md:max-w-[78%] border px-4 sm:px-5 py-3.5 transition-all duration-300 ${isUser ? "ml-auto" : "mr-auto"
+                    } ${warning ? "cursor-pointer hover:border-[var(--nerdvana-accent)] hover:shadow-[0_0_15px_rgba(239,68,68,0.15)]" : ""}`}
+                onClick={warning ? onWarningClick : undefined}
                 style={{
                     borderColor: warning ? "var(--nerdvana-accent)" : "var(--nerdvana-border)",
                     backgroundColor: isUser
@@ -55,21 +62,21 @@ export default function ChatBubble({
                 {/* Spoiler Warning Banner */}
                 {warning && (
                     <div
-                        className="mb-3 p-2 text-[0.75rem] border border-dashed"
+                        className="mb-3 p-2.5 text-[0.75rem] border border-dashed transition-all duration-200 hover:bg-[rgba(239,68,68,0.08)]"
                         style={{
                             borderColor: "var(--nerdvana-accent)",
                             color: "var(--nerdvana-accent)",
                             fontFamily: '"Courier New", monospace'
                         }}
                     >
-                        ⚠ SPOILERS HIDDEN. Enable "Conversation Spoilers" to reveal details.
+                        ⚠ SPOILERS HIDDEN. Click anywhere on this message to reveal.
                     </div>
                 )}
 
                 {/* Content or Skeleton */}
                 <div
-                    className="prose prose-sm max-w-none dark:prose-invert transition-all duration-300"
-                    style={warning ? { filter: "blur(6px)", opacity: 0.5, userSelect: "none", pointerEvents: "none" } : {}}
+                    className={`${RENDER_CONTRACTS.classes.markdownBody} ${RENDER_CONTRACTS.classes.prose} prose-sm max-w-none dark:prose-invert transition-all duration-300`}
+                    style={warning ? { filter: "blur(6px)", opacity: 0.4, userSelect: "none", pointerEvents: "none" } : {}}
                 >
                     {content ? (
                         <ReactMarkdown
@@ -150,9 +157,9 @@ export default function ChatBubble({
             </div>
 
             {/* Follow-up Suggestions */}
-            {!isUser && suggestions && suggestions.length > 0 && (
+            {!isUser && safeSuggestions.length > 0 && (
                 <div className="mt-2 ml-1 flex flex-wrap gap-2 w-full max-w-[96%] sm:max-w-[90%] md:max-w-[78%]">
-                    {suggestions.map((suggestion, idx) => (
+                    {safeSuggestions.map((suggestion, idx) => (
                         <button
                             key={idx}
                             onClick={() => onSuggestionClick?.(suggestion)}

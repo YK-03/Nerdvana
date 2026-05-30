@@ -5,20 +5,27 @@ import react from '@vitejs/plugin-react'
 import nerdvanaAnswerHandler from './api/nerdvana-answer'
 import searchHandler from './api/search'
 import visualLookupHandler from './api/visual-lookup'
+import autocompleteHandler from './api/autocomplete'
 
 export default defineConfig(({ mode }) => {
   const frontendEnv = loadEnv(mode, process.cwd(), '')
   const rootEnv = loadEnv(mode, path.resolve(__dirname, '..'), '')
   const mergedEnv = { ...rootEnv, ...frontendEnv }
 
-  if (!process.env.GEMINI_API_KEY && mergedEnv.GEMINI_API_KEY) {
-    process.env.GEMINI_API_KEY = mergedEnv.GEMINI_API_KEY
-  }
-  if (!process.env.GEMINI_API_KEY && mergedEnv.VITE_GEMINI_API_KEY) {
-    process.env.GEMINI_API_KEY = mergedEnv.VITE_GEMINI_API_KEY
-  }
-  if (!process.env.SERPER_API_KEY && mergedEnv.SERPER_API_KEY) {
-    process.env.SERPER_API_KEY = mergedEnv.SERPER_API_KEY
+  const BACKEND_KEYS = [
+    'GEMINI_API_KEY',
+    'GROQ_API_KEY',
+    'SERPER_API_KEY',
+    'TMDB_API_KEY',
+    'IGDB_CLIENT_ID',
+    'IGDB_CLIENT_SECRET',
+    'COMICVINE_API_KEY',
+    'RAWG_API_KEY',
+  ]
+  for (const key of BACKEND_KEYS) {
+    if (!process.env[key] && mergedEnv[key]) {
+      process.env[key] = mergedEnv[key].trim()
+    }
   }
 
   return {
@@ -37,7 +44,8 @@ export default defineConfig(({ mode }) => {
             if (
               !req.url.startsWith('/api/nerdvana-answer') &&
               !req.url.startsWith('/api/search') &&
-              !req.url.startsWith('/api/visual-lookup')
+              !req.url.startsWith('/api/visual-lookup') &&
+              !req.url.startsWith('/api/autocomplete')
             ) {
               next()
               return
@@ -82,6 +90,8 @@ export default defineConfig(({ mode }) => {
                 response = await searchHandler(request)
               } else if (req.url.startsWith('/api/visual-lookup')) {
                 response = await visualLookupHandler(request)
+              } else if (req.url.startsWith('/api/autocomplete')) {
+                response = await autocompleteHandler(request)
               } else {
                 response = await nerdvanaAnswerHandler(request)
               }

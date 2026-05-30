@@ -1,405 +1,228 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { inferMediaTypeFromEntityType, type VisualContext } from "../visualContext";
-
-interface VisualData {
-  poster: string | null;
-  backdrop: string | null;
-  title: string;
-  year: string;
-  rating: string;
-  genres: string[];
-  overview: string;
-  extraLabel?: string;
-}
+import type { ResolverContextPacket, ValidatedVisualAsset } from "../canonicalResolver";
+import { VISUAL_PHASE_LABELS } from "../../lib/experience/experienceLanguage";
+import { recordRetrieval } from "../../lib/resolver/pipelineTracker.js";
+import type { ActiveVisualOwner } from "../../app/canonicalResolver.js";
 
 interface VisualPanelProps {
-  context: VisualContext;
+  contextPacket: ResolverContextPacket;
+  activeTraceId: string | null;
+  activeVisualOwner?: ActiveVisualOwner | null;
+  onVisualLocked?: (owner: ActiveVisualOwner) => void;
 }
 
-const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY ?? "";
-const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY ?? "";
-const NO_RATING = "-";
-const visualDataCache = new Map<string, Promise<VisualData | null>>();
+type RetrievalConfidence = "high" | "medium" | "low" | "fallback";
+type RetrievalMode = "STRICT" | "RELAXED" | "FRANCHISE" | "ENTITY" | "POPULARITY";
 
-function getOrCreateVisualCache(
-  key: string,
-  loader: () => Promise<VisualData | null>,
-) {
-  const cached = visualDataCache.get(key);
-  if (cached) return cached;
-
-  const promise = loader().catch(() => null);
-  visualDataCache.set(key, promise);
-  return promise;
+interface RetrievalOutcome {
+  state: "SUCCESS" | "NO_COMPATIBLE_RESULTS" | "PROCESSING_ERROR" | "API_ERROR";
+  asset?: ValidatedVisualAsset;
+  reason?: string;
+  error?: string;
+  confidence?: RetrievalConfidence;
+  mode?: RetrievalMode;
 }
 
 
 
-async function fetchTMDB(entity: string, type: "movie" | "tv"): Promise<VisualData | null> {
-  const endpoint = type === "movie" ? "movie" : "tv";
-  let res = await fetch(
-    `https://api.themoviedb.org/3/search/${endpoint}?query=${encodeURIComponent(entity)}&api_key=${TMDB_API_KEY}`
-  );
-  if (!res.ok) return null;
+// ─── Adaptive Search Status Labels ────────────────────────────────────
 
-  let data = await res.json();
-  let item = data?.results?.[0];
+type SearchPhase =
+  | "idle"
+  | "searching"
+  | "relaxing"
+  | "franchise"
+  | "entity"
+  | "best-available"
+  | "done";
 
-  if (!item) {
-    res = await fetch(
-      `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(entity)}&api_key=${TMDB_API_KEY}`
-    );
-    if (!res.ok) return null;
-    data = await res.json();
-    item = data?.results?.find((row: any) => row.media_type === type);
-  }
+const PHASE_LABELS: Record<SearchPhase, string> = {
+  idle: "",
+  searching: VISUAL_PHASE_LABELS.STRICT,
+  relaxing: VISUAL_PHASE_LABELS.RELAXED,
+  franchise: VISUAL_PHASE_LABELS.FRANCHISE,
+  entity: VISUAL_PHASE_LABELS.ENTITY,
+  "best-available": VISUAL_PHASE_LABELS.POPULARITY,
+  done: "",
+};
 
-  if (!item) return null;
+const CONFIDENCE_BADGE: Record<RetrievalConfidence, string | null> = {
+  high: null,
+  medium: null,
+  low: VISUAL_PHASE_LABELS.APPROXIMATE_BADGE,
+  fallback: VISUAL_PHASE_LABELS.APPROXIMATE_BADGE,
+};
 
-  return {
-    poster: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null,
-    backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}` : null,
-    title: item.title ?? item.name ?? entity,
-    year: (item.release_date ?? item.first_air_date ?? "").slice(0, 4),
-    rating: item.vote_average ? String(item.vote_average.toFixed(1)) : NO_RATING,
-    genres: [],
-    overview: item.overview ?? "",
-  };
-}
+// ─── Component ────────────────────────────────────────────────────────
 
-function titleMatches(returned: string, searched: string): boolean {
-  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
-  const a = normalize(returned);
-  const b = normalize(searched);
-  if (!a || !b) return false;
-  if (a.includes(b) || b.includes(a)) return true;
-  const wordsA = a.split(/\s+/);
-  const wordsB = new Set(b.split(/\s+/));
-  const shared = wordsA.filter((word) => word.length > 2 && wordsB.has(word));
-  return shared.length >= 2;
-}
-
-async function fetchJikan(entity: string, mediaType?: string): Promise<VisualData | null> {
-  await new Promise((r) => setTimeout(r, 400));
-
-  // Step 1: Try character endpoint with strict matching
-  const charRes = await fetch(
-    `https://api.jikan.moe/v4/characters?q=${encodeURIComponent(entity)}&limit=8`
-  );
-  if (charRes.ok) {
-    const charData = await charRes.json();
-    const chars = charData?.data ?? [];
-
-    // Strict match first: exact or startsWith
-    const search = entity.toLowerCase().trim();
-    const charMatch = chars.find((c: any) => {
-      const name = String(c.name ?? "").toLowerCase().trim();
-      const nameKanji = String(c.name_kanji ?? "").toLowerCase().trim();
-      return (
-        name === search ||
-        name.startsWith(search) ||
-        nameKanji === search ||
-        titleMatches(String(c.name ?? ""), entity)
-      );
-    });
-
-    if (charMatch) {
-      // Prefer the associated anime's poster over character thumbnail
-      const associatedAnime = charMatch.anime?.[0]?.anime;
-      let poster = charMatch.images?.jpg?.image_url ?? null;
-
-      // Fetch the anime poster if we have a mal_id
-      if (associatedAnime?.mal_id) {
-        try {
-          const animeRes = await fetch(
-            `https://api.jikan.moe/v4/anime/${associatedAnime.mal_id}`
-          );
-          if (animeRes.ok) {
-            const animeData = await animeRes.json();
-            poster =
-              animeData.data?.images?.jpg?.large_image_url ??
-              animeData.data?.images?.jpg?.image_url ??
-              poster;
-          }
-        } catch {
-          // keep character thumbnail as fallback
-        }
-      }
-
-      return {
-        poster,
-        backdrop: null,
-        title: charMatch.name ?? entity,
-        year: "",
-        rating: "—",
-        genres: [],
-        overview: (charMatch.about ?? "").replace(/\n+/g, " ").slice(0, 300),
-        extraLabel: associatedAnime?.title ? `From: ${associatedAnime.title}` : undefined,
-      };
-    }
-  }
-
-  // Step 2: Manga search if lens is manga
-  if (mediaType === "manga") {
-    const mangaRes = await fetch(
-      `https://api.jikan.moe/v4/manga?q=${encodeURIComponent(entity)}&limit=5`
-    );
-    if (mangaRes.ok) {
-      const mangaData = await mangaRes.json();
-      const scored = (mangaData?.data ?? [])
-        .map((entry: any) => {
-          const titleEn = String(entry.title_english ?? "");
-          const titleJa = String(entry.title ?? "");
-          const search = entity.toLowerCase().trim();
-          let score = 0;
-          if (titleEn.toLowerCase() === search || titleJa.toLowerCase() === search) score += 10;
-          else if (titleEn.toLowerCase().startsWith(search) || titleJa.toLowerCase().startsWith(search)) score += 6;
-          else if (titleMatches(titleEn, entity) || titleMatches(titleJa, entity)) score += 3;
-          if (entry.score) score += 1;
-          return { entry, score };
-        })
-        .filter(({ score }: any) => score > 0)
-        .sort((a: any, b: any) => b.score - a.score);
-
-      const item = scored[0]?.entry;
-      if (item) {
-        return {
-          poster: item.images?.jpg?.large_image_url ?? item.images?.jpg?.image_url ?? null,
-          backdrop: null,
-          title: item.title_english ?? item.title ?? entity,
-          year: String(item.published?.prop?.from?.year ?? ""),
-          rating: item.score ? String(item.score.toFixed(1)) : "—",
-          genres: (item.genres ?? []).map((g: any) => g.name).slice(0, 3),
-          overview: item.synopsis?.replace(/\[Written by MAL Rewrite\]/g, "").trim() ?? "",
-          extraLabel: item.authors?.[0]?.name ? `Author: ${item.authors[0].name}` : undefined,
-        };
-      }
-    }
-  }
-
-  // Step 3: Anime search with scoring
-  const res = await fetch(
-    `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(entity)}&limit=5`
-  );
-  if (!res.ok) return null;
-  const data = await res.json();
-
-  const scored = (data?.data ?? [])
-    .map((entry: any) => {
-      const titleEn = String(entry.title_english ?? "");
-      const titleJa = String(entry.title ?? "");
-      const search = entity.toLowerCase().trim();
-      let score = 0;
-      if (titleEn.toLowerCase() === search || titleJa.toLowerCase() === search) score += 10;
-      else if (titleEn.toLowerCase().startsWith(search) || titleJa.toLowerCase().startsWith(search)) score += 6;
-      else if (titleMatches(titleEn, entity) || titleMatches(titleJa, entity)) score += 3;
-      if (entry.score) score += 1;
-      return { entry, score };
-    })
-    .filter(({ score }: any) => score > 0)
-    .sort((a: any, b: any) => b.score - a.score);
-
-  const item = scored[0]?.entry;
-  if (!item) return null;
-
-  const studio = item.studios?.[0]?.name ? `Studio: ${item.studios[0].name}` : undefined;
-  const episodes = item.episodes ? `Episodes: ${item.episodes}` : undefined;
-
-  return {
-    poster: item.images?.jpg?.large_image_url ?? item.images?.jpg?.image_url ?? null,
-    backdrop: null,
-    title: item.title_english ?? item.title ?? entity,
-    year: String(item.aired?.prop?.from?.year ?? ""),
-    rating: item.score ? String(item.score.toFixed(1)) : "—",
-    genres: (item.genres ?? []).map((g: any) => g.name).slice(0, 3),
-    overview: item.synopsis?.replace(/\[Written by MAL Rewrite\]/g, "").trim() ?? "",
-    extraLabel: studio ?? episodes,
-  };
-}
-
-async function fetchRAWG(entity: string): Promise<VisualData | null> {
-  if (!RAWG_API_KEY) return null;
-
-  const res = await fetch(
-    `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}&search=${encodeURIComponent(entity)}&page_size=1`
-  );
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  const item = data?.results?.[0];
-  if (!item) return null;
-
-  return {
-    poster: item.background_image ?? null,
-    backdrop: item.background_image ?? null,
-    title: item.name ?? entity,
-    year: (item.released ?? "").slice(0, 4),
-    rating: item.rating ? String((item.rating as number).toFixed(1)) : NO_RATING,
-    genres: (item.genres ?? []).map((genre: any) => genre.name).slice(0, 3),
-    overview: "",
-    extraLabel: item.platforms?.[0]?.platform?.name
-      ? `Platform: ${item.platforms[0].platform.name}`
-      : undefined,
-  };
-}
-
-async function fetchServerGameVisual(entity: string): Promise<VisualData | null> {
-  const response = await fetch("/api/visual-lookup", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      entity,
-      mediaLens: "games",
-    }),
-  });
-
-  if (!response.ok) return null;
-
-  const payload = await response.json();
-  const gameVisuals = payload?.gameVisuals;
-  if (!gameVisuals) return null;
-
-  return {
-    poster: gameVisuals.image ?? null,
-    backdrop: gameVisuals.image ?? null,
-    title: gameVisuals.title ?? entity,
-    year: gameVisuals.year ? String(gameVisuals.year) : "",
-    rating: gameVisuals.rating ? String(gameVisuals.rating) : NO_RATING,
-    genres: Array.isArray(gameVisuals.genres) ? gameVisuals.genres : [],
-    overview: "",
-    extraLabel: gameVisuals.studio ? `Studio: ${gameVisuals.studio}` : undefined,
-  };
-}
-
-async function fetchComic(entity: string): Promise<VisualData | null> {
-  const res = await fetch("/api/visual-lookup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ entity, mediaLens: "comics" })
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data ?? null;
-}
-
-export default function VisualPanel({ context }: VisualPanelProps) {
-  const [visual, setVisual] = useState<VisualData | null>(null);
+export default function VisualPanel({ contextPacket, activeTraceId, activeVisualOwner, onVisualLocked }: VisualPanelProps) {
+  const [visual, setVisual] = useState<ValidatedVisualAsset | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const mediaType =
-    context.mediaType && context.mediaType !== "unknown"
-      ? context.mediaType
-      : inferMediaTypeFromEntityType(context.entityType);
+  const [searchPhase, setSearchPhase] = useState<SearchPhase>("idle");
+  const [errorState, setErrorState] = useState<string | null>(null);
+  const [confidence, setConfidence] = useState<RetrievalConfidence | null>(null);
 
   useEffect(() => {
-    if (
-      !context?.entity ||
-      (context.entityType === "unknown" && (!context.mediaType || context.mediaType === "unknown"))
-    ) {
-      return;
-    }
+    if (!contextPacket || !contextPacket.canonicalEntity) return;
 
     let cancelled = false;
     setLoading(true);
+    setErrorState(null);
+    setVisual(null);
+    setConfidence(null);
+    setSearchPhase("searching");
 
-    const run = async () => {
-      let result: VisualData | null = null;
-
-      if (mediaType === "movies") {
-        result = await fetchTMDB(context.entity, "movie");
-        if (!result && context.entityType === "character") {
-          result = await fetchTMDB(context.entity, "tv");
+    const fetchVisuals = async () => {
+      // Fast-path bypass: Reuse active visual owner if provided and matches intent
+      if (
+         activeVisualOwner &&
+         activeVisualOwner.providerId === contextPacket.providerId
+      ) {
+        console.log("[VISUAL_OWNER_REUSED]", {
+          oldProviderId: activeVisualOwner.providerId,
+          newProviderId: contextPacket.providerId,
+          oldTitle: activeVisualOwner.canonicalTitle,
+          newTitle: contextPacket.canonicalEntity
+        });
+        if (activeVisualOwner.asset) {
+          setVisual(activeVisualOwner.asset);
+          setConfidence("high"); // Locked visuals are always high confidence
+          setSearchPhase("done");
+          setLoading(false);
+          return;
         }
-      } else if (mediaType === "tv") {
-        result = await fetchTMDB(context.entity, "tv");
-        if (!result && context.entityType === "character") {
-          result = await fetchTMDB(context.entity, "movie");
-        }
-      } else if (mediaType === "anime") {
-        result = await fetchJikan(context.entity, mediaType);
-        if (!result) result = await fetchTMDB(context.entity, "tv");
-      } else if (mediaType === "games") {
-        if (context.gameVisuals) {
-          result = {
-            poster: context.gameVisuals.image,
-            backdrop: context.gameVisuals.image,
-            title: context.gameVisuals.title,
-            year: context.gameVisuals.year ? String(context.gameVisuals.year) : "",
-            rating: context.gameVisuals.rating ? String(context.gameVisuals.rating) : NO_RATING,
-            genres: context.gameVisuals.genres ?? [],
-            overview: "",
-            extraLabel: context.gameVisuals.studio ? `Studio: ${context.gameVisuals.studio}` : undefined,
-          };
-        } else {
-          result = await fetchServerGameVisual(context.entity);
-          if (!result) result = await fetchRAWG(context.entity);
-        }
-      } else if (mediaType === "comics") {
-        result = await fetchComic(context.entity);
-      } else if (context.entityType === "character") {
-        const lens = context.mediaLens ?? "movies";
-
-        if (lens === "movies") {
-          result = await fetchTMDB(context.entity, "movie");
-          if (!result) result = await fetchTMDB(context.entity, "tv");
-        } else if (lens === "tv") {
-          result = await fetchTMDB(context.entity, "tv");
-          if (!result) result = await fetchTMDB(context.entity, "movie");
-        } else if (lens === "anime") {
-          result = await fetchJikan(context.entity, mediaType);
-          if (!result) result = await fetchTMDB(context.entity, "tv");
-        } else if (lens === "comics") {
-          result = await fetchComic(context.entity);
-        } else if (lens === "games") {
-          result = await fetchServerGameVisual(context.entity);
-          if (!result) result = await fetchRAWG(context.entity);
-        }
-
-        if (!result) result = await fetchTMDB(context.entity, "movie");
-        if (!result) result = await fetchTMDB(context.entity, "tv");
-        if (!result) result = await fetchJikan(context.entity, mediaType);
-      } else if (context.entityType === "movie") {
-        result = await fetchTMDB(context.entity, "movie");
-      } else if (context.entityType === "tv") {
-        result = await fetchTMDB(context.entity, "tv");
-      } else if (context.entityType === "anime") {
-        result = await fetchJikan(context.entity, mediaType);
-        if (!result) result = await fetchTMDB(context.entity, "tv");
-      } else if (context.entityType === "game") {
-        result = await fetchServerGameVisual(context.entity);
-        if (!result) result = await fetchRAWG(context.entity);
-      } else if (context.entityType === "comic") {
-        result = await fetchComic(context.entity);
+      } else if (activeVisualOwner) {
+        console.log("[VISUAL_OWNER_PROVIDER_MISMATCH]", {
+          oldProviderId: activeVisualOwner.providerId,
+          newProviderId: contextPacket.providerId,
+          oldTitle: activeVisualOwner.canonicalTitle,
+          newTitle: contextPacket.canonicalEntity
+        });
+        console.log("[VISUAL_OWNER_INVALIDATED]", {
+          oldProviderId: activeVisualOwner.providerId,
+          newProviderId: contextPacket.providerId,
+          oldTitle: activeVisualOwner.canonicalTitle,
+          newTitle: contextPacket.canonicalEntity
+        });
       }
 
-      if (!cancelled) {
-        setVisual((previous) => result ?? previous);
-        setLoading(false);
+      try {
+        if (activeTraceId) {
+          recordRetrieval(activeTraceId, {
+            started: true,
+            mode: contextPacket.providerId ? "DETERMINISTIC" : "EXPLORATORY"
+          });
+        }
+
+        const response = await fetch("/api/visual-lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contextPacket }),
+        });
+
+        // Always try to parse body even on error responses
+        let outcome: RetrievalOutcome;
+        try {
+          outcome = await response.json();
+        } catch {
+          const errMsg = response.ok
+            ? "Visual retrieval failed safely."
+            : `Provider temporarily unavailable (Status: ${response.status})`;
+          
+          if (activeTraceId) {
+            recordRetrieval(activeTraceId, {
+              success: false,
+              failureReason: errMsg
+            });
+          }
+          throw new Error(errMsg);
+        }
+
+        if (cancelled) return;
+
+        // Animate phase progression based on mode
+        if (outcome.mode === "RELAXED") setSearchPhase("relaxing");
+        else if (outcome.mode === "FRANCHISE") setSearchPhase("franchise");
+        else if (outcome.mode === "ENTITY") setSearchPhase("entity");
+        else if (outcome.mode === "POPULARITY") setSearchPhase("best-available");
+
+        if (outcome.state === "SUCCESS" && outcome.asset) {
+          if (activeTraceId) {
+            recordRetrieval(activeTraceId, {
+              success: true,
+              provider: outcome.asset.source
+            });
+          }
+          setVisual(outcome.asset);
+          setConfidence(outcome.confidence ?? "high");
+          setSearchPhase("done");
+
+          if (onVisualLocked) {
+            onVisualLocked({
+              providerId: contextPacket.providerId || null,
+              canonicalTitle: contextPacket.canonicalEntity || null,
+              mediaType: contextPacket.mediaLens,
+              providerType: contextPacket.providerMetadata?.providerType || null,
+              asset: outcome.asset,
+              franchiseRoot: contextPacket.parentFranchise || null,
+              executionMode: contextPacket.executionMode,
+              lockedAt: Date.now()
+            });
+          }
+          return;
+        }
+
+
+
+        if (activeTraceId) {
+          recordRetrieval(activeTraceId, {
+            success: false,
+            failureReason: outcome.reason || outcome.error || "No compatible results"
+          });
+        }
+
+        setSearchPhase("done");
+        setVisual(null);
+
+        const userFriendlyError =
+          outcome.state === "NO_COMPATIBLE_RESULTS"
+            ? VISUAL_PHASE_LABELS.NOT_FOUND
+            : outcome.state === "PROCESSING_ERROR"
+            ? VISUAL_PHASE_LABELS.UNAVAILABLE
+            : outcome.error || outcome.reason || VISUAL_PHASE_LABELS.NO_IMAGE;
+
+        setErrorState(userFriendlyError);
+      } catch (err: any) {
+        if (cancelled) return;
+
+        if (activeTraceId) {
+          recordRetrieval(activeTraceId, {
+            success: false,
+            failureReason: err.message || "Visual lookup failed"
+          });
+        }
+
+        setSearchPhase("done");
+        setVisual(null);
+        setErrorState(err.message || "Visual retrieval failed safely.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [context.entity, context.entityType, context.gameVisuals, context.mediaLens, context.mediaType, context.entityKind]);
+    fetchVisuals();
+    return () => { cancelled = true; };
+  }, [contextPacket, activeTraceId]);
 
-  if (
-    !context ||
-    (!context.entity ||
-      (context.entityType === "unknown" && (!context.mediaType || context.mediaType === "unknown")))
-  ) {
-    return null;
-  }
+  if (!contextPacket || !contextPacket.canonicalEntity) return null;
 
+  const confidenceBadge = confidence ? CONFIDENCE_BADGE[confidence] : null;
 
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={context.entity}
+        key={contextPacket.canonicalEntity}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -12 }}
@@ -411,42 +234,36 @@ export default function VisualPanel({ context }: VisualPanelProps) {
           color: "var(--nerdvana-text)",
         }}
       >
+        {/* Loading skeleton */}
         {loading && (
           <div className="p-5 space-y-3 animate-pulse">
             <div className="w-full bg-current opacity-10" style={{ height: "240px" }} />
             <div className="h-3 w-3/4 bg-current opacity-10" />
             <div className="h-2 w-1/2 bg-current opacity-10" />
-            <div className="h-2 w-2/3 bg-current opacity-10" />
+            {/* Adaptive search status */}
+            {searchPhase !== "idle" && searchPhase !== "done" && (
+              <div
+                className="h-2 text-[0.5rem] uppercase tracking-[0.18em] opacity-30 mt-2"
+                style={{ fontFamily: '"Courier New", monospace' }}
+              >
+                {PHASE_LABELS[searchPhase]}
+              </div>
+            )}
           </div>
         )}
 
+        {/* Visual success state */}
         {!loading && visual && (
           <>
             <div className="relative w-full overflow-hidden" style={{ aspectRatio: "2/3", maxHeight: "300px" }}>
-              {visual.poster ? (
+              {visual.url ? (
                 <img
-                  src={visual.poster}
+                  src={visual.url}
                   alt={visual.title}
                   className="w-full h-full object-cover object-top"
                 />
-              ) : visual.backdrop ? (
-                <img
-                  src={visual.backdrop}
-                  alt={visual.title}
-                  className="w-full h-full object-cover object-center"
-                />
               ) : (
-                <div
-                  className="w-full h-full flex items-center justify-center"
-                  style={{
-                    opacity: 0.08,
-                    fontFamily: '"Special Elite", monospace',
-                    fontSize: "0.65rem",
-                    letterSpacing: "0.2em",
-                  }}
-                >
-                  NO IMAGE
-                </div>
+                <div className="w-full h-full flex items-center justify-center" />
               )}
 
               <div
@@ -456,9 +273,25 @@ export default function VisualPanel({ context }: VisualPanelProps) {
                 }}
               />
 
+              {/* Confidence badge for degraded results */}
+              {confidenceBadge && (
+                <div className="absolute top-3 left-3">
+                  <span
+                    className="px-2 py-[3px] text-[0.5rem] border"
+                    style={{
+                      fontFamily: '"Courier New", monospace',
+                      borderColor: "var(--nerdvana-border)",
+                      backgroundColor: "var(--nerdvana-surface)",
+                      opacity: 0.7,
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {confidenceBadge}
+                  </span>
+                </div>
+              )}
 
-
-              {visual.rating !== NO_RATING && mediaType !== "comics" && (
+              {visual.raw && (visual.raw as any).rating && contextPacket.mediaLens !== "comics" && (
                 <div className="absolute top-3 right-3">
                   <span
                     className="px-2 py-[3px] text-[0.58rem] border"
@@ -469,7 +302,7 @@ export default function VisualPanel({ context }: VisualPanelProps) {
                       opacity: 0.9,
                     }}
                   >
-                    * {visual.rating}
+                    ★ {(visual.raw as any).rating?.toFixed?.(1) ?? (visual.raw as any).rating}
                   </span>
                 </div>
               )}
@@ -483,15 +316,16 @@ export default function VisualPanel({ context }: VisualPanelProps) {
                 {visual.title}
               </h3>
 
-              <div
-                className="flex flex-wrap gap-x-3 text-[0.6rem] uppercase tracking-[0.1em]"
-                style={{ fontFamily: '"Courier New", monospace', opacity: 0.55 }}
-              >
-                {visual.year && <span>{visual.year}</span>}
-                {visual.extraLabel && <span>{visual.extraLabel}</span>}
-              </div>
+              {visual.year && (
+                <div
+                  className="flex flex-wrap gap-x-3 text-[0.6rem] uppercase tracking-[0.1em]"
+                  style={{ fontFamily: '"Courier New", monospace', opacity: 0.55 }}
+                >
+                  <span>{visual.year}</span>
+                </div>
+              )}
 
-              {visual.genres.length > 0 && (
+              {visual.genres && visual.genres.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-0.5">
                   {visual.genres.map((genre) => (
                     <span
@@ -528,12 +362,13 @@ export default function VisualPanel({ context }: VisualPanelProps) {
           </>
         )}
 
+        {/* Empty / error state */}
         {!loading && !visual && (
           <div
             className="p-5 text-[0.6rem] uppercase tracking-[0.14em]"
             style={{ fontFamily: '"Courier New", monospace', opacity: 0.3 }}
           >
-            No visual data found
+            {errorState || VISUAL_PHASE_LABELS.NO_IMAGE}
           </div>
         )}
       </motion.div>

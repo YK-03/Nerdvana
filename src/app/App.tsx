@@ -22,6 +22,8 @@ import {
   type Universe,
   universeToMediaLens,
 } from "./mediaLens";
+import { useAutocompleteStore } from "./store/resolverSession";
+import AutocompleteOverlay from "./components/AutocompleteOverlay";
 
 const UNIVERSE_TAGLINES = [
   "The Story Ended. The Questions Didn't.",
@@ -34,38 +36,66 @@ const UNIVERSE_OPTIONS: Universe[] = ["Movies", "TV", "Anime", "Games", "Comics"
 
 const UNIVERSE_PLACEHOLDERS: Record<Universe, string[]> = {
   Movies: [
-    "Explain the ending of Inception...",
-    "What did Nolan really imply there?",
-    "Was that scene symbolic or literal?"
+    "The Matrix",
+    "Interstellar",
+    "Fight Club"
   ],
+
   TV: [
-    "Why did THAT happen in Game of Thrones?",
-    "Did the finale contradict earlier seasons?",
-    "What foreshadowing did I miss?"
+    "Breaking Bad",
+    "Dark",
+    "Stranger Things"
   ],
+
   Anime: [
-    "Was that anime ending rushed or planned?",
-    "Canon arc or filler arc implications?",
-    "What does that final shot really mean?"
+    "Attack on Titan",
+    "Death Note",
+    "Cowboy Bebop"
   ],
+
   Games: [
-    "Hidden lore behind this game ending?",
-    "Was this questline choice the canon path?",
-    "What did the post-credits scene imply?"
+    "Red Dead Redemption 2",
+    "Elden Ring",
+    "Silent Hill 2"
   ],
+
   Comics: [
-    "Is this comic event canon now?",
-    "Main timeline or alternate earth?",
-    "Which run explains this best?"
+    "Secret Wars",
+    "Kang the Conqueror",
+    "Batman: The Killing Joke"
   ]
 };
 
 const TRENDING_MYSTERIES: Record<Universe, string[]> = {
-  Movies: ["Inception ending", "Interstellar bookshelf", "Dune prophecy"],
-  TV: ["GOT Azor Ahai", "Dark timeline knot", "Severance finale clues"],
-  Anime: ["Attack Titan paths", "JJK cursed binding", "One Piece will"],
-  Games: ["Elden Ring age choice", "Silent Hill loop", "RDR2 honor lore"],
-  Comics: ["Secret Wars reset", "Flashpoint paradox", "Kang variants"]
+  Movies: [
+    "Inception",
+    "Blade Runner 2049",
+    "Dune"
+  ],
+
+  TV: [
+    "Severance",
+    "Dark",
+    "Mr. Robot"
+  ],
+
+  Anime: [
+    "One Piece",
+    "Jujutsu Kaisen",
+    "Monster"
+  ],
+
+  Games: [
+    "Bloodborne",
+    "Cyberpunk 2077",
+    "Metal Gear Solid"
+  ],
+
+  Comics: [
+    "Secret Wars",
+    "Flashpoint",
+    "House of M"
+  ]
 };
 
 function readQuestionFromUrl() {
@@ -104,14 +134,116 @@ function LandingPage({
   onNavigateHome: () => void;
   onNavigatePage: (page: string) => void;
 }) {
+  const {
+    suggestions,
+    activeIndex,
+    loading,
+    setAutocompleteState,
+    setActiveIndex,
+    clearAutocompleteState
+  } = useAutocompleteStore();
+
+  const debounceTimerRef = useRef<any>(null);
+  const currentQueryRef = useRef("");
+  const activeAbortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const mediaLens = universeToMediaLens(selectedUniverse);
+    const query = entry.trim();
+    currentQueryRef.current = query;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    if (activeAbortControllerRef.current) {
+      activeAbortControllerRef.current.abort();
+      activeAbortControllerRef.current = null;
+    }
+
+    if (query.length < 2) {
+      clearAutocompleteState();
+      return;
+    }
+
+    // Set loading state in store
+    setAutocompleteState(suggestions, null, true);
+
+    debounceTimerRef.current = setTimeout(async () => {
+      if (currentQueryRef.current !== query) return;
+
+      const abortController = new AbortController();
+      activeAbortControllerRef.current = abortController;
+
+      try {
+        const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(query)}&lens=${mediaLens}`, {
+          signal: abortController.signal
+        });
+        if (!res.ok) throw new Error("Fetch failed");
+        const data = await res.json();
+        if (currentQueryRef.current === query) {
+          setAutocompleteState(data, null, false);
+        }
+      } catch (err: any) {
+        if (err.name !== "AbortError" && currentQueryRef.current === query) {
+          setAutocompleteState([], null, false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (activeAbortControllerRef.current) {
+        activeAbortControllerRef.current.abort();
+      }
+    };
+  }, [entry, selectedUniverse, clearAutocompleteState, setAutocompleteState]);
+
+  useEffect(() => {
+    return () => {
+      clearAutocompleteState();
+    };
+  }, [clearAutocompleteState]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && entry.trim()) {
-      onSubmit(entry);
+    if (suggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const nextIndex = activeIndex >= suggestions.length - 1 ? 0 : activeIndex + 1;
+        setActiveIndex(nextIndex);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const prevIndex = activeIndex <= 0 ? suggestions.length - 1 : activeIndex - 1;
+        setActiveIndex(prevIndex);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        clearAutocompleteState();
+      } else if (e.key === "Enter") {
+        if (activeIndex >= 0 && activeIndex < suggestions.length) {
+          e.preventDefault();
+          const selected = suggestions[activeIndex];
+          clearAutocompleteState();
+          onSubmit(selected.displayTitle);
+        } else if (entry.trim()) {
+          onSubmit(entry);
+        }
+      }
+    } else {
+      if (e.key === "Enter" && entry.trim()) {
+        onSubmit(entry);
+      }
     }
   };
 
+  const handleSelectSuggestion = (suggestion: any) => {
+    clearAutocompleteState();
+    onSubmit(suggestion.displayTitle);
+  };
+
   return (
-    <div className="min-h-screen w-full relative overflow-x-hidden overflow-y-hidden flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--nerdvana-bg)" }}>
+    <div className="min-h-screen w-full relative overflow-x-hidden flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--nerdvana-bg)" }}>
       <Header
         onNavigate={(page) => {
           onNavigatePage(page);
@@ -208,7 +340,7 @@ function LandingPage({
                 onChange={(e) => onSetEntry(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onFocus={() => onSetFocused(true)}
-                onBlur={() => onSetFocused(false)}
+                onBlur={() => setTimeout(() => onSetFocused(false), 200)}
                 placeholder={UNIVERSE_PLACEHOLDERS[selectedUniverse][placeholderIndex]}
                 className={`w-full text-[1rem] sm:text-[1.0625rem] md:text-[1.2rem] px-4 sm:px-5 md:px-6 py-3.5 sm:py-4 md:py-5 focus:outline-none tracking-wide transition-all duration-300 nerdvana-input ${isFocused ? "cursor-help" : ""
                   }`}
@@ -222,6 +354,14 @@ function LandingPage({
                 spellCheck={false}
                 autoCorrect="off"
                 autoComplete="off"
+              />
+              <AutocompleteOverlay
+                suggestions={suggestions}
+                activeIndex={activeIndex}
+                onSelect={handleSelectSuggestion}
+                onClose={() => clearAutocompleteState()}
+                onActiveIndexChange={(idx) => setActiveIndex(idx)}
+                isVisible={isFocused && entry.trim().length >= 2}
               />
             </div>
 
@@ -533,6 +673,7 @@ export default function App() {
         <AskPage
           question={question}
           onNavigatePage={navigateByHeaderPage}
+          onQuestionChange={setQuestion}
         />
       );
     }

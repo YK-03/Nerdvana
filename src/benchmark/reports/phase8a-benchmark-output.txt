@@ -1,0 +1,1999 @@
+﻿
+=====================================
+NERDVANA RESOLVER BENCHMARK v1
+=====================================
+
+[amb-001] [32mPASS[0m [35m[MOD][0m | Query: "Joker" (comics) -> "Joker"
+    Qualified ID: DC::Joker (Depth: 0)
+    Universe: DC Universe
+[amb-002] [32mPASS[0m [35m[MOD][0m | Query: "Joker" (movies) -> "Joker"
+    Qualified ID: DC::Joker (Depth: 0)
+    Universe: DC Universe
+[amb-003] [32mPASS[0m [35m[MOD][0m | Query: "Flash" (tv) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[amb-004] [32mPASS[0m [33m[HEU][0m | Query: "Avatar" (movies) -> "Avatar"
+[amb-005] [32mPASS[0m [33m[HEU][0m | Query: "Avatar" (anime) -> "Avatar: The Last Airbender"
+[ali-001] [31mFAIL[0m [35m[MOD][0m | Query: "CJ" (games) -> "CJ"
+    Qualified ID: Gaming::GTA::CJ (Depth: 0)
+    Universe: 3D Universe
+    Expected: "Carl Johnson" | Franchise: "Grand Theft Auto: San Andreas"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ali-002] [32mPASS[0m [36m[REG][0m | Query: "Gojo" (anime) -> "Satoru Gojo"
+    Universe: JJK Universe
+[ali-003] [31mFAIL[0m [35m[MOD][0m | Query: "AOT" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+    Expected: "Attack on Titan" | Franchise: "Attack on Titan"
+    Failures: unknown_entity, low_confidence_resolution
+[fra-001] [31mFAIL[0m [35m[MOD][0m | Query: "Halo" (games) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Halo" | Franchise: "Halo"
+    Failures: canonical_mismatch, low_confidence_resolution
+[fra-002] [31mFAIL[0m [35m[MOD][0m | Query: "Halo" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Halo TV Series" | Franchise: "Halo"
+    Failures: canonical_mismatch, low_confidence_resolution
+[fra-003] [32mPASS[0m [33m[HEU][0m | Query: "The Witcher" (games) -> "The Witcher 3: Wild Hunt"
+[fra-004] [32mPASS[0m [35m[MOD][0m | Query: "Master Chief" (games) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+[mix-001] [32mPASS[0m [33m[HEU][0m | Query: "Arcane" (tv) -> "Arcane"
+[mix-002] [31mFAIL[0m [35m[MOD][0m | Query: "Persona" (games) -> "Persona5"
+    Qualified ID: Gaming::Persona5 (Depth: 0)
+    Continuity: P5 Timeline (prime)
+    Universe: Shin Megami Tensei
+    Expected: "Persona 5" | Franchise: "Persona"
+    Failures: canonical_mismatch, low_confidence_resolution
+[mix-003] [32mPASS[0m [33m[HEU][0m | Query: "Sonic" (movies) -> "Sonic the Hedgehog"
+[edg-001] [32mPASS[0m [36m[REG][0m | Query: "Spawn" (comics) -> "Spawn"
+    Universe: Image Universe
+[edg-002] [32mPASS[0m [35m[MOD][0m | Query: "Kira" (anime) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+[edg-003] [32mPASS[0m [36m[REG][0m | Query: "Johan" (anime) -> "Johan Liebert"
+    Universe: Monster Universe
+[ver-001] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "The Batman" | Franchise: "Batman"
+    Failures: canonical_mismatch, low_confidence_resolution
+[ver-002] [31mFAIL[0m [35m[MOD][0m | Query: "Spider-Man" (games) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+    Expected: "Marvel's Spider-Man" | Franchise: "Spider-Man"
+    Failures: canonical_mismatch, low_confidence_resolution
+[col-001] [32mPASS[0m [35m[MOD][0m | Query: "Loki" (tv) -> "Loki"
+    Qualified ID: Marvel::Loki (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: MCU
+[col-002] [32mPASS[0m [36m[REG][0m | Query: "Doom" (games) -> "DOOM"
+    Universe: Doom Universe
+[col-003] [32mPASS[0m [35m[MOD][0m | Query: "Eren" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[col-004] [32mPASS[0m [33m[HEU][0m | Query: "Bleach" (anime) -> "Bleach"
+[col-005] [32mPASS[0m [33m[HEU][0m | Query: "One Piece" (anime) -> "One Piece"
+[spi-001] [31mFAIL[0m [35m[MOD][0m | Query: "Spider-Man" (movies) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: canonical_mismatch, low_confidence_resolution
+[spi-002] [31mFAIL[0m [35m[MOD][0m | Query: "Tobey Maguire Spider-Man" (movies) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+    Expected: "Spider-Man (Raimi)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[spi-003] [32mPASS[0m [35m[MOD][0m | Query: "Spidey" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[bat-001] [31mFAIL[0m [35m[MOD][0m | Query: "The Batman" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "The Batman (2022)" | Franchise: "Batman"
+    Failures: unknown_entity, low_confidence_resolution
+[bat-002] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Batman" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[hal-001] [32mPASS[0m [35m[MOD][0m | Query: "Chief" (games) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+[hal-002] [31mFAIL[0m [35m[MOD][0m | Query: "Silver Timeline Chief" (tv) -> "Silver"
+    Qualified ID: Gaming::Halo::Silver (Depth: 0)
+    Continuity: Silver Timeline (variant)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[cro-001] [32mPASS[0m [33m[HEU][0m | Query: "Venom" (movies) -> "Venom"
+[cro-002] [31mFAIL[0m [35m[MOD][0m | Query: "Cap" (movies) -> "Captain-America"
+    Qualified ID: Marvel::Captain-America (Depth: 0)
+    Universe: Marvel Universe
+    Expected: "Captain America" | Franchise: "Marvel Cinematic Universe"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[lon-001] [32mPASS[0m [33m[HEU][0m | Query: "Raiden" (games) -> "Raiden"
+[lon-002] [32mPASS[0m [33m[HEU][0m | Query: "Raiden" (anime) -> "Raiden"
+[lon-003] [32mPASS[0m [35m[MOD][0m | Query: "Dante" (games) -> "Dante"
+    Qualified ID: Anime::DevilMayCry::Dante (Depth: 0)
+    Universe: DMC Universe
+[lon-004] [32mPASS[0m [33m[HEU][0m | Query: "Arthur" (games) -> "Arthur"
+[lon-005] [32mPASS[0m [33m[HEU][0m | Query: "Link" (games) -> "Link"
+[lon-006] [32mPASS[0m [33m[HEU][0m | Query: "Cloud" (games) -> "Cloud"
+[lon-007] [32mPASS[0m [35m[MOD][0m | Query: "Sephiroth" (games) -> "Sephiroth"
+    Qualified ID: Anime::Sephiroth (Depth: 0)
+    Universe: FFVII Universe
+[lon-008] [32mPASS[0m [33m[HEU][0m | Query: "Tifa" (games) -> "Tifa"
+[lon-009] [32mPASS[0m [33m[HEU][0m | Query: "Snake" (games) -> "Snake"
+[lon-010] [31mFAIL[0m [33m[HEU][0m | Query: "Otacon" (games) -> "Otacon"
+    Expected: "Hal Emmerich" | Franchise: "Metal Gear"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[gen-001] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-002] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-003] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-004] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-005] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-006] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-007] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-008] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-009] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-010] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-011] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-012] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-013] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-014] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-015] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-016] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-017] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-018] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-019] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-020] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-021] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-022] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-023] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-024] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-025] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-026] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-027] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-028] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-029] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-030] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-031] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-032] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-033] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-034] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-035] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-036] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-037] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-038] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-039] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-040] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-041] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-042] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-043] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-044] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-045] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-046] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-047] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-048] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-049] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-050] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-051] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-052] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-053] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-054] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-055] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-056] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-057] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-058] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[gen-059] [32mPASS[0m [33m[HEU][0m | Query: "Naruto" (anime) -> "Naruto"
+[gen-060] [32mPASS[0m [33m[HEU][0m | Query: "Goku" (games) -> "Goku"
+[nam-001] [32mPASS[0m [35m[MOD][0m | Query: "Marvel::Spider-Man::MCU" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[nam-002] [32mPASS[0m [35m[MOD][0m | Query: "DC::Batman::Arkham" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[inh-001] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Batman" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[dir-001] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-002] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-003] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-004] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-005] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-006] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-007] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-008] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-009] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-010] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-011] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-012] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-013] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-014] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-015] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-016] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-017] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-018] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-019] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-020] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-021] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-022] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-023] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-024] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-025] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-026] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-027] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-028] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-029] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-030] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-031] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-032] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-033] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-034] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-035] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-036] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-037] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-038] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-039] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-040] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-041] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-042] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-043] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-044] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-045] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-046] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-047] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-048] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-049] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-050] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-051] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-052] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-053] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-054] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-055] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-056] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-057] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-058] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-059] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-060] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-061] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-062] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-063] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-064] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-065] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-066] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-067] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-068] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-069] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-070] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-071] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-072] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-073] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-074] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-075] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-076] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-077] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-078] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-079] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-080] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-081] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-082] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-083] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-084] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-085] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-086] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-087] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-088] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-089] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-090] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-091] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-092] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-093] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-094] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-095] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-096] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-097] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-098] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-099] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-100] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-101] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-102] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-103] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-104] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-105] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-106] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-107] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-108] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-109] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-110] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-111] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-112] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-113] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-114] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-115] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-116] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-117] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-118] [32mPASS[0m [35m[MOD][0m | Query: "Spider-Man" (comics) -> "Marvel Comics"
+    Qualified ID: Marvel::Spider-Man::Marvel Comics (Depth: 0)
+    Universe: Marvel Universe
+[dir-119] [31mFAIL[0m [35m[MOD][0m | Query: "Batman" (games) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+    Expected: "Batman (Arkham)" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[dir-120] [31mFAIL[0m [35m[MOD][0m | Query: "Master Chief" (tv) -> "Master Chief (Games)"
+    Qualified ID: Gaming::Halo::Master Chief (Games) (Depth: 0)
+    Universe: Halo Universe
+    Expected: "Master Chief (TV Series)" | Franchise: "Halo"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[fuz-001] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-002] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-003] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-004] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-005] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-006] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-007] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-008] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-009] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-010] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-011] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-012] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-013] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-014] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-015] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-016] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-017] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-018] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-019] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-020] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-021] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-022] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-023] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-024] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-025] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-026] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-027] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-028] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-029] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-030] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-031] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-032] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-033] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-034] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-035] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-036] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-037] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-038] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-039] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-040] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-041] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-042] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-043] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-044] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-045] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-046] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-047] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-048] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-049] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-050] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-051] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-052] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-053] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-054] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-055] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-056] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-057] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-058] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-059] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-060] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-061] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-062] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-063] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-064] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-065] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-066] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-067] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-068] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-069] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-070] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-071] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-072] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-073] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-074] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-075] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-076] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-077] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-078] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-079] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-080] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-081] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-082] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-083] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-084] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-085] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-086] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-087] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[fuz-088] [31mFAIL[0m [33m[HEU][0m | Query: "Caped Crusader" (movies) -> "Caped Crusader"
+    Expected: "Batman (Reeves)" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-089] [31mFAIL[0m [33m[HEU][0m | Query: "Green Goliath" (comics) -> "Green Goliath"
+    Expected: "Hulk" | Franchise: "Hulk"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[fuz-090] [32mPASS[0m [35m[MOD][0m | Query: "Wall Maria protagonist" (anime) -> "Eren"
+    Qualified ID: Anime::AttackOnTitan::Eren (Depth: 0)
+    Universe: AoT Universe
+[col-001] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-002] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-003] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-004] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-005] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-006] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-007] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-008] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-009] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-010] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-011] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-012] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-013] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-014] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-015] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-016] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-017] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-018] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-019] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-020] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-021] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-022] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-023] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-024] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-025] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-026] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-027] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-028] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-029] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-030] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-031] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-032] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-033] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-034] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-035] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-036] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-037] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-038] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-039] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-040] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-041] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-042] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-043] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-044] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-045] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-046] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-047] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-048] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-049] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-050] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-051] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-052] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-053] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-054] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-055] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-056] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-057] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-058] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[col-059] [32mPASS[0m [35m[MOD][0m | Query: "Arkham Bat" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+[col-060] [31mFAIL[0m [33m[HEU][0m | Query: "Web Slinger" (movies) -> "Web Slinger"
+    Expected: "Spider-Man (MCU)" | Franchise: "Spider-Man"
+    Failures: unknown_entity, low_confidence_resolution
+[adv-001] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-002] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-003] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-004] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-005] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-006] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-007] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-008] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-009] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-010] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-011] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-012] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-013] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-014] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-015] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-016] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-017] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-018] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-019] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-020] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-021] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-022] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-023] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-024] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-025] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-026] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-027] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-028] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-029] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[adv-030] [32mPASS[0m [35m[MOD][0m | Query: "MCU Bat" (movies) -> "MCU"
+    Qualified ID: Marvel::Spider-Man::MCU (Depth: 0)
+    Continuity: MCU Timeline (adaptation)
+    Universe: Marvel Universe
+[ent-001] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-002] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-003] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-004] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-005] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-006] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-007] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-008] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-009] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-010] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-011] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-012] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-013] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-014] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-015] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-016] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-017] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-018] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-019] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-020] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-021] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-022] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-023] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-024] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-025] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-026] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-027] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-028] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-029] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-030] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-031] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-032] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-033] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-034] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-035] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-036] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-037] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-038] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-039] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-040] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-041] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-042] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-043] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-044] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-045] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-046] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-047] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-048] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-049] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-050] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-051] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-052] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-053] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-054] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-055] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-056] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-057] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-058] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-059] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-060] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-061] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-062] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-063] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-064] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-065] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-066] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-067] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-068] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-069] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-070] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-071] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-072] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-073] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-074] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-075] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-076] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-077] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-078] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-079] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-080] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-081] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-082] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-083] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-084] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-085] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-086] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-087] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-088] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-089] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-090] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-091] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-092] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-093] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-094] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-095] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-096] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-097] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-098] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-099] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-100] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-101] [32mPASS[0m [35m[MOD][0m | Query: "rich vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-102] [31mFAIL[0m [33m[HEU][0m | Query: "alien superhero reporter" (anime) -> "alien superhero reporter"
+    Expected: "Superman" | Franchise: "Superman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-103] [32mPASS[0m [35m[MOD][0m | Query: "multiverse speedster" (movies) -> "Flash"
+    Qualified ID: DC::Flash (Depth: 0)
+    Universe: DC Universe
+[ent-104] [32mPASS[0m [35m[MOD][0m | Query: "anime genius strategist" (anime) -> "Lelouch"
+    Qualified ID: Anime::CodeGeass::Lelouch (Depth: 0)
+    Universe: Code Geass Universe
+[ent-105] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[ent-106] [31mFAIL[0m [33m[HEU][0m | Query: "rich vigilante" (anime) -> "rich vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-107] [32mPASS[0m [35m[MOD][0m | Query: "alien superhero reporter" (movies) -> "Superman"
+    Qualified ID: DC::Superman (Depth: 0)
+    Universe: DC Universe
+[ent-108] [31mFAIL[0m [33m[HEU][0m | Query: "multiverse speedster" (anime) -> "multiverse speedster"
+    Expected: "The Flash" | Franchise: "The Flash"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[ent-109] [31mFAIL[0m [35m[MOD][0m | Query: "anime genius strategist" (movies) -> "Light"
+    Qualified ID: Anime::DeathNote::Light (Depth: 0)
+    Universe: Death Note Universe
+    Expected: "Lelouch vi Britannia" | Franchise: "Code Geass"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[ent-110] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-001] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (movies) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-002] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (anime) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-003] [31mFAIL[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (movies) -> "Sephiroth"
+    Qualified ID: Anime::Sephiroth (Depth: 0)
+    Universe: FFVII Universe
+    Expected: "Dante" | Franchise: "Devil May Cry"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-004] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (anime) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-005] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[vis-006] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (anime) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-007] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (movies) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-008] [32mPASS[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (anime) -> "Dante"
+    Qualified ID: Anime::DevilMayCry::Dante (Depth: 0)
+    Universe: DMC Universe
+[vis-009] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (movies) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-010] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-011] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (movies) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-012] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (anime) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-013] [31mFAIL[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (movies) -> "Sephiroth"
+    Qualified ID: Anime::Sephiroth (Depth: 0)
+    Universe: FFVII Universe
+    Expected: "Dante" | Franchise: "Devil May Cry"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-014] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (anime) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-015] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[vis-016] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (anime) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-017] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (movies) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-018] [32mPASS[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (anime) -> "Dante"
+    Qualified ID: Anime::DevilMayCry::Dante (Depth: 0)
+    Universe: DMC Universe
+[vis-019] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (movies) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-020] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-021] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (movies) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-022] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (anime) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-023] [31mFAIL[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (movies) -> "Sephiroth"
+    Qualified ID: Anime::Sephiroth (Depth: 0)
+    Universe: FFVII Universe
+    Expected: "Dante" | Franchise: "Devil May Cry"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-024] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (anime) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-025] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[vis-026] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (anime) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-027] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (movies) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-028] [32mPASS[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (anime) -> "Dante"
+    Qualified ID: Anime::DevilMayCry::Dante (Depth: 0)
+    Universe: DMC Universe
+[vis-029] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (movies) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-030] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-031] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (movies) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-032] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (anime) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-033] [31mFAIL[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (movies) -> "Sephiroth"
+    Qualified ID: Anime::Sephiroth (Depth: 0)
+    Universe: FFVII Universe
+    Expected: "Dante" | Franchise: "Devil May Cry"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-034] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (anime) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-035] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[vis-036] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (anime) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-037] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (movies) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-038] [32mPASS[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (anime) -> "Dante"
+    Qualified ID: Anime::DevilMayCry::Dante (Depth: 0)
+    Universe: DMC Universe
+[vis-039] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (movies) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-040] [31mFAIL[0m [33m[HEU][0m | Query: "masked antihero with trauma" (anime) -> "masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-041] [31mFAIL[0m [33m[HEU][0m | Query: "dark armored vigilante" (movies) -> "dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-042] [31mFAIL[0m [33m[HEU][0m | Query: "masked billionaire hero" (anime) -> "masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-043] [31mFAIL[0m [35m[MOD][0m | Query: "silver-haired anime swordsman" (movies) -> "Sephiroth"
+    Qualified ID: Anime::Sephiroth (Depth: 0)
+    Universe: FFVII Universe
+    Expected: "Dante" | Franchise: "Devil May Cry"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-044] [31mFAIL[0m [33m[HEU][0m | Query: "glowing-eyed antihero" (anime) -> "glowing-eyed antihero"
+    Expected: "Spider-Man" | Franchise: "Spider-Man"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[vis-045] [32mPASS[0m [35m[MOD][0m | Query: "masked antihero with trauma" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[arb-001] [32mPASS[0m [35m[MOD][0m | Query: "gotham dark armored vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[arb-002] [32mPASS[0m [35m[MOD][0m | Query: "dc prime dark armored vigilante" (comics) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[arb-003] [32mPASS[0m [35m[MOD][0m | Query: "marvel dark armored vigilante" (movies) -> "Moon-Knight"
+    Qualified ID: Marvel::Moon-Knight (Depth: 0)
+    Universe: Marvel Universe
+[arb-004] [31mFAIL[0m [35m[MOD][0m | Query: "mcu masked billionaire hero" (movies) -> "Iron-Man"
+    Qualified ID: Marvel::Iron-Man (Depth: 0)
+    Universe: Marvel Universe
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-005] [32mPASS[0m [35m[MOD][0m | Query: "anime silver-haired swordsman" (anime) -> "Dante"
+    Qualified ID: Anime::DevilMayCry::Dante (Depth: 0)
+    Universe: DMC Universe
+[arb-006] [32mPASS[0m [35m[MOD][0m | Query: "batman beyond red suit hero" (tv) -> "Beyond"
+    Qualified ID: DC::Batman::Beyond (Depth: 0)
+    Continuity: Beyond Timeline (variant)
+    Universe: DC Universe
+[arb-007] [31mFAIL[0m [35m[MOD][0m | Query: "arkham rich vigilante" (games) -> "Arkham"
+    Qualified ID: DC::Batman::Arkham (Depth: 0)
+    Continuity: Arkham Games (variant)
+    Universe: DC Universe
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+[arb-008] [31mFAIL[0m [33m[HEU][0m | Query: "marvel masked antihero with trauma" (movies) -> "marvel masked antihero with trauma"
+    Expected: "Punisher" | Franchise: "Punisher"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-009] [31mFAIL[0m [33m[HEU][0m | Query: "dc masked antihero with trauma" (movies) -> "dc masked antihero with trauma"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-010] [31mFAIL[0m [33m[HEU][0m | Query: "gotham masked billionaire hero" (movies) -> "gotham masked billionaire hero"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-011] [32mPASS[0m [35m[MOD][0m | Query: "gotham dark armored vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[arb-012] [31mFAIL[0m [33m[HEU][0m | Query: "mcu masked billionaire hero" (anime) -> "mcu masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-013] [31mFAIL[0m [33m[HEU][0m | Query: "anime silver-haired swordsman" (tv) -> "anime silver-haired swordsman"
+    Expected: "Dante" | Franchise: "Devil May Cry"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-014] [32mPASS[0m [35m[MOD][0m | Query: "dc prime dark armored vigilante" (movies) -> "Batman (DC Comics)"
+    Qualified ID: DC::Batman (DC Comics) (Depth: 0)
+    Universe: DC Universe
+[arb-015] [32mPASS[0m [35m[MOD][0m | Query: "batman beyond red suit hero" (anime) -> "Beyond"
+    Qualified ID: DC::Batman::Beyond (Depth: 0)
+    Continuity: Beyond Timeline (variant)
+    Universe: DC Universe
+[arb-016] [31mFAIL[0m [33m[HEU][0m | Query: "gotham dark armored vigilante" (tv) -> "gotham dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-017] [31mFAIL[0m [35m[MOD][0m | Query: "mcu masked billionaire hero" (movies) -> "Iron-Man"
+    Qualified ID: Marvel::Iron-Man (Depth: 0)
+    Universe: Marvel Universe
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-018] [32mPASS[0m [35m[MOD][0m | Query: "anime silver-haired swordsman" (anime) -> "Dante"
+    Qualified ID: Anime::DevilMayCry::Dante (Depth: 0)
+    Universe: DMC Universe
+[arb-019] [31mFAIL[0m [33m[HEU][0m | Query: "dc prime dark armored vigilante" (tv) -> "dc prime dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-020] [32mPASS[0m [35m[MOD][0m | Query: "batman beyond red suit hero" (movies) -> "Beyond"
+    Qualified ID: DC::Batman::Beyond (Depth: 0)
+    Continuity: Beyond Timeline (variant)
+    Universe: DC Universe
+[arb-021] [31mFAIL[0m [33m[HEU][0m | Query: "gotham dark armored vigilante" (anime) -> "gotham dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-022] [31mFAIL[0m [33m[HEU][0m | Query: "mcu masked billionaire hero" (tv) -> "mcu masked billionaire hero"
+    Expected: "Iron Man" | Franchise: "Avengers"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-023] [31mFAIL[0m [35m[MOD][0m | Query: "anime silver-haired swordsman" (movies) -> "Sephiroth"
+    Qualified ID: Anime::Sephiroth (Depth: 0)
+    Universe: FFVII Universe
+    Expected: "Dante" | Franchise: "Devil May Cry"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-024] [31mFAIL[0m [33m[HEU][0m | Query: "dc prime dark armored vigilante" (anime) -> "dc prime dark armored vigilante"
+    Expected: "Batman" | Franchise: "Batman"
+    Failures: unknown_entity, entity_type_mismatch, low_confidence_resolution
+[arb-025] [32mPASS[0m [35m[MOD][0m | Query: "batman beyond red suit hero" (tv) -> "Beyond"
+    Qualified ID: DC::Batman::Beyond (Depth: 0)
+    Continuity: Beyond Timeline (variant)
+    Universe: DC Universe
+
+=====================================
+FINAL BENCHMARK REPORT
+=====================================
+Total Cases: 587
+Overall Pass Rate: 50.9%
+-------------------------------------
+Canonical Accuracy:  50.9%
+Franchise Accuracy:  54.9%
+Lens Accuracy:       100.0%
+Entity Type Accuracy: 9.0%
+-------------------------------------
+Average Confidence:  38.9%
+  - Authoritative:   61.3%
+  - Inferred (ML):   8.9%
+  - Embed Recall:    6.3%
+False Confidences:   0 (High confidence, wrong identity)
+-------------------------------------
+GROUNDING TELEMETRY:
+- Registry Hits:     4
+- Heuristic Fallback: 37
+- Generic Fallback:   214
+- Self-Referential:  50
+-------------------------------------
+TOPOLOGY METRICS:
+- Continuity Accuracy: 100.0%
+- Inheritance Usage:  56.6%
+- ML Expansion Hits:  66
+- ML Rejections:      0
+- Coverage Density:   56.6%
+- semanticGovernancePreservationScore: 68.9%
+  (Rejected 250 / 363 proposed neighbors)
+-------------------------------------
+ENTROPY & RESILIENCE (Phase 7.5):
+- Formalized EntropyResistance: 84.5%
+  (49 resilient / 58 pressure cases)
+- Avg Entropy Score:            0.001
+- Max Entropy Burst:            0.042
+-------------------------------------
+CROSS-MODAL GOVERNANCE (Phase 8A):
+- CrossModalGPS:               100.0%
+  (safe 240 / unsafe 0)
+- Continuity Breaches:         0
+- Visual Archetype Collisions: 81
+-------------------------------------
+RESOLUTION COURAGE (Phase 8A):
+- ResolutionCourage:           100.0%
+  (58 attempts / 58 difficult cases)
+- Accepted Under Uncertainty:  0
+-------------------------------------
+PHASE 8A SLICE (ent-* + vis-* + arb-*):
+- EntropyResistance: 84.5% (49/58)
+- Pass rate: 41.7% (75/180)
+  Top Visual Hotspots:
+  * "masked antihero with trauma" -> Marvel::Punisher (IMAGE Entropy Pressure: Candidate simila...)
+  * "masked antihero with trauma" -> Marvel::Punisher (IMAGE Entropy Pressure: Candidate simila...)
+  * "masked antihero with trauma" -> Marvel::Punisher (IMAGE Entropy Pressure: Candidate simila...)
+-------------------------------------
+GOVERNANCE FAILURE HOTSPOTS:
+- media_domain_violation   : 118
+- visual_archetype_collision: 58
+- semantic_false_neighbor  : 44
+- silhouette_ambiguity     : 23
+- continuity_conflict      : 5
+- namespace_bleed          : 2
+-------------------------------------
+TOP DANGEROUS NEIGHBORS (REJECTED):
+- [shared_archetype] DC::Green-Arrow: Candidate not found in deterministic topology registry...
+- [shared_archetype] DC::Superman: Media Domain Mismatch: "DC::Superman" is invalid for lens "a...
+- [continuity_overlap] Marvel::Spider-Man::MCU: TEXT Entropy Pressure: Candidate similarity (0.78) below ada...
+- [archetypal_overlap] Marvel::Punisher: IMAGE Entropy Pressure: Candidate similarity (0.89) below ad...
+- [shared_archetype] DC::Batman (DC Comics): Media Domain Mismatch: "DC::Batman (DC Comics)" is invalid f...
+-------------------------------------
+TOP FAILURE CATEGORIES:
+- low_confidence_resolution: 587
+- entity_type_mismatch: 534
+- unknown_entity: 187
+- canonical_mismatch: 101
+- franchise_drift: 70
+
+WORST PERFORMING QUERIES:
+- CJ (games): canonical_mismatch, entity_type_mismatch, low_confidence_resolution
+- AOT (anime): unknown_entity, low_confidence_resolution
+- Halo (games): canonical_mismatch, low_confidence_resolution
+- Halo (tv): canonical_mismatch, low_confidence_resolution
+- Persona (games): canonical_mismatch, low_confidence_resolution
+
+[SYSTEM VERDICT]
+Reliability: FRAGILE - RERANKING REQUIRED
+=====================================
+

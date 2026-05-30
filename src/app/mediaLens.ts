@@ -27,7 +27,7 @@ export function normalizeMediaLens(value: unknown): MediaLens {
   const normalized = value.trim().toLowerCase();
   if (normalized === "movies" || normalized === "movie") return "movies";
   if (normalized === "tv" || normalized === "television") return "tv";
-  if (normalized === "anime") return "anime";
+  if (normalized === "anime" || normalized === "manga") return "anime";
   if (normalized === "games" || normalized === "game") return "games";
   if (normalized === "comics" || normalized === "comic") return "comics";
   return DEFAULT_MEDIA_LENS;

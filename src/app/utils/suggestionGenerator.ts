@@ -1,41 +1,60 @@
-export function generateFollowUps(answerText: string, query: string): string[] {
+import { ThemeProfile } from "../../lib/experience/themeEngine";
+
+export function generateFollowUps(
+    answerText: string,
+    entity: string | null,
+    franchise: string | null,
+    mediaLens: string,
+    themeProfile: ThemeProfile | null
+): string[] {
     const text = answerText.toLowerCase();
     const suggestions: string[] = [];
 
-    // Canon / Consistency
-    if (text.includes("canon") || text.includes("official") || text.includes("manga") || text.includes("book")) {
-        suggestions.push("Are there any contradictions?");
-        suggestions.push("What do other sources say?");
+    // Entity-aware suggestions
+    if (entity) {
+        if (text.includes("canon") || text.includes("timeline")) {
+            suggestions.push(`How does ${entity} fit into the official timeline?`);
+        }
+        if (text.includes("ending") || text.includes("death")) {
+            suggestions.push(`What happens after ${entity}?`);
+        }
     }
 
-    // Theories / Fan Speculation
-    if (text.includes("theory") || text.includes("fan") || text.includes("speculation") || text.includes("reddit")) {
-        suggestions.push("Is this confirmed by the creator?");
-        suggestions.push("What is the most popular theory?");
+    // Franchise-aware suggestions
+    if (franchise && franchise !== entity) {
+        suggestions.push(`How does this connect to the ${franchise} universe?`);
     }
 
-    // Character Analysis
-    if (text.includes("character") || text.includes("who is") || text.includes("strongest") || text.includes("powers")) {
-        suggestions.push("Who is stronger than them?");
-        suggestions.push("What are their key weaknesses?");
-        suggestions.push("List their major appearances");
+    // Theme & Archetype-aware suggestions
+    if (themeProfile) {
+        if (themeProfile.themes.includes("time travel") || themeProfile.themes.includes("time dilation")) {
+            suggestions.push("How does the timeline actually work?");
+        }
+        if (themeProfile.archetypes.includes("unreliable narrator")) {
+            suggestions.push("Can we trust this perspective?");
+        }
+        if (themeProfile.themes.includes("multiverse")) {
+            suggestions.push("How do the alternate universes connect?");
+        }
+        if (themeProfile.archetypes.includes("unlikely hero") || themeProfile.archetypes.includes("reluctant hero")) {
+            suggestions.push("What motivates their decisions?");
+        }
     }
 
-    // Plot / Events
-    if (text.includes("ending") || text.includes("death") || text.includes("plot") || text.includes("story")) {
-        suggestions.push("Explain the timeline order");
-        suggestions.push("What happens after this?");
-        suggestions.push("Did I miss any easter eggs?");
-    }
-
-    // Fallbacks if few suggestions found
+    // Fallbacks if few suggestions found (Editorial, not robotic)
     if (suggestions.length < 2) {
-        suggestions.push("Give a deeper explanation");
-        suggestions.push("Summarize this quickly");
+        suggestions.push("Is there a deeper meaning here?");
+        if (mediaLens === "movies" || mediaLens === "tv") {
+            suggestions.push("Did the creators confirm this?");
+        } else if (mediaLens === "anime" || mediaLens === "comics") {
+            suggestions.push("Does the original source material differ?");
+        } else {
+            suggestions.push("Are there alternate interpretations?");
+        }
     }
 
     if (suggestions.length < 3) {
-        suggestions.push("Any spoilers I should know?");
+        suggestions.push("What are the most popular fan theories?");
     }
 
     // Return top 3-4 unique suggestions
