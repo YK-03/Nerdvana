@@ -50,7 +50,7 @@ export default function ChatBubble({
                 }}
             >
                 <div
-                    className="mb-2 text-[0.62rem] uppercase tracking-[0.12em]"
+                    className="mb-2 text-[0.65rem] lg:text-[0.62rem] uppercase tracking-[0.12em]"
                     style={{
                         fontFamily: '"Courier New", monospace',
                         opacity: 0.7
@@ -136,7 +136,7 @@ export default function ChatBubble({
                 {sources && sources.length > 0 && !isUser && (
                     <div className="mt-4 pt-3 border-t" style={{ borderColor: "var(--nerdvana-border)" }}>
                         <div className="flex items-center justify-between mb-2">
-                            <p className="text-[0.6rem] uppercase tracking-widest opacity-60" style={{ fontFamily: '"Courier New", monospace' }}>Sources</p>
+                            <p className="text-[0.65rem] lg:text-[0.6rem] uppercase tracking-widest opacity-60" style={{ fontFamily: '"Courier New", monospace' }}>Sources</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {sources.map((s, i) => (

@@ -1764,7 +1764,7 @@ export default function AskPage({
               ].map((sw, idx) => (
                 <label key={idx} className="nerdvana-clickable flex items-center gap-2 group select-none">
                   <span
-                    className="text-[0.58rem] sm:text-[0.6rem] uppercase tracking-[0.1em]"
+                    className="text-[0.65rem] lg:text-[0.58rem] uppercase tracking-[0.1em]"
                     style={{
                       fontFamily: '"Courier New", monospace',
                       color: sw.checked ? "var(--nerdvana-accent)" : "var(--nerdvana-text)",
@@ -1796,7 +1796,7 @@ export default function AskPage({
               ))}
             </div>
 
-            {!isLoading && fullQuestion && (
+            {!isLoading && fullQuestion && user && (
               <div className="mb-6 flex justify-start sm:justify-end">
                 <button
                   onClick={handleSaveLorebook}
@@ -1822,8 +1822,8 @@ export default function AskPage({
             )}
 
             {/* Main content + Visual Panel side by side */}
-            <div className="flex gap-8 items-start">
-              <div className="flex-1 min-w-0">
+            <div className="flex flex-col-reverse lg:flex-row gap-8 items-start">
+              <div className="flex-1 min-w-0 w-full">
                 {!isLoading && fullQuestion && answer.summary.trim() && (
                   <motion.div
                     key={responseData ? `${fullQuestion}-${responseData.answer.summary.length}` : `empty-${fullQuestion}`}
@@ -1842,14 +1842,14 @@ export default function AskPage({
                       <div className="mt-6 mb-6 p-5 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(135deg,rgba(25,25,35,0.85),rgba(15,15,22,0.95))] backdrop-blur-md shadow-2xl transition-all duration-300">
                         <div className="flex items-center justify-between mb-4 border-b border-[rgba(255,255,255,0.06)] pb-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-[var(--nerdvana-accent)] text-[0.6rem] animate-pulse">●</span>
+                            <span className="text-[var(--nerdvana-accent)] text-[0.65rem] lg:text-[0.6rem] animate-pulse">●</span>
                             <h3 className="text-[0.68rem] uppercase tracking-[0.2em] font-semibold text-gray-300 font-mono">
                               Continuity Timeline & Reading Order
                             </h3>
                           </div>
                           {contextPacket?.providerMetadata?.publisherLabel && (
                             <span
-                              className="text-[0.58rem] uppercase tracking-[0.1em] px-2 py-0.5 rounded font-mono font-semibold"
+                              className="text-[0.65rem] lg:text-[0.58rem] uppercase tracking-[0.1em] px-2 py-0.5 rounded font-mono font-semibold"
                               style={{
                                 backgroundColor: (() => {
                                   const pub = contextPacket.providerMetadata.publisherLabel.toLowerCase();
@@ -1889,14 +1889,14 @@ export default function AskPage({
                               >
                                 <div>
                                   <div className="flex items-center gap-1.5 mb-2">
-                                    <span className="text-[0.6rem] font-mono text-[var(--nerdvana-accent)] font-bold">
+                                    <span className="text-[0.65rem] lg:text-[0.6rem] font-mono text-[var(--nerdvana-accent)] font-bold">
                                       {String(idx + 1).padStart(2, "0")}
                                     </span>
-                                    <span className="text-[0.52rem] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[rgba(255,255,255,0.06)] text-gray-400 font-mono">
+                                    <span className="text-[0.65rem] lg:text-[0.52rem] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[rgba(255,255,255,0.06)] text-gray-400 font-mono">
                                       {item.type}
                                     </span>
                                     {item.year && (
-                                      <span className="text-[0.58rem] font-mono text-gray-400 ml-auto">
+                                      <span className="text-[0.65rem] lg:text-[0.58rem] font-mono text-gray-400 ml-auto">
                                         {item.year}
                                       </span>
                                     )}
@@ -1918,7 +1918,7 @@ export default function AskPage({
                         {/* Continuation Sequel Timelines */}
                         {continuationSuggestions && continuationSuggestions.length > 0 && (
                           <div className="mt-5 pt-4 border-t border-[rgba(255,255,255,0.05)]">
-                            <p className="text-[0.62rem] uppercase tracking-[0.15em] text-gray-400 font-mono mb-2.5">
+                            <p className="text-[0.65rem] lg:text-[0.62rem] uppercase tracking-[0.15em] text-gray-400 font-mono mb-2.5">
                               Next Arc & Sequel Timeline Continuation:
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1931,7 +1931,7 @@ export default function AskPage({
                                   <span className="text-[0.74rem] font-semibold text-gray-300">
                                     {item.title}
                                   </span>
-                                  <span className="text-[0.52rem] uppercase font-mono px-1.5 py-0.2 bg-[rgba(255,255,255,0.05)] text-gray-400 rounded">
+                                  <span className="text-[0.65rem] lg:text-[0.52rem] uppercase font-mono px-1.5 py-0.2 bg-[rgba(255,255,255,0.05)] text-gray-400 rounded">
                                     {item.type}
                                   </span>
                                 </div>
@@ -2075,7 +2075,7 @@ export default function AskPage({
 
               {/* Visual Panel — sticky sidebar */}
               {(contextPacket || explorationStatus === "completed") && (
-                <div className="hidden lg:block w-72 flex-shrink-0 sticky top-24">
+                <div className="w-full max-w-md mx-auto lg:mx-0 lg:w-72 flex-shrink-0 sticky top-24">
                   {contextPacket && detectQueryMode(fullQuestion) === "entity" && (
                       <VisualPanel
                         contextPacket={(contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && renderEntityPacket) ? renderEntityPacket.contextPacket : contextPacket}

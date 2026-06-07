@@ -42,6 +42,147 @@ function isPublisherAligned(candidatePublisher: string | undefined, expectedPubl
   return candPubNorm.includes(expPubNorm) || expPubNorm.includes(candPubNorm);
 }
 
+function rankAutocompleteCandidates(
+  rawCandidates: any[],
+  query: string,
+  lens: string
+): any[] {
+  const yearRegex = /\b(19\d\d|20\d\d)\b/;
+  const yearMatch = query.match(yearRegex);
+  const queryYear = yearMatch ? parseInt(yearMatch[1], 10) : null;
+  const cleanQuery = query.replace(yearRegex, "").replace(/\s+/g, " ").trim();
+  const normQuery = cleanQuery.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const queryCompletenessWeight = Math.min(1.0, normQuery.length / 8);
+
+  const queryLen = normQuery.length;
+  let MIN_RELEVANCE_THRESHOLD = 0.40;
+  if (queryLen <= 3) MIN_RELEVANCE_THRESHOLD = 0.20;
+  else if (queryLen <= 6) MIN_RELEVANCE_THRESHOLD = 0.30;
+  else MIN_RELEVANCE_THRESHOLD = 0.40;
+
+  const scoredCandidates = rawCandidates.map(c => {
+    let score = 0;
+    const normCandidate = c.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const exactMatch = normQuery === normCandidate;
+    
+    const editionKeywords = ["special edition", "remastered", "remaster", "definitive edition", "goty", "game of the year", "director's cut", "complete edition", "hd collection", "enhanced edition", "enhanced", "royal", "ultimate edition", "ultimate", "deluxe edition", "deluxe"];
+    const queryEditions = editionKeywords.filter(k => query.toLowerCase().includes(k));
+    const candidateEditions = editionKeywords.filter(k => c.name.toLowerCase().includes(k));
+    
+    const hasDivergentEdition = candidateEditions.length > 0 && queryEditions.length === 0;
+    
+    // Prefix Continuity Dominance
+    const prefixAligns = normCandidate.startsWith(normQuery);
+
+    if (exactMatch) {
+      score += 0.50;
+    } else if (prefixAligns) {
+      score += 0.45; // Massive prefix continuity boosting
+    } else {
+      const queryTokens = cleanQuery.toLowerCase().split(/\s+/).filter((t: string) => t.length > 0);
+      const candidateTokens = c.name.toLowerCase().split(/\s+/).filter((t: string) => t.length > 0);
+      const overlappingTokens = queryTokens.filter((t: string) => candidateTokens.includes(t));
+      const tokenOverlapRatio = queryTokens.length > 0 ? overlappingTokens.length / Math.max(queryTokens.length, candidateTokens.length) : 0;
+      score += tokenOverlapRatio * 0.20;
+    }
+
+    if (!hasDivergentEdition && !c.isEdition) {
+      score += 0.15;
+    } else if (hasDivergentEdition) {
+      score -= 0.10;
+    } else if (queryEditions.some(eq => candidateEditions.includes(eq))) {
+      score += 0.15;
+    }
+
+    if (queryYear && c.year) {
+      const parsedCandYear = typeof c.year === "string" ? parseInt(c.year) : c.year;
+      if (parsedCandYear === queryYear) score += 0.15;
+      else if (Math.abs(parsedCandYear - queryYear) <= 1) score -= 0.05;
+      else score -= 0.20;
+    }
+
+    score += ((c.popularity || 0) / 100) * 0.10; 
+    if (c.source === "igdb" || c.source === "tmdb" || c.source === "jikan" || c.source === "rawg") score += 0.10;
+    
+    score = score * queryCompletenessWeight;
+
+    if (c.source === "local") score = Math.min(score, 0.75);
+    if (exactMatch && queryYear && c.year && (typeof c.year === "string" ? parseInt(c.year) : c.year) === queryYear) {
+      score = Math.min(0.98, score + 0.20);
+    } else if (exactMatch) {
+      score = Math.max(0.90, Math.min(0.94, score + 0.10));
+    } else {
+       score = Math.min(score, 0.89);
+    }
+
+    // Candidate Tier Classification
+    let classification: "STRONG" | "VALID_PREFIX" | "WEAK" | "REJECTED" = "REJECTED";
+    if (score >= 0.70) {
+      classification = "STRONG";
+    } else if (prefixAligns && score >= MIN_RELEVANCE_THRESHOLD * 0.8) {
+      classification = "VALID_PREFIX"; // Prefix overrides tight suppression
+    } else if (score >= MIN_RELEVANCE_THRESHOLD) {
+      classification = "WEAK";
+    } else {
+      classification = "REJECTED";
+    }
+
+    return { 
+      ...c, 
+      score: Math.round(score * 100) / 100, 
+      franchiseRoot: typeof c.name === 'string' ? c.name.split(/[:\- ]/)[0].toLowerCase() : "",
+      classification
+    };
+  });
+
+  // Franchise Cohesion Grouping
+  const grouped = new Map<string, any[]>();
+  for (const c of scoredCandidates) {
+    if (!grouped.has(c.franchiseRoot)) grouped.set(c.franchiseRoot, []);
+    grouped.get(c.franchiseRoot)!.push(c);
+  }
+
+  const flatGrouped: any[] = [];
+  const sortedGroups = Array.from(grouped.entries()).sort((a, b) => {
+    const maxA = Math.max(...a[1].map(x => x.score));
+    const maxB = Math.max(...b[1].map(x => x.score));
+    return maxB - maxA;
+  });
+
+  for (const [_, groupItems] of sortedGroups) {
+    groupItems.sort((a, b) => b.score - a.score);
+    flatGrouped.push(...groupItems);
+  }
+
+  // 4. Suppression Gate (Quality Gating)
+  const finalSurvivors: any[] = [];
+  const rejections: any[] = [];
+
+  for (const c of flatGrouped) {
+    if (c.classification === "REJECTED") {
+       rejections.push({ title: c.name, score: c.score, classification: c.classification, reason: `Below dynamic threshold (${MIN_RELEVANCE_THRESHOLD})` });
+    } else {
+       finalSurvivors.push(c);
+    }
+  }
+
+  if (rejections.length > 0 && process.env.DEBUG_AUTOCOMPLETE === "true") {
+     console.log("[AUTOCOMPLETE REJECTION]", { query, threshold: MIN_RELEVANCE_THRESHOLD, rejections });
+  }
+
+  const topSurvivors = finalSurvivors.slice(0, 5);
+
+  if (process.env.DEBUG_AUTOCOMPLETE === "true") {
+    console.log("[AUTOCOMPLETE SURVIVORS]", { 
+      query, 
+      threshold: MIN_RELEVANCE_THRESHOLD, 
+      survivors: topSurvivors.map(s => ({ title: s.name, score: s.score, class: s.classification }))
+    });
+  }
+
+  return topSurvivors;
+}
+
 async function fetchAutocomplete(query: string, lens: string, keys: any): Promise<any[]> {
   try {
     if (lens === "movies" || lens === "tv") {
@@ -50,25 +191,31 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
       const res = await fetch(`https://api.themoviedb.org/3/search/${endpoint}?query=${encodeURIComponent(query)}&api_key=${keys.tmdb}`, { signal: AbortSignal.timeout(2500) });
       if (!res.ok) return [];
       const data = await res.json();
-      return (data.results || []).slice(0, 5).map((r: any) => ({
+      const rawCandidates = (data.results || []).map((r: any) => ({
         id: r.id,
         name: r.title ?? r.name ?? r.original_title ?? r.original_name,
         year: (r.release_date || r.first_air_date || "").slice(0, 4) || null,
-        genre: null, // TMDB requires extra lookup for genre IDs, so fallback to Movie/TV Series
-        source: "tmdb"
+        genre: null,
+        source: "tmdb",
+        popularity: r.vote_average ? r.vote_average * 10 : 0,
+        isEdition: false
       }));
+      return rankAutocompleteCandidates(rawCandidates, query, lens);
     }
     if (lens === "anime") {
-      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=5`, { signal: AbortSignal.timeout(2500) });
+      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=10`, { signal: AbortSignal.timeout(2500) });
       if (!res.ok) return [];
       const data = await res.json();
-      return (data.data || []).map((r: any) => ({
+      const rawCandidates = (data.data || []).map((r: any) => ({
         id: r.mal_id,
         name: r.title_english ?? r.title,
         year: r.aired?.prop?.from?.year,
         genre: r.genres?.[0]?.name ?? null,
-        source: "jikan"
+        source: "jikan",
+        popularity: r.score ? r.score * 10 : 0,
+        isEdition: false
       }));
+      return rankAutocompleteCandidates(rawCandidates, query, lens);
     }
     if (lens === "games") {
       const yearRegex = /\b(19\d\d|20\d\d)\b/;
@@ -172,133 +319,7 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
           }));
       }
 
-      // 3. Normalization & Ranking Engine (Survivorship Scoring)
-      const queryLen = normQuery.length;
-      let MIN_RELEVANCE_THRESHOLD = 0.40;
-      if (queryLen <= 3) MIN_RELEVANCE_THRESHOLD = 0.20;
-      else if (queryLen <= 6) MIN_RELEVANCE_THRESHOLD = 0.30;
-      else MIN_RELEVANCE_THRESHOLD = 0.40;
-
-      const scoredCandidates = rawCandidates.map(c => {
-        let score = 0;
-        const normCandidate = c.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const exactMatch = normQuery === normCandidate;
-        
-        const editionKeywords = ["special edition", "remastered", "remaster", "definitive edition", "goty", "game of the year", "director's cut", "complete edition", "hd collection", "enhanced edition", "enhanced", "royal", "ultimate edition", "ultimate", "deluxe edition", "deluxe"];
-        const queryEditions = editionKeywords.filter(k => query.toLowerCase().includes(k));
-        const candidateEditions = editionKeywords.filter(k => c.name.toLowerCase().includes(k));
-        
-        const hasDivergentEdition = candidateEditions.length > 0 && queryEditions.length === 0;
-        
-        // Prefix Continuity Dominance
-        const prefixAligns = normCandidate.startsWith(normQuery);
-
-        if (exactMatch) {
-          score += 0.50;
-        } else if (prefixAligns) {
-          score += 0.45; // Massive prefix continuity boosting
-        } else {
-          const queryTokens = cleanQuery.toLowerCase().split(/\s+/).filter((t: string) => t.length > 0);
-          const candidateTokens = c.name.toLowerCase().split(/\s+/).filter((t: string) => t.length > 0);
-          const overlappingTokens = queryTokens.filter((t: string) => candidateTokens.includes(t));
-          const tokenOverlapRatio = queryTokens.length > 0 ? overlappingTokens.length / Math.max(queryTokens.length, candidateTokens.length) : 0;
-          score += tokenOverlapRatio * 0.20;
-        }
-
-        if (!hasDivergentEdition && !c.isEdition) {
-          score += 0.15;
-        } else if (hasDivergentEdition) {
-          score -= 0.10;
-        } else if (queryEditions.some(eq => candidateEditions.includes(eq))) {
-          score += 0.15;
-        }
-
-        if (queryYear && c.year) {
-          if (c.year === queryYear) score += 0.15;
-          else if (Math.abs(c.year - queryYear) <= 1) score -= 0.05;
-          else score -= 0.20;
-        }
-
-        score += (c.popularity / 100) * 0.10; 
-        if (c.source === "igdb") score += 0.10;
-        
-        score = score * queryCompletenessWeight;
-
-        if (c.source === "local") score = Math.min(score, 0.75);
-        if (exactMatch && queryYear === c.year && queryYear !== null) {
-          score = Math.min(0.98, score + 0.20);
-        } else if (exactMatch) {
-          score = Math.max(0.90, Math.min(0.94, score + 0.10));
-        } else {
-           score = Math.min(score, 0.89);
-        }
-
-        // Candidate Tier Classification
-        let classification: "STRONG" | "VALID_PREFIX" | "WEAK" | "REJECTED" = "REJECTED";
-        if (score >= 0.70) {
-          classification = "STRONG";
-        } else if (prefixAligns && score >= MIN_RELEVANCE_THRESHOLD * 0.8) {
-          classification = "VALID_PREFIX"; // Prefix overrides tight suppression
-        } else if (score >= MIN_RELEVANCE_THRESHOLD) {
-          classification = "WEAK";
-        } else {
-          classification = "REJECTED";
-        }
-
-        return { 
-          ...c, 
-          score: Math.round(score * 100) / 100, 
-          franchiseRoot: typeof c.name === 'string' ? c.name.split(/[:\- ]/)[0].toLowerCase() : "",
-          classification
-        };
-      });
-
-      // Franchise Cohesion Grouping
-      const grouped = new Map<string, any[]>();
-      for (const c of scoredCandidates) {
-        if (!grouped.has(c.franchiseRoot)) grouped.set(c.franchiseRoot, []);
-        grouped.get(c.franchiseRoot)!.push(c);
-      }
-
-      const flatGrouped: any[] = [];
-      const sortedGroups = Array.from(grouped.entries()).sort((a, b) => {
-        const maxA = Math.max(...a[1].map(x => x.score));
-        const maxB = Math.max(...b[1].map(x => x.score));
-        return maxB - maxA;
-      });
-
-      for (const [_, groupItems] of sortedGroups) {
-        groupItems.sort((a, b) => b.score - a.score);
-        flatGrouped.push(...groupItems);
-      }
-
-      // 4. Suppression Gate (Quality Gating)
-      const finalSurvivors: any[] = [];
-      const rejections: any[] = [];
-
-      for (const c of flatGrouped) {
-        if (c.classification === "REJECTED") {
-           rejections.push({ title: c.name, score: c.score, classification: c.classification, reason: `Below dynamic threshold (${MIN_RELEVANCE_THRESHOLD})` });
-        } else {
-           finalSurvivors.push(c);
-        }
-      }
-
-      if (rejections.length > 0 && process.env.DEBUG_AUTOCOMPLETE === "true") {
-         console.log("[AUTOCOMPLETE REJECTION]", { query, threshold: MIN_RELEVANCE_THRESHOLD, rejections });
-      }
-
-      const topSurvivors = finalSurvivors.slice(0, 5);
-
-      if (process.env.DEBUG_AUTOCOMPLETE === "true") {
-        console.log("[AUTOCOMPLETE SURVIVORS]", { 
-          query, 
-          threshold: MIN_RELEVANCE_THRESHOLD, 
-          survivors: topSurvivors.map(s => ({ title: s.name, score: s.score, class: s.classification }))
-        });
-      }
-
-      return topSurvivors;
+      return rankAutocompleteCandidates(rawCandidates, query, lens);
     }
     if (lens === "comics") {
       const classifiedType = classifyComicsQueryType(query);

@@ -243,7 +243,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
             {/* Adaptive search status */}
             {searchPhase !== "idle" && searchPhase !== "done" && (
               <div
-                className="h-2 text-[0.5rem] uppercase tracking-[0.18em] opacity-30 mt-2"
+                className="h-2 text-[0.65rem] lg:text-[0.5rem] uppercase tracking-[0.18em] opacity-30 mt-2"
                 style={{ fontFamily: '"Courier New", monospace' }}
               >
                 {PHASE_LABELS[searchPhase]}
@@ -277,7 +277,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
               {confidenceBadge && (
                 <div className="absolute top-3 left-3">
                   <span
-                    className="px-2 py-[3px] text-[0.5rem] border"
+                    className="px-2 py-[3px] text-[0.65rem] lg:text-[0.5rem] border"
                     style={{
                       fontFamily: '"Courier New", monospace',
                       borderColor: "var(--nerdvana-border)",
@@ -294,7 +294,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
               {visual.raw && (visual.raw as any).rating && contextPacket.mediaLens !== "comics" && (
                 <div className="absolute top-3 right-3">
                   <span
-                    className="px-2 py-[3px] text-[0.58rem] border"
+                    className="px-2 py-[3px] text-[0.65rem] lg:text-[0.58rem] border"
                     style={{
                       fontFamily: '"Courier New", monospace',
                       borderColor: "var(--nerdvana-border)",
@@ -318,7 +318,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
 
               {visual.year && (
                 <div
-                  className="flex flex-wrap gap-x-3 text-[0.6rem] uppercase tracking-[0.1em]"
+                  className="flex flex-wrap gap-x-3 text-[0.65rem] lg:text-[0.6rem] uppercase tracking-[0.1em]"
                   style={{ fontFamily: '"Courier New", monospace', opacity: 0.55 }}
                 >
                   <span>{visual.year}</span>
@@ -330,7 +330,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
                   {visual.genres.map((genre) => (
                     <span
                       key={genre}
-                      className="text-[0.52rem] uppercase tracking-[0.08em] px-2 py-0.5 border"
+                      className="text-[0.65rem] lg:text-[0.52rem] uppercase tracking-[0.08em] px-2 py-0.5 border"
                       style={{
                         borderColor: "var(--nerdvana-border)",
                         fontFamily: '"Courier New", monospace',
@@ -365,7 +365,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
         {/* Empty / error state */}
         {!loading && !visual && (
           <div
-            className="p-5 text-[0.6rem] uppercase tracking-[0.14em]"
+            className="p-5 text-[0.65rem] lg:text-[0.6rem] uppercase tracking-[0.14em]"
             style={{ fontFamily: '"Courier New", monospace', opacity: 0.3 }}
           >
             {errorState || VISUAL_PHASE_LABELS.NO_IMAGE}

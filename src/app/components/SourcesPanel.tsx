@@ -32,14 +32,14 @@ export default function SourcesPanel({ sources }: SourcesPanelProps) {
       >
         Sources
       </h3>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 space-y-2 break-words min-w-0">
         {sources.map((source) => (
           <a
             key={`${source.link}-${source.title}`}
             href={source.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="block text-[0.86rem] hover:underline"
+            className="block text-[0.86rem] hover:underline break-words min-w-0"
             style={{
               fontFamily: '"Times New Roman", serif',
               color: "var(--nerdvana-text)"
