@@ -1,28 +1,21 @@
 import Header from "../components/Header";
-import { discoverItems } from "../mockDiscoverItems";
+import { EXPLORE_CATALOG, type CatalogEntity } from "../data/exploreCatalog";
 import { motion } from "motion/react";
 
 interface ExplorePageProps {
-  onOpenItem: (slug: string) => void;
+  onAskQuestion: (value: string, context?: { item?: string; mediaLens?: any }) => void;
   onNavigatePage: (page: string) => void;
 }
 
 interface ExploreCardProps {
-  item: {
-    slug: string;
-    title: string;
-    description: string;
-    type?: string;
-    tag?: string;
-    image?: string;
-  };
-  onOpenItem: (slug: string) => void;
+  item: CatalogEntity;
+  onAskQuestion: (value: string, context?: { item?: string; mediaLens?: any }) => void;
 }
 
-function ExploreCard({ item, onOpenItem }: ExploreCardProps) {
+function ExploreCard({ item, onAskQuestion }: ExploreCardProps) {
   return (
     <motion.button
-      key={item.slug}
+      key={item.id}
       className="group nerdvana-clickable relative overflow-hidden text-left border-[2px] p-4 md:p-5 transition-all duration-300 h-full"
       style={{
         borderColor: "var(--nerdvana-border)",
@@ -33,11 +26,11 @@ function ExploreCard({ item, onOpenItem }: ExploreCardProps) {
         boxShadow: "0 10px 18px rgba(26, 25, 24, 0.14)"
       }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      onClick={() => onOpenItem(item.slug)}
+      onClick={() => onAskQuestion(item.title, { item: item.providerId, mediaLens: item.mediaLens })}
     >
-      {item.image && (
+      {item.thumbnailUrl && (
         <img
-          src={item.image}
+          src={item.thumbnailUrl}
           alt=""
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 h-full w-full object-cover grayscale contrast-125 opacity-[0.18] transition-opacity duration-300 group-hover:opacity-[0.32]"
@@ -64,7 +57,7 @@ function ExploreCard({ item, onOpenItem }: ExploreCardProps) {
             opacity: 0.88
           }}
         >
-          {item.tag ?? item.type ?? "Story"}
+          {item.theme ?? item.mediaLens}
         </span>
         <p
           className="mt-3 text-[0.95rem] sm:text-[0.98rem] leading-7"
@@ -81,7 +74,7 @@ function ExploreCard({ item, onOpenItem }: ExploreCardProps) {
 }
 
 export default function ExplorePage({
-  onOpenItem,
+  onAskQuestion,
   onNavigatePage
 }: ExplorePageProps) {
   return (
@@ -119,19 +112,31 @@ export default function ExplorePage({
               Stories, universes, and ideas Nerdvana understands.
             </p>
 
-            <section
-              className="mt-6 sm:mt-8 border-[2px] p-4 sm:p-5 md:p-7 transition-colors duration-300"
-              style={{
-                borderColor: "var(--nerdvana-border)",
-                backgroundColor: "var(--nerdvana-message-bg)"
-              }}
+            {EXPLORE_CATALOG.map((section) => (
+              <section
+                key={section.title}
+                className="mt-6 sm:mt-8 border-[2px] p-4 sm:p-5 md:p-7 transition-colors duration-300"
+                style={{
+                  borderColor: "var(--nerdvana-border)",
+                  backgroundColor: "var(--nerdvana-message-bg)"
+                }}
               >
+                <h2
+                  className="mb-4 text-sm md:text-base uppercase tracking-[0.16em]"
+                  style={{
+                    fontFamily: '"Courier New", monospace',
+                    color: "var(--nerdvana-accent)"
+                  }}
+                >
+                  {section.title}
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
-                  {discoverItems.map((item) => (
-                    <ExploreCard key={item.slug} item={item} onOpenItem={onOpenItem} />
-                ))}
-              </div>
-            </section>
+                  {section.entities.map((item) => (
+                    <ExploreCard key={item.id} item={item} onAskQuestion={onAskQuestion} />
+                  ))}
+                </div>
+              </section>
+            ))}
           </article>
         </main>
       </div>

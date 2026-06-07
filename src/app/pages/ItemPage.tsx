@@ -1,5 +1,5 @@
 import Header from "../components/Header";
-import { getDiscoverItemBySlug } from "../mockDiscoverItems";
+import { EXPLORE_CATALOG } from "../data/exploreCatalog";
 
 interface ItemPageProps {
   slug: string;
@@ -12,7 +12,7 @@ export default function ItemPage({
   onAskQuestion,
   onNavigatePage
 }: ItemPageProps) {
-  const item = getDiscoverItemBySlug(slug);
+  const item = EXPLORE_CATALOG.flatMap(section => section.entities).find(e => e.id === slug);
 
   return (
     <div
@@ -86,7 +86,7 @@ export default function ItemPage({
                     color: "var(--nerdvana-accent)"
                   }}
                 >
-                  {item.type}
+                  {item.mediaLens}
                 </p>
 
                 <section
@@ -103,98 +103,10 @@ export default function ItemPage({
                       color: "var(--nerdvana-text)"
                     }}
                   >
-                    {item.overview}
+                    {item.description}
                   </p>
 
-                  <section
-                    className="mt-10 pt-6 border-t"
-                    style={{
-                      borderColor: "var(--nerdvana-border)"
-                    }}
-                  >
-                    <h2
-                      className="text-xs md:text-sm uppercase tracking-[0.18em]"
-                      style={{
-                        fontFamily: '"Courier New", monospace',
-                        color: "var(--nerdvana-accent)"
-                      }}
-                    >
-                      Why This Matters
-                    </h2>
-                    <p
-                      className="mt-3 text-[1rem] leading-7"
-                      style={{
-                        fontFamily: '"Times New Roman", serif',
-                        color: "var(--nerdvana-text)"
-                      }}
-                    >
-                      {item.whyThisMatters}
-                    </p>
-                  </section>
-
-                  <section
-                    className="mt-10 pt-6 border-t"
-                    style={{
-                      borderColor: "var(--nerdvana-border)"
-                    }}
-                  >
-                    <h2
-                      className="text-xs md:text-sm uppercase tracking-[0.18em]"
-                      style={{
-                        fontFamily: '"Courier New", monospace',
-                        color: "var(--nerdvana-accent)"
-                      }}
-                    >
-                      Key Themes
-                    </h2>
-                    <ul
-                      className="mt-3 list-disc pl-5 space-y-2"
-                      style={{
-                        fontFamily: '"Times New Roman", serif',
-                        color: "var(--nerdvana-text)"
-                      }}
-                    >
-                      {item.themes.map((theme) => (
-                        <li key={theme} className="leading-7">
-                          {theme}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-
-                  <section
-                    className="mt-10 pt-6 border-t"
-                    style={{
-                      borderColor: "var(--nerdvana-border)"
-                    }}
-                  >
-                    <h2
-                      className="text-xs md:text-sm uppercase tracking-[0.18em]"
-                      style={{
-                        fontFamily: '"Courier New", monospace',
-                        color: "var(--nerdvana-accent)"
-                      }}
-                    >
-                      Common Questions
-                    </h2>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {item.questions.map((question) => (
-                        <button
-                          key={question}
-                          className="nerdvana-clickable text-[0.68rem] sm:text-[0.72rem] md:text-[0.78rem] uppercase tracking-[0.09em] px-3 py-2 border-[1.8px] transition-all duration-300 hover:-translate-y-0.5 text-left"
-                          style={{
-                            fontFamily: '"Courier New", monospace',
-                            borderColor: "var(--nerdvana-border)",
-                            backgroundColor: "var(--nerdvana-bg)",
-                            color: "var(--nerdvana-text)"
-                          }}
-                          onClick={() => onAskQuestion(question)}
-                        >
-                          {question}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
+                  {/* Deprecated sections for missing fields in new catalog */}
                 </section>
               </>
             )}

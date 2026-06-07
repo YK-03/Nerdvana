@@ -574,11 +574,11 @@ export default function App() {
     setPlaceholderIndex(0);
   }, [selectedUniverse]);
 
-  const navigateToAsk = (value: string) => {
+  const navigateToAsk = (value: string, context?: { item?: string; mediaLens?: MediaLens }) => {
     const trimmed = value.trim();
     if (!trimmed) return;
-    const mediaLens = universeToMediaLens(selectedUniverse);
-    window.history.pushState({ mediaLens }, "", buildAskUrl(trimmed, { lens: mediaLens }));
+    const mediaLens = context?.mediaLens ?? universeToMediaLens(selectedUniverse);
+    window.history.pushState({ mediaLens, item: context?.item }, "", buildAskUrl(trimmed, { lens: mediaLens, item: context?.item }));
     setPathname("/ask");
     setQuestion(trimmed);
     setEntry("");
@@ -681,7 +681,7 @@ export default function App() {
     if (pathname === "/explore") {
       return (
         <ExplorePage
-          onOpenItem={navigateToItem}
+          onAskQuestion={navigateToAsk}
           onNavigatePage={navigateByHeaderPage}
         />
       );
