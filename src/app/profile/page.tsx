@@ -2,14 +2,25 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { collection, doc, getCountFromServer, getDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc, query, orderBy, onSnapshot } from "firebase/firestore";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
 import { auth, db } from "@/firebase";
+import { buildAskUrl, normalizeMediaLens, type MediaLens } from "../mediaLens";
+import { DEFAULT_AVATAR } from "../utils/getOrCreateAvatarSeed";
 
 interface ProfilePageProps {
   onNavigatePage: (page: string) => void;
+}
+
+interface LorebookItem {
+  id: string;
+  topic: string;
+  conversation: { role: "user" | "assistant"; content: string }[];
+  results: any[];
+  createdAt: any;
+  mediaLens?: MediaLens;
 }
 
 function continuityActive() {
@@ -21,43 +32,64 @@ function continuityActive() {
 export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
   const [user] = useAuthState(auth);
   const { login } = useAuth();
-  const [savedCount, setSavedCount] = useState(0);
+  
   const [username, setUsername] = useState("Explorer");
+  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
   const [usernameDraft, setUsernameDraft] = useState("Explorer");
   const [savingUsername, setSavingUsername] = useState(false);
+  const [lorebooks, setLorebooks] = useState<LorebookItem[]>([]);
+  
   const continuityStatus = useMemo(() => continuityActive(), []);
 
   useEffect(() => {
     if (!user) {
-      setSavedCount(0);
       setUsername("Explorer");
       setUsernameDraft("Explorer");
+      setAvatarUrl(DEFAULT_AVATAR);
+      setLorebooks([]);
       return;
     }
-
-    getCountFromServer(collection(db, "users", user.uid, "saved"))
-      .then((countSnap) => setSavedCount(countSnap.data().count))
-      .catch(() => setSavedCount(0));
 
     const fetchUser = async () => {
       try {
         const userRef = doc(db, "users", user.uid);
         const snap = await getDoc(userRef);
-        const data = snap.data() as { username?: string } | undefined;
-        const resolvedUsername =
-          typeof data?.username === "string" && data.username.trim()
-            ? data.username.trim()
-            : user.displayName || "Explorer";
+        const data = snap.data() as { username?: string; avatar?: string } | undefined;
+        
+        const resolvedUsername = typeof data?.username === "string" && data.username.trim()
+          ? data.username.trim()
+          : user.displayName || "Explorer";
+          
+        const resolvedAvatar = typeof data?.avatar === "string" && data.avatar.trim()
+          ? data.avatar.trim()
+          : DEFAULT_AVATAR;
 
         setUsername(resolvedUsername);
         setUsernameDraft(resolvedUsername);
+        setAvatarUrl(resolvedAvatar);
       } catch (error) {
         const fallbackName = user.displayName || "Explorer";
         setUsername(fallbackName);
         setUsernameDraft(fallbackName);
+        setAvatarUrl(DEFAULT_AVATAR);
       }
     };
     fetchUser();
+
+    const q = query(
+      collection(db, "users", user.uid, "lorebooks"),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const items = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data()
+      })) as LorebookItem[];
+      setLorebooks(items);
+    });
+
+    return () => unsubscribe();
   }, [user]);
 
   const canSaveUsername = useMemo(() => {
@@ -66,56 +98,60 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
   }, [username, usernameDraft]);
 
   const onSaveUsername = async () => {
-    console.log("=== Saving settings started ===");
+    if (!user?.uid || !canSaveUsername || savingUsername) return;
 
-    if (!user?.uid || !canSaveUsername || savingUsername) {
-      console.error("Save aborted:", {
-        hasUser: !!user?.uid,
-        canSave: canSaveUsername,
-        alreadySaving: savingUsername
-      });
-      return;
-    }
-
-    // Timeout safety: Force reset after 10 seconds
     const timeoutId = setTimeout(() => {
-      console.error("⚠️ TIMEOUT: Save took too long, forcing state reset");
       setSavingUsername(false);
     }, 10000);
 
     try {
-      console.log("Setting saving state to true");
       setSavingUsername(true);
-
       const userRef = doc(db, "users", user.uid);
-      console.log("Writing to path:", userRef.path);
-
       const updatedSettings = { username: usernameDraft.trim() };
-      console.log("Data to save:", updatedSettings);
-
+      
       await setDoc(userRef, updatedSettings, { merge: true });
-      console.log("✓ Firestore write success:", updatedSettings);
-
-      // After successful save, re-sync local state
       setUsername(updatedSettings.username);
-      console.log("✓ Local state updated");
     } catch (err) {
-      console.error("❌ SETTINGS SAVE ERROR:", err);
-      console.error("Error details:", {
-        name: (err as Error).name,
-        message: (err as Error).message,
-        stack: (err as Error).stack
-      });
-      // Log to window for visibility
-      if (typeof window !== 'undefined') {
-        (window as any).__lastSaveError = err;
-        console.error("Error saved to window.__lastSaveError for inspection");
-      }
+      console.error("SETTINGS SAVE ERROR:", err);
     } finally {
       clearTimeout(timeoutId);
       setSavingUsername(false);
-      console.log("=== Saving finished, state reset ===");
     }
+  };
+
+  const handleLorebookClick = (item: LorebookItem) => {
+    let restoredAnswer = { summary: "", categories: [], spoilers: "" };
+    let restoredConversation: any[] = [];
+
+    if (item.conversation && item.conversation.length > 0) {
+      const firstAssistantIndex = item.conversation.findIndex(m => m.role === "assistant");
+      if (firstAssistantIndex !== -1) {
+        restoredAnswer = {
+          summary: item.conversation[firstAssistantIndex].content,
+          categories: [],
+          spoilers: ""
+        };
+        if (item.conversation.length > 2) {
+          restoredConversation = item.conversation.slice(2);
+        }
+      }
+    }
+
+    const stateToPush = {
+      query: item.topic,
+      conversation: restoredConversation,
+      results: item.results,
+      answer: restoredAnswer,
+      rehydrated: true,
+      mediaLens: normalizeMediaLens(item.mediaLens)
+    };
+
+    window.history.pushState(
+      stateToPush,
+      "",
+      buildAskUrl(item.topic, { lens: normalizeMediaLens(item.mediaLens) })
+    );
+    window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
   if (!user) {
@@ -174,86 +210,142 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
   return (
     <div className="min-h-screen w-full transition-colors duration-300" style={{ backgroundColor: "var(--nerdvana-conversation-bg)" }}>
       <div className="fixed inset-0 pointer-events-none paper-texture nerdvana-paper-texture-conversation" />
-      <div className="relative">
+      <div className="relative flex-1 flex flex-col min-h-screen">
         <Header onNavigate={onNavigatePage} />
-        <main className="px-4 sm:px-6 lg:px-10 xl:px-12 py-6 sm:py-8 md:py-12">
-          <article className="profile-shell max-w-3xl mx-auto border p-5 md:p-8">
-            <div className="border p-4 md:p-5 flex items-center gap-4 flex-wrap" style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}>
-              <div>
-                <h1 className="text-[clamp(1.6rem,7vw,1.9rem)] md:text-3xl font-black tracking-[-0.03em] uppercase" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
-                  {`Hi, ${username} !`}
-                </h1>
-                <p className="mt-1 text-[0.72rem] uppercase tracking-[0.14em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.75 }}>
-                  Continuity Memory: {continuityStatus ? "Active" : "Off"}
-                </p>
-              </div>
-            </div>
-
-            <section className="control-card mt-6 border p-4">
-              <p className="text-[0.7rem] uppercase tracking-[0.14em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.75 }}>
-                Profile Settings
+        
+        <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 py-10 sm:py-14 md:py-20 max-w-7xl mx-auto w-full">
+          
+          {/* Hero Section */}
+          <section className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 mb-16 md:mb-24">
+            <img 
+              src={avatarUrl} 
+              alt="Avatar" 
+              className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 object-cover shadow-xl transition-transform duration-500 hover:scale-105" 
+              style={{ borderColor: "var(--nerdvana-accent)" }}
+            />
+            <div className="text-center md:text-left">
+              <h1 className="text-[clamp(2.8rem,7vw,4.5rem)] font-black tracking-[-0.03em] uppercase leading-none drop-shadow-sm" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+                {username}
+              </h1>
+              <p className="mt-3 text-[0.75rem] md:text-[0.85rem] uppercase tracking-[0.25em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.75 }}>
+                Currently Exploring: {lorebooks.length > 0 ? lorebooks[0].topic : "The Unknown"}
               </p>
-              <label
-                className="mt-3 block text-[0.66rem] uppercase tracking-[0.16em]"
-                style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.8 }}
-              >
-                Username
-              </label>
-              <input
-                value={usernameDraft}
-                onChange={(event) => setUsernameDraft(event.target.value)}
-                className="mt-2 w-full border px-3 py-2 text-[1rem] focus:outline-none"
-                style={{
-                  borderColor: "var(--nerdvana-border)",
-                  backgroundColor: "var(--nerdvana-conversation-bg)",
-                  color: "var(--nerdvana-text)",
-                  fontFamily: '"Times New Roman", serif'
-                }}
-              />
-              <button
-                type="button"
-                disabled={!canSaveUsername || savingUsername}
-                onClick={onSaveUsername}
-                className="nerdvana-clickable mt-4 border-[2px] px-3 py-2 text-[0.68rem] uppercase tracking-[0.12em] disabled:opacity-60"
-                style={{ fontFamily: '"Courier New", monospace', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
-              >
-                {savingUsername ? "Saving..." : "Save Settings"}
-              </button>
-            </section>
+            </div>
+          </section>
 
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <div className="control-card border p-4">
-                <p className="text-[0.7rem] uppercase tracking-[0.14em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.75 }}>
-                  Saved Lorebooks
+          {/* Your Library (Media Cards) */}
+          <section className="mb-16 md:mb-24">
+            <h2 className="text-[1.3rem] md:text-[1.5rem] font-bold uppercase tracking-[0.08em] mb-6 flex items-center gap-4" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+              Your Library
+              <span className="text-[0.8rem] font-normal tracking-[0.15em] opacity-50 bg-[var(--nerdvana-border)] px-3 py-1 rounded-full text-[var(--nerdvana-surface)]" style={{ fontFamily: '"Courier New", monospace' }}>
+                {lorebooks.length} Items
+              </span>
+            </h2>
+            
+            {lorebooks.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+                {lorebooks.map((item) => (
+                  <div 
+                    key={item.id} 
+                    onClick={() => handleLorebookClick(item)} 
+                    className="group relative aspect-[2/3] nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" 
+                    style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
+                  >
+                    {/* Dark gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-transparent to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-300 z-10" />
+                    
+                    {/* Subtle abstract background element based on topic */}
+                    <div className="absolute inset-0 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 bg-[var(--nerdvana-text)]" />
+                    
+                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 z-20 flex flex-col justify-end h-full">
+                      <h3 className="text-lg md:text-xl font-bold leading-tight line-clamp-4 mb-2 md:mb-3 drop-shadow-md" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                        {item.topic}
+                      </h3>
+                      <p className="text-[0.6rem] uppercase tracking-[0.15em] opacity-70" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                        {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : "Archived"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-10 border rounded-lg border-dashed text-center opacity-60" style={{ borderColor: "var(--nerdvana-border)" }}>
+                <p className="text-sm uppercase tracking-[0.1em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                  Your library is currently empty.
                 </p>
-                <p className="mt-2 text-3xl font-black" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
-                  {savedCount}
-                </p>
-                <button
-                  className="nerdvana-clickable mt-4 border-[2px] px-3 py-2 text-[0.68rem] uppercase tracking-[0.12em]"
-                  style={{ fontFamily: '"Courier New", monospace', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
-                  onClick={() => {
-                    window.history.pushState({}, "", "/saved");
-                    window.dispatchEvent(new PopStateEvent("popstate"));
-                  }}
+              </div>
+            )}
+          </section>
+
+          {/* Collections Section */}
+          <section className="mb-20">
+            <h2 className="text-[1.1rem] md:text-[1.3rem] font-bold uppercase tracking-[0.08em] mb-5" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+              Collections
+            </h2>
+            <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar">
+              {["Favorites", "Read Later", "Deep Dives", "Game Lore"].map((col) => (
+                <div 
+                  key={col} 
+                  className="flex-none px-6 py-2.5 border rounded-full text-[0.7rem] uppercase tracking-[0.15em] opacity-60 hover:opacity-100 cursor-not-allowed transition-opacity" 
+                  style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)", backgroundColor: "var(--nerdvana-surface)" }}
+                  title="Collections coming soon"
                 >
-                  View Saved
-                </button>
+                  {col}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Settings Section (Minimal) */}
+          <section className="border-t pt-10" style={{ borderColor: "var(--nerdvana-border)" }}>
+            <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-8 opacity-40" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+              Preferences
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-2xl">
+              
+              <div className="group">
+                <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                  Username
+                </label>
+                <div className="flex items-center gap-3">
+                  <input 
+                    value={usernameDraft}
+                    onChange={(e) => setUsernameDraft(e.target.value)}
+                    className="flex-1 bg-transparent border-b pb-1 text-base focus:outline-none transition-colors"
+                    style={{ 
+                      borderColor: "var(--nerdvana-border)", 
+                      color: "var(--nerdvana-text)", 
+                      fontFamily: '"Times New Roman", serif',
+                      borderBottomColor: canSaveUsername ? "var(--nerdvana-accent)" : "var(--nerdvana-border)"
+                    }}
+                  />
+                  <button 
+                    disabled={!canSaveUsername || savingUsername}
+                    onClick={onSaveUsername}
+                    className="text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded disabled:opacity-20 hover:bg-[var(--nerdvana-border)] hover:text-[var(--nerdvana-surface)] transition-all"
+                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                  >
+                    {savingUsername ? "Saving" : "Save"}
+                  </button>
+                </div>
               </div>
 
-              <div className="control-card border p-4">
-                <p className="text-[0.7rem] uppercase tracking-[0.14em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.75 }}>
-                  Continuity Settings
-                </p>
-                <p className="mt-2 text-[0.9rem]" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                  {continuityStatus ? "Continuity memory is active." : "Continuity memory is currently off."}
+              <div>
+                <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                  Continuity Memory
+                </label>
+                <p className="text-[0.95rem] pb-1 opacity-80" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                  {continuityStatus ? "Active (Remembers context across sessions)" : "Off"}
                 </p>
               </div>
-            </section>
-          </article>
+
+            </div>
+          </section>
+
         </main>
+        
+        <Footer />
       </div>
-      <Footer />
       <style>{`
         .paper-texture {
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='6.5' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
@@ -261,18 +353,12 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
         }
         .nerdvana-paper-texture-conversation { opacity: 0.04; transition: opacity 0.3s ease; }
         .dark .nerdvana-paper-texture-conversation { opacity: 0.08; }
-        .profile-shell {
-          border-color: var(--nerdvana-border);
-          background: linear-gradient(180deg, var(--nerdvana-surface) 0%, var(--nerdvana-conversation-bg) 100%);
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
         }
-        .control-card {
-          border-color: var(--nerdvana-border);
-          background-color: var(--nerdvana-surface);
-          transition: transform 0.18s ease, box-shadow 0.18s ease;
-        }
-        .control-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 2px 2px 0 var(--nerdvana-shadow);
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>
