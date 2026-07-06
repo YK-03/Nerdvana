@@ -10,6 +10,19 @@ body,
 }
 
 
+/* Ensure native interactive elements and custom clickables use the pointer cursor */
+button,
+a,
+select,
+[role="button"],
+[role="link"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+.nerdvana-clickable {
+  cursor: pointer;
+}
+
 /* ─── MEDIA SIZING ───────────────────────────────────────────────────────── */
 img,
 svg,
