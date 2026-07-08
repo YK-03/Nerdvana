@@ -23,29 +23,26 @@ interface LorebookItem {
   mediaLens?: MediaLens;
 }
 
-function continuityActive() {
-  if (typeof window === "undefined") return true;
-  const raw = window.localStorage.getItem("nerdvana_pref_remember_context");
-  return raw !== "false";
-}
-
 export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
   const [user] = useAuthState(auth);
   const { login } = useAuth();
   
   const [username, setUsername] = useState("Explorer");
-  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [imgError, setImgError] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState("Explorer");
   const [savingUsername, setSavingUsername] = useState(false);
+  const [bio, setBio] = useState("");
+  const [bioDraft, setBioDraft] = useState("");
+  const [savingBio, setSavingBio] = useState(false);
   const [lorebooks, setLorebooks] = useState<LorebookItem[]>([]);
-  
-  const continuityStatus = useMemo(() => continuityActive(), []);
 
   useEffect(() => {
     if (!user) {
       setUsername("Explorer");
       setUsernameDraft("Explorer");
-      setAvatarUrl(DEFAULT_AVATAR);
+      setAvatarUrl("");
+      setImgError(false);
       setLorebooks([]);
       return;
     }
@@ -54,24 +51,33 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
       try {
         const userRef = doc(db, "users", user.uid);
         const snap = await getDoc(userRef);
-        const data = snap.data() as { username?: string; avatar?: string } | undefined;
+        const data = snap.data() as { username?: string; avatar?: string; bio?: string } | undefined;
         
         const resolvedUsername = typeof data?.username === "string" && data.username.trim()
           ? data.username.trim()
           : user.displayName || "Explorer";
           
-        const resolvedAvatar = typeof data?.avatar === "string" && data.avatar.trim()
+        const hasCustomAvatar = typeof data?.avatar === "string" && data.avatar.trim() !== "" && data.avatar !== DEFAULT_AVATAR;
+        const resolvedAvatar = hasCustomAvatar
           ? data.avatar.trim()
-          : DEFAULT_AVATAR;
+          : (user.photoURL || "");
+
+        const resolvedBio = typeof data?.bio === "string" ? data.bio : "";
 
         setUsername(resolvedUsername);
         setUsernameDraft(resolvedUsername);
         setAvatarUrl(resolvedAvatar);
+        setImgError(false);
+        setBio(resolvedBio);
+        setBioDraft(resolvedBio);
       } catch (error) {
         const fallbackName = user.displayName || "Explorer";
         setUsername(fallbackName);
         setUsernameDraft(fallbackName);
-        setAvatarUrl(DEFAULT_AVATAR);
+        setAvatarUrl(user.photoURL || "");
+        setImgError(false);
+        setBio("");
+        setBioDraft("");
       }
     };
     fetchUser();
@@ -96,6 +102,33 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
     const trimmed = usernameDraft.trim();
     return trimmed.length > 0 && trimmed !== username;
   }, [username, usernameDraft]);
+
+  const canSaveBio = useMemo(() => {
+    return bioDraft !== bio;
+  }, [bio, bioDraft]);
+
+  const onSaveBio = async () => {
+    if (!user?.uid || !canSaveBio || savingBio) return;
+
+    const timeoutId = setTimeout(() => {
+      setSavingBio(false);
+    }, 10000);
+
+    try {
+      setSavingBio(true);
+      const userRef = doc(db, "users", user.uid);
+      const updatedSettings = { bio: bioDraft.trim() };
+      
+      await setDoc(userRef, updatedSettings, { merge: true });
+      setBio(updatedSettings.bio);
+      setBioDraft(updatedSettings.bio);
+    } catch (err) {
+      console.error("BIO SAVE ERROR:", err);
+    } finally {
+      clearTimeout(timeoutId);
+      setSavingBio(false);
+    }
+  };
 
   const onSaveUsername = async () => {
     if (!user?.uid || !canSaveUsername || savingUsername) return;
@@ -170,7 +203,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               <div className="archive-modules">
                 <div className="archive-module">Saved Lorebooks</div>
                 <div className="archive-module">Search History</div>
-                <div className="archive-module">Continuity Memory</div>
+                <div className="archive-module">Bio</div>
               </div>
               <button
                 type="button"
@@ -213,42 +246,85 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
       <div className="relative flex-1 flex flex-col min-h-screen">
         <Header onNavigate={onNavigatePage} />
         
-        <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 py-10 sm:py-14 md:py-20 max-w-7xl mx-auto w-full">
+        <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 py-12 sm:py-16 md:py-24 max-w-3xl mx-auto w-full flex flex-col items-center">
           
           {/* Hero Section */}
-          <section className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 mb-16 md:mb-24">
-            <img 
-              src={avatarUrl} 
-              alt="Avatar" 
-              className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 object-cover shadow-xl transition-transform duration-500 hover:scale-105" 
-              style={{ borderColor: "var(--nerdvana-accent)" }}
-            />
-            <div className="text-center md:text-left">
-              <h1 className="text-[clamp(2.8rem,7vw,4.5rem)] font-black tracking-[-0.03em] uppercase leading-none drop-shadow-sm" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+          <section className="flex flex-col items-center text-center gap-6 mb-24 md:mb-32 w-full mt-4 md:mt-8">
+            <div className="relative group shrink-0">
+              {/* Upload button wrapper (future-ready) */}
+              {avatarUrl && !imgError ? (
+                <img 
+                  src={avatarUrl} 
+                  alt={username} 
+                  onError={() => setImgError(true)}
+                  referrerPolicy="no-referrer"
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-sm transition-transform duration-500 group-hover:scale-[1.02]" 
+                />
+              ) : (
+                <div 
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full shadow-sm flex items-center justify-center transition-transform duration-500 group-hover:scale-[1.02]"
+                  style={{ backgroundColor: "var(--nerdvana-border)", color: "var(--nerdvana-surface)" }}
+                >
+                  <span className="text-4xl md:text-5xl font-black uppercase" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+                    {username ? username.charAt(0) : "?"}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            <div className="pt-2 md:pt-4 w-full">
+              <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-black tracking-[-0.02em] leading-none mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
                 {username}
               </h1>
-              <p className="mt-3 text-[0.75rem] md:text-[0.85rem] uppercase tracking-[0.25em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.75 }}>
-                Currently Exploring: {lorebooks.length > 0 ? lorebooks[0].topic : "The Unknown"}
-              </p>
+              
+              {/* Bio */}
+              {bio && (
+                <div className="max-w-md mx-auto mb-10">
+                  <p className="text-[1rem] md:text-[1.1rem] leading-relaxed opacity-90" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                    {bio}
+                  </p>
+                </div>
+              )}
+
+              {/* Story Focal Point */}
+              {lorebooks.length > 0 && (
+                <div className="flex flex-col items-center">
+                  <span className="text-[0.65rem] uppercase tracking-[0.2em] opacity-40 mb-2" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                    Currently exploring
+                  </span>
+                  <span className="text-[1.3rem] md:text-[1.5rem] italic opacity-90 mb-5" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                    {lorebooks[0].topic}
+                  </span>
+                  <button 
+                    onClick={() => handleLorebookClick(lorebooks[0])}
+                    className="text-[0.65rem] uppercase tracking-[0.15em] px-5 py-2 border rounded hover:bg-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] hover:border-[var(--nerdvana-text)] transition-all duration-200 hover:-translate-y-[1px]" 
+                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
           {/* Your Library (Media Cards) */}
-          <section className="mb-16 md:mb-24">
-            <h2 className="text-[1.3rem] md:text-[1.5rem] font-bold uppercase tracking-[0.08em] mb-6 flex items-center gap-4" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+          <section className="mb-24 md:mb-32 w-full">
+            <h2 className="text-[1.2rem] md:text-[1.4rem] font-bold uppercase tracking-[0.08em] mb-10 flex items-center justify-center gap-4" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
               Your Library
-              <span className="text-[0.8rem] font-normal tracking-[0.15em] opacity-50 bg-[var(--nerdvana-border)] px-3 py-1 rounded-full text-[var(--nerdvana-surface)]" style={{ fontFamily: '"Courier New", monospace' }}>
-                {lorebooks.length} Items
-              </span>
+              {lorebooks.length > 1 && (
+                <span className="text-[0.75rem] font-normal tracking-[0.15em] opacity-50 bg-[var(--nerdvana-border)] px-3 py-1 rounded-full text-[var(--nerdvana-surface)]" style={{ fontFamily: '"Courier New", monospace' }}>
+                  {lorebooks.length} Items
+                </span>
+              )}
             </h2>
             
             {lorebooks.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
                 {lorebooks.map((item) => (
                   <div 
                     key={item.id} 
                     onClick={() => handleLorebookClick(item)} 
-                    className="group relative aspect-[2/3] nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" 
+                    className="group relative w-[calc(50%-0.5rem)] sm:w-[180px] md:w-[200px] shrink-0 aspect-[2/3] nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" 
                     style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
                   >
                     {/* Dark gradient overlay */}
@@ -257,11 +333,11 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                     {/* Subtle abstract background element based on topic */}
                     <div className="absolute inset-0 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 bg-[var(--nerdvana-text)]" />
                     
-                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 z-20 flex flex-col justify-end h-full">
-                      <h3 className="text-lg md:text-xl font-bold leading-tight line-clamp-4 mb-2 md:mb-3 drop-shadow-md" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 z-20 flex flex-col justify-end h-full text-center">
+                      <h3 className="text-lg md:text-xl font-bold leading-tight line-clamp-4 mb-2 drop-shadow-md" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
                         {item.topic}
                       </h3>
-                      <p className="text-[0.6rem] uppercase tracking-[0.15em] opacity-70" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                      <p className="text-[0.6rem] uppercase tracking-[0.15em] opacity-60" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
                         {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : "Archived"}
                       </p>
                     </div>
@@ -269,24 +345,24 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                 ))}
               </div>
             ) : (
-              <div className="p-10 border rounded-lg border-dashed text-center opacity-60" style={{ borderColor: "var(--nerdvana-border)" }}>
+              <div className="max-w-md mx-auto p-12 border rounded-lg border-dashed text-center opacity-40" style={{ borderColor: "var(--nerdvana-border)" }}>
                 <p className="text-sm uppercase tracking-[0.1em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                  Your library is currently empty.
+                  Your library is empty.
                 </p>
               </div>
             )}
           </section>
 
           {/* Collections Section */}
-          <section className="mb-20">
-            <h2 className="text-[1.1rem] md:text-[1.3rem] font-bold uppercase tracking-[0.08em] mb-5" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+          <section className="mb-24 md:mb-32 w-full">
+            <h2 className="text-[1rem] md:text-[1.2rem] font-bold uppercase tracking-[0.08em] mb-8 text-center" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
               Collections
             </h2>
-            <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar">
+            <div className="flex flex-wrap justify-center gap-3">
               {["Favorites", "Read Later", "Deep Dives", "Game Lore"].map((col) => (
                 <div 
                   key={col} 
-                  className="flex-none px-6 py-2.5 border rounded-full text-[0.7rem] uppercase tracking-[0.15em] opacity-60 hover:opacity-100 cursor-not-allowed transition-opacity" 
+                  className="flex-none px-6 py-2.5 border rounded-full text-[0.7rem] uppercase tracking-[0.15em] opacity-50 hover:opacity-100 cursor-not-allowed transition-opacity" 
                   style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)", backgroundColor: "var(--nerdvana-surface)" }}
                   title="Collections coming soon"
                 >
@@ -297,13 +373,13 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
           </section>
 
           {/* Settings Section (Minimal) */}
-          <section className="border-t pt-10" style={{ borderColor: "var(--nerdvana-border)" }}>
-            <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-8 opacity-40" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+          <section className="border-t pt-16 w-full flex flex-col items-center" style={{ borderColor: "var(--nerdvana-border)" }}>
+            <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-12 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
               Preferences
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-2xl">
+            <div className="w-full max-w-sm flex flex-col gap-10">
               
-              <div className="group">
+              <div className="group text-left">
                 <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
                   Username
                 </label>
@@ -322,7 +398,11 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                   <button 
                     disabled={!canSaveUsername || savingUsername}
                     onClick={onSaveUsername}
-                    className="text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded disabled:opacity-20 hover:bg-[var(--nerdvana-border)] hover:text-[var(--nerdvana-surface)] transition-all"
+                    className={`text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded transition-all duration-200 ${
+                      canSaveUsername || savingUsername
+                        ? "opacity-100 hover:bg-[var(--nerdvana-text)] hover:border-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] hover:-translate-y-[1px]"
+                        : "opacity-0"
+                    }`}
                     style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
                   >
                     {savingUsername ? "Saving" : "Save"}
@@ -330,13 +410,41 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                  Continuity Memory
+              <div className="group text-left">
+                <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                  Bio
                 </label>
-                <p className="text-[0.95rem] pb-1 opacity-80" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                  {continuityStatus ? "Active (Remembers context across sessions)" : "Off"}
-                </p>
+                <div className="flex items-start gap-3">
+                  <textarea 
+                    value={bioDraft}
+                    onChange={(e) => setBioDraft(e.target.value.slice(0, 160))}
+                    className="flex-1 bg-transparent border-b pb-1 text-[0.95rem] focus:outline-none transition-colors resize-none hide-scrollbar"
+                    rows={2}
+                    maxLength={160}
+                    placeholder="Tell people a little about your taste..."
+                    style={{ 
+                      borderColor: "var(--nerdvana-border)", 
+                      color: "var(--nerdvana-text)", 
+                      fontFamily: '"Times New Roman", serif',
+                      borderBottomColor: canSaveBio ? "var(--nerdvana-accent)" : "var(--nerdvana-border)"
+                    }}
+                  />
+                  <button 
+                    disabled={!canSaveBio || savingBio}
+                    onClick={onSaveBio}
+                    className={`text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded transition-all duration-200 ${
+                      canSaveBio || savingBio
+                        ? "opacity-100 hover:bg-[var(--nerdvana-text)] hover:border-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] hover:-translate-y-[1px]"
+                        : "opacity-0"
+                    }`}
+                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                  >
+                    {savingBio ? "Saving" : "Save"}
+                  </button>
+                </div>
+                <div className="text-right text-[0.6rem] mt-2 opacity-40" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                   {bioDraft.length}/160
+                </div>
               </div>
 
             </div>
