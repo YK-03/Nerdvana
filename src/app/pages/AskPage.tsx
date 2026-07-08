@@ -439,11 +439,42 @@ export default function AskPage({
     if (fullSession.length === 0) return;
 
     try {
+      let visualAsset = null;
+      if (activeVisualOwner?.asset) {
+        const asset = activeVisualOwner.asset;
+        const raw = (asset as any).raw || {};
+        
+        let posterUrl = asset.url;
+        let backdropUrl = null;
+
+        if (asset.source === "tmdb") {
+           posterUrl = raw.poster_path ? `https://image.tmdb.org/t/p/w780${raw.poster_path}` : asset.url;
+           backdropUrl = raw.backdrop_path ? `https://image.tmdb.org/t/p/w1280${raw.backdrop_path}` : null;
+        } else if (asset.source === "rawg") {
+           backdropUrl = raw.background_image || null;
+           posterUrl = raw.background_image || asset.url; 
+        } else if (asset.source === "jikan") {
+           posterUrl = raw.images?.jpg?.large_image_url || asset.url;
+        } else if (asset.source === "igdb") {
+           posterUrl = raw.cover?.url ? `https:${raw.cover.url.replace("t_thumb", "t_cover_big")}` : asset.url;
+        }
+
+        visualAsset = {
+           url: asset.url,
+           posterUrl,
+           backdropUrl,
+           title: asset.title,
+           source: asset.source,
+           mediaType: activeVisualOwner.mediaType
+        };
+      }
+
       await addDoc(collection(db, "users", user.uid, "lorebooks"), {
         topic: fullQuestion,
         mediaLens,
         conversation: fullSession,
         results: results.map(s => ({ title: s.title, url: s.url })),
+        visualAsset,
         createdAt: serverTimestamp()
       });
       alert("Session saved to Lorebooks!");

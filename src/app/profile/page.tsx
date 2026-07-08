@@ -19,6 +19,14 @@ interface LorebookItem {
   topic: string;
   conversation: { role: "user" | "assistant"; content: string }[];
   results: any[];
+  visualAsset?: {
+    url: string;
+    posterUrl?: string | null;
+    backdropUrl?: string | null;
+    title: string;
+    source: string;
+    mediaType: string;
+  } | null;
   createdAt: any;
   mediaLens?: MediaLens;
 }
@@ -293,9 +301,8 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
           <section className="mb-24 md:mb-32 w-full max-w-4xl mx-auto flex flex-col items-center">
             {lorebooks.length > 0 ? (() => {
               const activeStory = lorebooks[0];
-              const media = activeStory.results?.[0];
-              const artworkPath = media?.backdrop_path || media?.poster_path; // Prefer backdrop for wide cinematic feel
-              const artworkUrl = artworkPath ? `https://image.tmdb.org/t/p/w1280${artworkPath}` : null;
+              const asset = activeStory.visualAsset;
+              const artworkUrl = asset?.backdropUrl || asset?.posterUrl || asset?.url || null;
               
               return (
                 <div 
@@ -360,9 +367,8 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
             {lorebooks.length > 0 ? (
               <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center max-w-4xl">
                 {lorebooks.map((item) => {
-                  const media = item.results?.[0];
-                  const artworkPath = media?.poster_path || media?.backdrop_path; // Prefer poster for compact library
-                  const artworkUrl = artworkPath ? `https://image.tmdb.org/t/p/w500${artworkPath}` : null;
+                  const asset = item.visualAsset;
+                  const artworkUrl = asset?.posterUrl || asset?.backdropUrl || asset?.url || null;
                   
                   return (
                     <div 
@@ -435,12 +441,14 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                   <input 
                     value={usernameDraft}
                     onChange={(e) => setUsernameDraft(e.target.value)}
-                    className="flex-1 bg-transparent border-b pb-1 text-base focus:outline-none transition-colors"
+                    className={`flex-1 bg-transparent border-b pb-1 text-base focus:outline-none transition-colors duration-200 ${
+                      canSaveUsername
+                        ? "border-b-[var(--nerdvana-accent)] focus:border-b-[var(--nerdvana-accent-hover)]"
+                        : "border-b-[var(--nerdvana-border)] focus:border-b-[var(--nerdvana-text)]"
+                    }`}
                     style={{ 
-                      borderColor: "var(--nerdvana-border)", 
                       color: "var(--nerdvana-text)", 
                       fontFamily: '"Times New Roman", serif',
-                      borderBottomColor: canSaveUsername ? "var(--nerdvana-accent)" : "var(--nerdvana-border)"
                     }}
                   />
                   <button 
@@ -448,10 +456,10 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                     onClick={onSaveUsername}
                     className={`text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded transition-all duration-200 ${
                       canSaveUsername || savingUsername
-                        ? "opacity-100 hover:bg-[var(--nerdvana-text)] hover:border-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] hover:-translate-y-[1px]"
-                        : "opacity-0"
+                        ? "opacity-60 hover:opacity-100 border-[var(--nerdvana-border)] hover:border-[var(--nerdvana-text)]"
+                        : "opacity-0 pointer-events-none"
                     }`}
-                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                    style={{ color: "var(--nerdvana-text)", backgroundColor: "transparent" }}
                   >
                     {savingUsername ? "Saving" : "Save"}
                   </button>
@@ -466,15 +474,17 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                   <textarea 
                     value={bioDraft}
                     onChange={(e) => setBioDraft(e.target.value.slice(0, 160))}
-                    className="flex-1 bg-transparent border-b pb-1 text-[0.95rem] focus:outline-none transition-colors resize-none hide-scrollbar"
+                    className={`flex-1 bg-transparent border-b pb-1 text-[0.95rem] focus:outline-none transition-colors duration-200 resize-none hide-scrollbar ${
+                      canSaveBio
+                        ? "border-b-[var(--nerdvana-accent)] focus:border-b-[var(--nerdvana-accent-hover)]"
+                        : "border-b-[var(--nerdvana-border)] focus:border-b-[var(--nerdvana-text)]"
+                    }`}
                     rows={2}
                     maxLength={160}
                     placeholder="Tell people a little about your taste..."
                     style={{ 
-                      borderColor: "var(--nerdvana-border)", 
                       color: "var(--nerdvana-text)", 
                       fontFamily: '"Times New Roman", serif',
-                      borderBottomColor: canSaveBio ? "var(--nerdvana-accent)" : "var(--nerdvana-border)"
                     }}
                   />
                   <button 
@@ -482,10 +492,10 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                     onClick={onSaveBio}
                     className={`text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded transition-all duration-200 ${
                       canSaveBio || savingBio
-                        ? "opacity-100 hover:bg-[var(--nerdvana-text)] hover:border-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] hover:-translate-y-[1px]"
-                        : "opacity-0"
+                        ? "opacity-60 hover:opacity-100 border-[var(--nerdvana-border)] hover:border-[var(--nerdvana-text)]"
+                        : "opacity-0 pointer-events-none"
                     }`}
-                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                    style={{ color: "var(--nerdvana-text)", backgroundColor: "transparent" }}
                   >
                     {savingBio ? "Saving" : "Save"}
                   </button>
