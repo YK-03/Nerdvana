@@ -286,25 +286,69 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                 </div>
               )}
 
-              {/* Story Focal Point */}
-              {lorebooks.length > 0 && (
-                <div className="flex flex-col items-center">
-                  <span className="text-[0.65rem] uppercase tracking-[0.2em] opacity-40 mb-2" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                    Currently exploring
-                  </span>
-                  <span className="text-[1.3rem] md:text-[1.5rem] italic opacity-90 mb-5" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                    {lorebooks[0].topic}
-                  </span>
-                  <button 
-                    onClick={() => handleLorebookClick(lorebooks[0])}
-                    className="text-[0.65rem] uppercase tracking-[0.15em] px-5 py-2 border rounded hover:bg-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] hover:border-[var(--nerdvana-text)] transition-all duration-200 hover:-translate-y-[1px]" 
-                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
-                  >
-                    Continue
-                  </button>
-                </div>
-              )}
             </div>
+          </section>
+
+          {/* Continue Exploring (Featured Panel) */}
+          <section className="mb-24 md:mb-32 w-full max-w-4xl mx-auto flex flex-col items-center">
+            {lorebooks.length > 0 ? (() => {
+              const activeStory = lorebooks[0];
+              const media = activeStory.results?.[0];
+              const artworkPath = media?.backdrop_path || media?.poster_path; // Prefer backdrop for wide cinematic feel
+              const artworkUrl = artworkPath ? `https://image.tmdb.org/t/p/w1280${artworkPath}` : null;
+              
+              return (
+                <div 
+                  onClick={() => handleLorebookClick(activeStory)}
+                  className="group relative w-full aspect-[4/3] md:aspect-[21/9] rounded-xl border shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden nerdvana-clickable cursor-pointer transform hover:-translate-y-1"
+                  style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
+                >
+                  {artworkUrl ? (
+                    <img 
+                      src={artworkUrl} 
+                      alt={activeStory.topic} 
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-700 bg-[var(--nerdvana-text)]" />
+                  )}
+                  
+                  {/* Subtle gradient overlay to ensure readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/40 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500 z-10" />
+                  
+                  <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-20">
+                    <span className="text-[0.65rem] uppercase tracking-[0.25em] opacity-60 mb-2" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                      Continue Exploring
+                    </span>
+                    <h3 className="text-3xl md:text-5xl font-bold leading-tight mb-6 drop-shadow-xl" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                      {activeStory.topic}
+                    </h3>
+                    
+                    <div>
+                      <button 
+                        className="text-[0.7rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full transition-opacity duration-200 shadow-sm flex items-center gap-3 hover:opacity-80" 
+                        style={{ backgroundColor: "var(--nerdvana-text)", color: "var(--nerdvana-surface)", borderColor: "var(--nerdvana-text)" }}
+                      >
+                        Continue <span>→</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="w-full aspect-[4/3] md:aspect-[21/9] rounded-xl border border-dashed flex flex-col items-center justify-center p-8 opacity-40 transition-opacity hover:opacity-60" style={{ borderColor: "var(--nerdvana-border)" }}>
+                <p className="text-[1rem] md:text-[1.1rem] italic mb-6 text-center" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                  Pick up where your next story begins.
+                </p>
+                <button 
+                  onClick={() => onNavigatePage("home")}
+                  className="text-[0.65rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full hover:bg-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] transition-all"
+                  style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                >
+                  Explore
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Your Library (Media Cards) */}
@@ -313,24 +357,18 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               Your Library
             </h2>
             
-            {lorebooks.length > 1 ? (
-              <div className={`w-full grid gap-6 md:gap-8 justify-items-center ${
-                lorebooks.slice(1).length === 1 
-                  ? "grid-cols-1 max-w-3xl" 
-                  : "grid-cols-2 sm:grid-cols-3 max-w-4xl"
-              }`}>
-                {lorebooks.slice(1).map((item) => {
+            {lorebooks.length > 0 ? (
+              <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center max-w-4xl">
+                {lorebooks.map((item) => {
                   const media = item.results?.[0];
-                  const artworkPath = media?.poster_path || media?.backdrop_path;
-                  const artworkUrl = artworkPath ? `https://image.tmdb.org/t/p/w780${artworkPath}` : null;
+                  const artworkPath = media?.poster_path || media?.backdrop_path; // Prefer poster for compact library
+                  const artworkUrl = artworkPath ? `https://image.tmdb.org/t/p/w500${artworkPath}` : null;
                   
                   return (
                     <div 
                       key={item.id} 
                       onClick={() => handleLorebookClick(item)} 
-                      className={`group relative nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 w-full ${
-                        lorebooks.slice(1).length === 1 ? "aspect-[4/5] sm:aspect-[21/9]" : "aspect-[2/3] max-w-[260px]"
-                      }`} 
+                      className="group relative nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 w-full aspect-[2/3] max-w-[260px]" 
                       style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
                     >
                       {artworkUrl ? (
@@ -345,8 +383,8 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       
                       <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/20 to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-500 z-10" />
                       
-                      <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-20 flex flex-col justify-end h-full text-center items-center">
-                        <h3 className={`${lorebooks.slice(1).length === 1 ? 'text-2xl md:text-4xl' : 'text-lg md:text-xl'} font-bold leading-tight line-clamp-3 mb-2 drop-shadow-lg`} style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                      <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 z-20 flex flex-col justify-end h-full text-center items-center">
+                        <h3 className="text-lg md:text-xl font-bold leading-tight line-clamp-3 mb-2 drop-shadow-lg" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
                           {item.topic}
                         </h3>
                       </div>
