@@ -279,7 +279,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               
               {/* Bio */}
               {bio && (
-                <div className="max-w-md mx-auto mb-10">
+                <div className="max-w-md mx-auto mb-12">
                   <p className="text-[1rem] md:text-[1.1rem] leading-relaxed opacity-90" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
                     {bio}
                   </p>
@@ -308,44 +308,54 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
           </section>
 
           {/* Your Library (Media Cards) */}
-          <section className="mb-24 md:mb-32 w-full">
-            <h2 className="text-[1.2rem] md:text-[1.4rem] font-bold uppercase tracking-[0.08em] mb-10 flex items-center justify-center gap-4" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+          <section className="mb-24 md:mb-32 w-full flex flex-col items-center">
+            <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-10 opacity-40 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
               Your Library
-              {lorebooks.length > 1 && (
-                <span className="text-[0.75rem] font-normal tracking-[0.15em] opacity-50 bg-[var(--nerdvana-border)] px-3 py-1 rounded-full text-[var(--nerdvana-surface)]" style={{ fontFamily: '"Courier New", monospace' }}>
-                  {lorebooks.length} Items
-                </span>
-              )}
             </h2>
             
             {lorebooks.length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                {lorebooks.map((item) => (
-                  <div 
-                    key={item.id} 
-                    onClick={() => handleLorebookClick(item)} 
-                    className="group relative w-[calc(50%-0.5rem)] sm:w-[180px] md:w-[200px] shrink-0 aspect-[2/3] nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" 
-                    style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
-                  >
-                    {/* Dark gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-transparent to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-300 z-10" />
-                    
-                    {/* Subtle abstract background element based on topic */}
-                    <div className="absolute inset-0 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 bg-[var(--nerdvana-text)]" />
-                    
-                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 z-20 flex flex-col justify-end h-full text-center">
-                      <h3 className="text-lg md:text-xl font-bold leading-tight line-clamp-4 mb-2 drop-shadow-md" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                        {item.topic}
-                      </h3>
-                      <p className="text-[0.6rem] uppercase tracking-[0.15em] opacity-60" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                        {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : "Archived"}
-                      </p>
+              <div className={`w-full grid gap-6 md:gap-8 justify-items-center ${
+                lorebooks.length === 1 
+                  ? "grid-cols-1 max-w-3xl" 
+                  : "grid-cols-2 sm:grid-cols-3 max-w-4xl"
+              }`}>
+                {lorebooks.map((item) => {
+                  const media = item.results?.[0];
+                  const artworkPath = media?.poster_path || media?.backdrop_path;
+                  const artworkUrl = artworkPath ? `https://image.tmdb.org/t/p/w780${artworkPath}` : null;
+                  
+                  return (
+                    <div 
+                      key={item.id} 
+                      onClick={() => handleLorebookClick(item)} 
+                      className={`group relative nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 w-full ${
+                        lorebooks.length === 1 ? "aspect-[4/5] sm:aspect-[21/9]" : "aspect-[2/3] max-w-[260px]"
+                      }`} 
+                      style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
+                    >
+                      {artworkUrl ? (
+                        <img 
+                          src={artworkUrl} 
+                          alt={item.topic} 
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                        />
+                      ) : (
+                        <div className="absolute inset-0 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 bg-[var(--nerdvana-text)]" />
+                      )}
+                      
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/20 to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-500 z-10" />
+                      
+                      <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-20 flex flex-col justify-end h-full text-center items-center">
+                        <h3 className={`${lorebooks.length === 1 ? 'text-2xl md:text-4xl' : 'text-lg md:text-xl'} font-bold leading-tight line-clamp-3 mb-2 drop-shadow-lg`} style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                          {item.topic}
+                        </h3>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
-              <div className="max-w-md mx-auto p-12 border rounded-lg border-dashed text-center opacity-40" style={{ borderColor: "var(--nerdvana-border)" }}>
+              <div className="max-w-md w-full mx-auto p-12 border rounded-lg border-dashed text-center opacity-30" style={{ borderColor: "var(--nerdvana-border)" }}>
                 <p className="text-sm uppercase tracking-[0.1em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
                   Your library is empty.
                 </p>
@@ -354,8 +364,8 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
           </section>
 
           {/* Collections Section */}
-          <section className="mb-24 md:mb-32 w-full">
-            <h2 className="text-[1rem] md:text-[1.2rem] font-bold uppercase tracking-[0.08em] mb-8 text-center" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+          <section className="mb-24 md:mb-32 w-full flex flex-col items-center">
+            <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-6 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
               Collections
             </h2>
             <div className="flex flex-wrap justify-center gap-3">
