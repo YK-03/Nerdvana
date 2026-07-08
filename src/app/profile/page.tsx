@@ -313,13 +313,13 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               Your Library
             </h2>
             
-            {lorebooks.length > 0 ? (
+            {lorebooks.length > 1 ? (
               <div className={`w-full grid gap-6 md:gap-8 justify-items-center ${
-                lorebooks.length === 1 
+                lorebooks.slice(1).length === 1 
                   ? "grid-cols-1 max-w-3xl" 
                   : "grid-cols-2 sm:grid-cols-3 max-w-4xl"
               }`}>
-                {lorebooks.map((item) => {
+                {lorebooks.slice(1).map((item) => {
                   const media = item.results?.[0];
                   const artworkPath = media?.poster_path || media?.backdrop_path;
                   const artworkUrl = artworkPath ? `https://image.tmdb.org/t/p/w780${artworkPath}` : null;
@@ -329,7 +329,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       key={item.id} 
                       onClick={() => handleLorebookClick(item)} 
                       className={`group relative nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 w-full ${
-                        lorebooks.length === 1 ? "aspect-[4/5] sm:aspect-[21/9]" : "aspect-[2/3] max-w-[260px]"
+                        lorebooks.slice(1).length === 1 ? "aspect-[4/5] sm:aspect-[21/9]" : "aspect-[2/3] max-w-[260px]"
                       }`} 
                       style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
                     >
@@ -346,7 +346,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/20 to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-500 z-10" />
                       
                       <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-20 flex flex-col justify-end h-full text-center items-center">
-                        <h3 className={`${lorebooks.length === 1 ? 'text-2xl md:text-4xl' : 'text-lg md:text-xl'} font-bold leading-tight line-clamp-3 mb-2 drop-shadow-lg`} style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                        <h3 className={`${lorebooks.slice(1).length === 1 ? 'text-2xl md:text-4xl' : 'text-lg md:text-xl'} font-bold leading-tight line-clamp-3 mb-2 drop-shadow-lg`} style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
                           {item.topic}
                         </h3>
                       </div>
