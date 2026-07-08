@@ -254,260 +254,283 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
       <div className="relative flex-1 flex flex-col min-h-screen">
         <Header onNavigate={onNavigatePage} />
         
-        <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 py-12 sm:py-16 md:py-24 max-w-3xl mx-auto w-full flex flex-col items-center">
+        <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 py-12 sm:py-16 md:py-24 max-w-5xl mx-auto w-full flex flex-col">
+          <h1
+            className="text-[clamp(2rem,8.6vw,3.2rem)] font-black tracking-[-0.03em] leading-tight uppercase mb-6 sm:mb-8"
+            style={{
+              fontFamily: 'Impact, "Arial Black", sans-serif',
+              color: "var(--nerdvana-text)"
+            }}
+          >
+            Profile
+          </h1>
           
-          {/* Hero Section */}
-          <section className="flex flex-col items-center text-center gap-6 mb-24 md:mb-32 w-full mt-4 md:mt-8">
-            <div className="relative group shrink-0">
-              {/* Upload button wrapper (future-ready) */}
-              {avatarUrl && !imgError ? (
-                <img 
-                  src={avatarUrl} 
-                  alt={username} 
-                  onError={() => setImgError(true)}
-                  referrerPolicy="no-referrer"
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-sm transition-transform duration-500 group-hover:scale-[1.02]" 
-                />
-              ) : (
-                <div 
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-full shadow-sm flex items-center justify-center transition-transform duration-500 group-hover:scale-[1.02]"
-                  style={{ backgroundColor: "var(--nerdvana-border)", color: "var(--nerdvana-surface)" }}
-                >
-                  <span className="text-4xl md:text-5xl font-black uppercase" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
-                    {username ? username.charAt(0) : "?"}
-                  </span>
+          <div 
+            className="w-full border rounded-md p-6 sm:p-10 md:p-16 flex flex-col gap-16 md:gap-24 transition-colors duration-300"
+            style={{ 
+              borderColor: "var(--nerdvana-border)", 
+              }}
+          >
+            {/* Hero Section */}
+            <section className="flex flex-col items-center text-center gap-6 w-full mt-4 md:mt-8">
+              <div className="relative group shrink-0">
+                {/* Upload button wrapper (future-ready) */}
+                {avatarUrl && !imgError ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt={username} 
+                    onError={() => setImgError(true)}
+                    referrerPolicy="no-referrer"
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-sm transition-transform duration-500 group-hover:scale-[1.02]" 
+                  />
+                ) : (
+                  <div 
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-full shadow-sm flex items-center justify-center transition-transform duration-500 group-hover:scale-[1.02]"
+                    style={{ backgroundColor: "var(--nerdvana-border)", color: "var(--nerdvana-surface)" }}
+                  >
+                    <span className="text-4xl md:text-5xl font-black uppercase" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+                      {username ? username.charAt(0) : "?"}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="pt-2 md:pt-4 w-full">
+                <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-black tracking-[-0.02em] leading-none mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+                  {username}
+                </h1>
+                
+                {/* Bio */}
+                {bio && (
+                  <div className="max-w-md mx-auto mb-12">
+                    <p className="text-[1rem] md:text-[1.1rem] leading-relaxed opacity-90" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                      {bio}
+                    </p>
+                  </div>
+                )}
+
+              </div>
+            </section>
+
+            <hr style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
+
+            {/* Continue Exploring (Featured Panel) */}
+            <section className="w-full max-w-4xl mx-auto flex flex-col items-center">
+              {lorebooks.length > 0 ? (() => {
+                const activeStory = lorebooks[0];
+                const asset = activeStory.visualAsset;
+                const artworkUrl = asset?.backdropUrl || asset?.posterUrl || asset?.url || null;
+                
+                return (
+                  <div 
+                    onClick={() => handleLorebookClick(activeStory)}
+                    className="group relative w-full aspect-[4/3] md:aspect-[21/9] rounded-xl border shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden nerdvana-clickable cursor-pointer transform hover:-translate-y-1"
+                    style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
+                  >
+                    {artworkUrl ? (
+                      <img 
+                        src={artworkUrl} 
+                        alt={activeStory.topic} 
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.02]"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-700 bg-[var(--nerdvana-text)]" />
+                    )}
+                    
+                    {/* Subtle gradient overlay to ensure readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/40 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500 z-10" />
+                    
+                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-20">
+                      <span className="text-[0.65rem] uppercase tracking-[0.25em] opacity-60 mb-2" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                        Continue Exploring
+                      </span>
+                      <h3 className="text-3xl md:text-5xl font-bold leading-tight mb-6 drop-shadow-xl" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                        {activeStory.topic}
+                      </h3>
+                      
+                      <div>
+                        <button 
+                          className="text-[0.7rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full transition-opacity duration-200 shadow-sm flex items-center gap-3 hover:opacity-80" 
+                          style={{ backgroundColor: "var(--nerdvana-text)", color: "var(--nerdvana-surface)", borderColor: "var(--nerdvana-text)" }}
+                        >
+                          Continue <span>→</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })() : (
+                <div className="w-full aspect-[4/3] md:aspect-[21/9] rounded-xl border border-dashed flex flex-col items-center justify-center p-8 opacity-40 transition-opacity hover:opacity-60" style={{ borderColor: "var(--nerdvana-border)" }}>
+                  <p className="text-[1rem] md:text-[1.1rem] italic mb-6 text-center" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                    Pick up where your next story begins.
+                  </p>
+                  <button 
+                    onClick={() => onNavigatePage("home")}
+                    className="text-[0.65rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full hover:bg-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] transition-all"
+                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                  >
+                    Explore
+                  </button>
                 </div>
               )}
-            </div>
-            
-            <div className="pt-2 md:pt-4 w-full">
-              <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-black tracking-[-0.02em] leading-none mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
-                {username}
-              </h1>
+            </section>
+
+            <hr style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
+
+            {/* Your Library (Media Cards) */}
+            <section className="w-full flex flex-col items-center">
+              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-10 opacity-40 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                Your Library
+              </h2>
               
-              {/* Bio */}
-              {bio && (
-                <div className="max-w-md mx-auto mb-12">
-                  <p className="text-[1rem] md:text-[1.1rem] leading-relaxed opacity-90" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                    {bio}
+              {lorebooks.length > 0 ? (
+                <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center max-w-4xl">
+                  {lorebooks.map((item) => {
+                    const asset = item.visualAsset;
+                    const artworkUrl = asset?.posterUrl || asset?.backdropUrl || asset?.url || null;
+                    
+                    return (
+                      <div 
+                        key={item.id} 
+                        onClick={() => handleLorebookClick(item)} 
+                        className="group relative nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 w-full aspect-[2/3] max-w-[260px]" 
+                        style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
+                      >
+                        {artworkUrl ? (
+                          <img 
+                            src={artworkUrl} 
+                            alt={item.topic} 
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                          />
+                        ) : (
+                          <div className="absolute inset-0 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 bg-[var(--nerdvana-text)]" />
+                        )}
+                        
+                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/20 to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-500 z-10" />
+                        
+                        <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 z-20 flex flex-col justify-end h-full text-center items-center">
+                          <h3 className="text-lg md:text-xl font-bold leading-tight line-clamp-3 mb-2 drop-shadow-lg" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                            {item.topic}
+                          </h3>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="max-w-md w-full mx-auto p-12 border rounded-lg border-dashed text-center opacity-30" style={{ borderColor: "var(--nerdvana-border)" }}>
+                  <p className="text-sm uppercase tracking-[0.1em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                    Your library is empty.
                   </p>
                 </div>
               )}
+            </section>
 
-            </div>
-          </section>
+            <hr style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
 
-          {/* Continue Exploring (Featured Panel) */}
-          <section className="mb-24 md:mb-32 w-full max-w-4xl mx-auto flex flex-col items-center">
-            {lorebooks.length > 0 ? (() => {
-              const activeStory = lorebooks[0];
-              const asset = activeStory.visualAsset;
-              const artworkUrl = asset?.backdropUrl || asset?.posterUrl || asset?.url || null;
-              
-              return (
-                <div 
-                  onClick={() => handleLorebookClick(activeStory)}
-                  className="group relative w-full aspect-[4/3] md:aspect-[21/9] rounded-xl border shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden nerdvana-clickable cursor-pointer transform hover:-translate-y-1"
-                  style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
-                >
-                  {artworkUrl ? (
-                    <img 
-                      src={artworkUrl} 
-                      alt={activeStory.topic} 
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.02]"
+            {/* Collections Section */}
+            <section className="w-full flex flex-col items-center">
+              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-6 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                Collections
+              </h2>
+              <div className="flex flex-wrap justify-center gap-3">
+                {["Favorites", "Read Later", "Deep Dives", "Game Lore"].map((col) => (
+                  <div 
+                    key={col} 
+                    className="flex-none px-6 py-2.5 border rounded-full text-[0.7rem] uppercase tracking-[0.15em] opacity-50 hover:opacity-100 cursor-not-allowed transition-opacity" 
+                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)", backgroundColor: "var(--nerdvana-surface)" }}
+                    title="Collections coming soon"
+                  >
+                    {col}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <hr style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
+
+            {/* Settings Section (Minimal) */}
+            <section className="w-full flex flex-col items-center">
+              <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-12 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                Preferences
+              </h2>
+              <div className="w-full max-w-sm flex flex-col gap-10">
+                
+                <div className="group text-left">
+                  <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                    Username
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      value={usernameDraft}
+                      onChange={(e) => setUsernameDraft(e.target.value)}
+                      className={`flex-1 bg-transparent border-b pb-1 text-base focus:outline-none transition-colors duration-200 ${
+                        canSaveUsername
+                          ? "border-b-[var(--nerdvana-accent)] focus:border-b-[var(--nerdvana-accent-hover)]"
+                          : "border-b-[var(--nerdvana-border)] focus:border-b-[var(--nerdvana-text)]"
+                      }`}
+                      style={{ 
+                        color: "var(--nerdvana-text)", 
+                        fontFamily: '"Times New Roman", serif',
+                      }}
                     />
-                  ) : (
-                    <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-700 bg-[var(--nerdvana-text)]" />
-                  )}
-                  
-                  {/* Subtle gradient overlay to ensure readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/40 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500 z-10" />
-                  
-                  <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-20">
-                    <span className="text-[0.65rem] uppercase tracking-[0.25em] opacity-60 mb-2" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                      Continue Exploring
-                    </span>
-                    <h3 className="text-3xl md:text-5xl font-bold leading-tight mb-6 drop-shadow-xl" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                      {activeStory.topic}
-                    </h3>
-                    
-                    <div>
-                      <button 
-                        className="text-[0.7rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full transition-opacity duration-200 shadow-sm flex items-center gap-3 hover:opacity-80" 
-                        style={{ backgroundColor: "var(--nerdvana-text)", color: "var(--nerdvana-surface)", borderColor: "var(--nerdvana-text)" }}
-                      >
-                        Continue <span>→</span>
-                      </button>
-                    </div>
+                    <button 
+                      disabled={!canSaveUsername || savingUsername}
+                      onClick={onSaveUsername}
+                      className={`text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded transition-all duration-200 ${
+                        canSaveUsername || savingUsername
+                          ? "opacity-60 hover:opacity-100 border-[var(--nerdvana-border)] hover:border-[var(--nerdvana-text)]"
+                          : "opacity-0 pointer-events-none"
+                      }`}
+                      style={{ color: "var(--nerdvana-text)", backgroundColor: "transparent" }}
+                    >
+                      {savingUsername ? "Saving" : "Save"}
+                    </button>
                   </div>
                 </div>
-              );
-            })() : (
-              <div className="w-full aspect-[4/3] md:aspect-[21/9] rounded-xl border border-dashed flex flex-col items-center justify-center p-8 opacity-40 transition-opacity hover:opacity-60" style={{ borderColor: "var(--nerdvana-border)" }}>
-                <p className="text-[1rem] md:text-[1.1rem] italic mb-6 text-center" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                  Pick up where your next story begins.
-                </p>
-                <button 
-                  onClick={() => onNavigatePage("home")}
-                  className="text-[0.65rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full hover:bg-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] transition-all"
-                  style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
-                >
-                  Explore
-                </button>
-              </div>
-            )}
-          </section>
 
-          {/* Your Library (Media Cards) */}
-          <section className="mb-24 md:mb-32 w-full flex flex-col items-center">
-            <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-10 opacity-40 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-              Your Library
-            </h2>
-            
-            {lorebooks.length > 0 ? (
-              <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center max-w-4xl">
-                {lorebooks.map((item) => {
-                  const asset = item.visualAsset;
-                  const artworkUrl = asset?.posterUrl || asset?.backdropUrl || asset?.url || null;
-                  
-                  return (
-                    <div 
-                      key={item.id} 
-                      onClick={() => handleLorebookClick(item)} 
-                      className="group relative nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 w-full aspect-[2/3] max-w-[260px]" 
-                      style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
+                <div className="group text-left">
+                  <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                    Bio
+                  </label>
+                  <div className="flex items-start gap-3">
+                    <textarea 
+                      value={bioDraft}
+                      onChange={(e) => setBioDraft(e.target.value.slice(0, 160))}
+                      className={`flex-1 bg-transparent border-b pb-1 text-[0.95rem] focus:outline-none transition-colors duration-200 resize-none hide-scrollbar ${
+                        canSaveBio
+                          ? "border-b-[var(--nerdvana-accent)] focus:border-b-[var(--nerdvana-accent-hover)]"
+                          : "border-b-[var(--nerdvana-border)] focus:border-b-[var(--nerdvana-text)]"
+                      }`}
+                      rows={2}
+                      maxLength={160}
+                      placeholder="Tell people a little about your taste..."
+                      style={{ 
+                        color: "var(--nerdvana-text)", 
+                        fontFamily: '"Times New Roman", serif',
+                      }}
+                    />
+                    <button 
+                      disabled={!canSaveBio || savingBio}
+                      onClick={onSaveBio}
+                      className={`text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded transition-all duration-200 ${
+                        canSaveBio || savingBio
+                          ? "opacity-60 hover:opacity-100 border-[var(--nerdvana-border)] hover:border-[var(--nerdvana-text)]"
+                          : "opacity-0 pointer-events-none"
+                      }`}
+                      style={{ color: "var(--nerdvana-text)", backgroundColor: "transparent" }}
                     >
-                      {artworkUrl ? (
-                        <img 
-                          src={artworkUrl} 
-                          alt={item.topic} 
-                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                        />
-                      ) : (
-                        <div className="absolute inset-0 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 bg-[var(--nerdvana-text)]" />
-                      )}
-                      
-                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/20 to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-500 z-10" />
-                      
-                      <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 z-20 flex flex-col justify-end h-full text-center items-center">
-                        <h3 className="text-lg md:text-xl font-bold leading-tight line-clamp-3 mb-2 drop-shadow-lg" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                          {item.topic}
-                        </h3>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="max-w-md w-full mx-auto p-12 border rounded-lg border-dashed text-center opacity-30" style={{ borderColor: "var(--nerdvana-border)" }}>
-                <p className="text-sm uppercase tracking-[0.1em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                  Your library is empty.
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* Collections Section */}
-          <section className="mb-24 md:mb-32 w-full flex flex-col items-center">
-            <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-6 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-              Collections
-            </h2>
-            <div className="flex flex-wrap justify-center gap-3">
-              {["Favorites", "Read Later", "Deep Dives", "Game Lore"].map((col) => (
-                <div 
-                  key={col} 
-                  className="flex-none px-6 py-2.5 border rounded-full text-[0.7rem] uppercase tracking-[0.15em] opacity-50 hover:opacity-100 cursor-not-allowed transition-opacity" 
-                  style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)", backgroundColor: "var(--nerdvana-surface)" }}
-                  title="Collections coming soon"
-                >
-                  {col}
+                      {savingBio ? "Saving" : "Save"}
+                    </button>
+                  </div>
+                  <div className="text-right text-[0.6rem] mt-2 opacity-40" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                     {bioDraft.length}/160
+                  </div>
                 </div>
-              ))}
-            </div>
-          </section>
 
-          {/* Settings Section (Minimal) */}
-          <section className="border-t pt-16 w-full flex flex-col items-center" style={{ borderColor: "var(--nerdvana-border)" }}>
-            <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-12 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-              Preferences
-            </h2>
-            <div className="w-full max-w-sm flex flex-col gap-10">
-              
-              <div className="group text-left">
-                <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                  Username
-                </label>
-                <div className="flex items-center gap-3">
-                  <input 
-                    value={usernameDraft}
-                    onChange={(e) => setUsernameDraft(e.target.value)}
-                    className={`flex-1 bg-transparent border-b pb-1 text-base focus:outline-none transition-colors duration-200 ${
-                      canSaveUsername
-                        ? "border-b-[var(--nerdvana-accent)] focus:border-b-[var(--nerdvana-accent-hover)]"
-                        : "border-b-[var(--nerdvana-border)] focus:border-b-[var(--nerdvana-text)]"
-                    }`}
-                    style={{ 
-                      color: "var(--nerdvana-text)", 
-                      fontFamily: '"Times New Roman", serif',
-                    }}
-                  />
-                  <button 
-                    disabled={!canSaveUsername || savingUsername}
-                    onClick={onSaveUsername}
-                    className={`text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded transition-all duration-200 ${
-                      canSaveUsername || savingUsername
-                        ? "opacity-60 hover:opacity-100 border-[var(--nerdvana-border)] hover:border-[var(--nerdvana-text)]"
-                        : "opacity-0 pointer-events-none"
-                    }`}
-                    style={{ color: "var(--nerdvana-text)", backgroundColor: "transparent" }}
-                  >
-                    {savingUsername ? "Saving" : "Save"}
-                  </button>
-                </div>
               </div>
-
-              <div className="group text-left">
-                <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                  Bio
-                </label>
-                <div className="flex items-start gap-3">
-                  <textarea 
-                    value={bioDraft}
-                    onChange={(e) => setBioDraft(e.target.value.slice(0, 160))}
-                    className={`flex-1 bg-transparent border-b pb-1 text-[0.95rem] focus:outline-none transition-colors duration-200 resize-none hide-scrollbar ${
-                      canSaveBio
-                        ? "border-b-[var(--nerdvana-accent)] focus:border-b-[var(--nerdvana-accent-hover)]"
-                        : "border-b-[var(--nerdvana-border)] focus:border-b-[var(--nerdvana-text)]"
-                    }`}
-                    rows={2}
-                    maxLength={160}
-                    placeholder="Tell people a little about your taste..."
-                    style={{ 
-                      color: "var(--nerdvana-text)", 
-                      fontFamily: '"Times New Roman", serif',
-                    }}
-                  />
-                  <button 
-                    disabled={!canSaveBio || savingBio}
-                    onClick={onSaveBio}
-                    className={`text-[0.65rem] uppercase tracking-[0.15em] px-3 py-1.5 border rounded transition-all duration-200 ${
-                      canSaveBio || savingBio
-                        ? "opacity-60 hover:opacity-100 border-[var(--nerdvana-border)] hover:border-[var(--nerdvana-text)]"
-                        : "opacity-0 pointer-events-none"
-                    }`}
-                    style={{ color: "var(--nerdvana-text)", backgroundColor: "transparent" }}
-                  >
-                    {savingBio ? "Saving" : "Save"}
-                  </button>
-                </div>
-                <div className="text-right text-[0.6rem] mt-2 opacity-40" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                   {bioDraft.length}/160
-                </div>
-              </div>
-
-            </div>
-          </section>
-
+            </section>
+          </div>
         </main>
         
         <Footer />
