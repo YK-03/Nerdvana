@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { collection, doc, getDoc, setDoc, query, orderBy, onSnapshot } from "firebase/firestore";
 import Header from "../components/Header";
@@ -50,6 +50,72 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
   const [bioDraft, setBioDraft] = useState("");
   const [savingBio, setSavingBio] = useState(false);
   const [lorebooks, setLorebooks] = useState<LorebookItem[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onTriggerFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      alert("Unsupported file type. Please select a JPG, PNG, or WEBP image.");
+      return;
+    }
+
+    // Validate size (8MB)
+    if (file.size > 8 * 1024 * 1024) {
+      alert("File is too large. Please select an image smaller than 8MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 200; // Resize to 200x200 px
+        canvas.width = maxDim;
+        canvas.height = maxDim;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        // Crop to square
+        const size = Math.min(img.width, img.height);
+        const sx = (img.width - size) / 2;
+        const sy = (img.height - size) / 2;
+
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, maxDim, maxDim);
+
+        const base64Data = canvas.toDataURL("image/jpeg", 0.85);
+
+        if (!user?.uid) return;
+
+        try {
+          const userRef = doc(db, "users", user.uid);
+          await setDoc(userRef, { avatar: base64Data }, { merge: true });
+          setAvatarUrl(base64Data);
+          setImgError(false);
+        } catch (err) {
+          console.error("AVATAR UPLOAD ERROR:", err);
+          alert("Failed to save avatar image.");
+        }
+      };
+      img.onerror = () => {
+        alert("Failed to load selected image.");
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = () => {
+      alert("Failed to read file.");
+    };
+    reader.readAsDataURL(file);
+  };
 
 
   useEffect(() => {
@@ -284,7 +350,26 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
             {/* Hero Section */}
             <section className="flex flex-col items-center text-center gap-4 sm:gap-6 w-full mt-2 md:mt-4">
               <div className="relative group shrink-0">
-                {/* Upload button wrapper (future-ready) */}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept="image/png, image/jpeg, image/jpg, image/webp" 
+                  className="hidden" 
+                />
+                
+                {/* Pencil Edit Overlay Icon */}
+                <button
+                  type="button"
+                  onClick={onTriggerFilePicker}
+                  className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center cursor-pointer z-20 group"
+                  aria-label="Upload profile picture"
+                >
+                  <svg className="w-8 h-8 md:w-10 md:h-10 text-white/95 scale-90 group-hover:scale-100 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+
                 {avatarUrl && !imgError ? (
                   <img 
                     src={avatarUrl} 
