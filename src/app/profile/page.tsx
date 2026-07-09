@@ -435,14 +435,14 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-700 bg-[var(--nerdvana-text)]" />
                     )}
                     
-                    {/* Subtle gradient overlay to ensure readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/40 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500 z-10" />
+                    {/* Subtle gradient overlay restricted to bottom to preserve artwork */}
+                    <div className="absolute bottom-0 left-0 w-full h-[60%] bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-500 z-10 pointer-events-none" />
                     
-                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-20">
-                      <span className="text-[0.65rem] uppercase tracking-[0.25em] opacity-60 mb-2" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                    <div className="absolute inset-0 flex flex-col justify-end items-start p-6 md:p-10 lg:p-12 z-20">
+                      <span className="text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.25em] opacity-80 mb-3" style={{ fontFamily: '"Courier New", monospace', color: "white" }}>
                         Continue Exploring
                       </span>
-                      <h3 className="text-3xl md:text-5xl font-bold leading-tight mb-6 drop-shadow-xl" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                      <h3 className="text-[clamp(2rem,5vw,3.75rem)] font-bold uppercase tracking-tight leading-[1] mb-6 drop-shadow-md transition-transform duration-500 origin-bottom-left group-hover:scale-[1.01]" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "white" }}>
                         {activeStory.topic}
                       </h3>
                       
