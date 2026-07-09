@@ -18,7 +18,7 @@ import { saveCase } from "../utils/caseStorage";
 import { saveCaseCloud } from "../utils/caseCloud";
 import type { MockAnswer } from "../mockAnswers";
 import { buildAskUrl, DEFAULT_MEDIA_LENS, normalizeMediaLens } from "../mediaLens";
-import { shouldMaintainFranchiseLock, type ResolverContextPacket, type ActiveVisualOwner, type ActiveVisualOwnerMetadata } from "../canonicalResolver";
+import { shouldMaintainFranchiseLock, type ResolverContextPacket, type ActiveVisualOwner, type ActiveVisualOwnerMetadata, extractProviderId } from "../canonicalResolver";
 import { auth, db } from "../lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { startNewSession, useQuerySessionStore, useAutocompleteStore, useIntentStore } from "../store/resolverSession";
@@ -166,8 +166,16 @@ export default function AskPage({
   const fullQuestion = question.trim();
   const [queryInput, setQueryInput] = useState(fullQuestion);
   const [contextPacket, setContextPacket] = useState<ResolverContextPacket | null>(null);
-  const [activeVisualOwner, setActiveVisualOwner] = useState<ActiveVisualOwner | null>(null);
-  const [activeVisualOwnerMetadata, setActiveVisualOwnerMetadata] = useState<ActiveVisualOwnerMetadata | null>(null);
+  const activeVisualOwnerRef = useRef<ActiveVisualOwner | null>(null);
+  const [activeVisualOwner, _setActiveVisualOwner] = useState<ActiveVisualOwner | null>(null);
+  const setActiveVisualOwner = (val: ActiveVisualOwner | null) => {
+    activeVisualOwnerRef.current = val;
+    _setActiveVisualOwner(val);
+  };
+  const [activeVisualOwnerMetadata, _setActiveVisualOwnerMetadata] = useState<ActiveVisualOwnerMetadata | null>(null);
+  const setActiveVisualOwnerMetadata = (val: ActiveVisualOwnerMetadata | null) => {
+    _setActiveVisualOwnerMetadata(val);
+  };
   const [grounding, setGrounding] = useState<CanonicalGroundingResult | null>(null);
   const [renderEntityPacket, setRenderEntityPacket] = useState<RenderEntityPacket | null>(null);
   const resolvedItem = (contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && renderEntityPacket)
@@ -439,42 +447,24 @@ export default function AskPage({
     if (fullSession.length === 0) return;
 
     try {
-      let visualAsset = null;
+      let visual = null;
       if (activeVisualOwner?.asset) {
         const asset = activeVisualOwner.asset;
-        const raw = (asset as any).raw || {};
-        
-        let posterUrl = asset.url;
-        let backdropUrl = null;
-
-        if (asset.source === "tmdb") {
-           posterUrl = raw.poster_path ? `https://image.tmdb.org/t/p/w780${raw.poster_path}` : asset.url;
-           backdropUrl = raw.backdrop_path ? `https://image.tmdb.org/t/p/w1280${raw.backdrop_path}` : null;
-        } else if (asset.source === "rawg") {
-           backdropUrl = raw.background_image || null;
-           posterUrl = raw.background_image || asset.url; 
-        } else if (asset.source === "jikan") {
-           posterUrl = raw.images?.jpg?.large_image_url || asset.url;
-        } else if (asset.source === "igdb") {
-           posterUrl = raw.cover?.url ? `https:${raw.cover.url.replace("t_thumb", "t_cover_big")}` : asset.url;
-        }
-
-        visualAsset = {
-           url: asset.url,
-           posterUrl,
-           backdropUrl,
+        visual = {
            title: asset.title,
-           source: asset.source,
-           mediaType: activeVisualOwner.mediaType
+           posterUrl: asset.posterUrl || asset.url || null,
+           backdropUrl: asset.backdropUrl || null,
+           mediaType: activeVisualOwner.mediaType || asset.mediaType || "",
+           provider: asset.source || ""
         };
       }
 
-      await addDoc(collection(db, "users", user.uid, "lorebooks"), {
+      const docRef = await addDoc(collection(db, "users", user.uid, "lorebooks"), {
         topic: fullQuestion,
         mediaLens,
         conversation: fullSession,
         results: results.map(s => ({ title: s.title, url: s.url })),
-        visualAsset,
+        visual,
         createdAt: serverTimestamp()
       });
       alert("Session saved to Lorebooks!");
@@ -594,20 +584,6 @@ export default function AskPage({
       isManualSubmitRef.current = false;
     }
 
-    console.log("[EFFECT_TRIGGER] Search useEffect triggered. State:", {
-      normalizedQuestion,
-      currentItem,
-      providerMetadata,
-      isManualSubmit,
-      isAutocompleteSelection: isAutocompleteSelectionRef.current
-    });
-
-    console.log("[URL_ITEM_STATE]", {
-      queryItem,
-      historyItem: window.history.state?.item,
-      urlParamsItem: urlParams.item
-    });
-
     if (isAutocompleteSelectionRef.current) {
       isAutocompleteSelectionRef.current = false;
       activeExecutionRef.current = null;
@@ -615,62 +591,43 @@ export default function AskPage({
     }
 
     const desynced = (queryItem || null) !== currentItem;
-    console.log("[STATE DESYNC]", {
-      queryItem,
-      currentItem,
-      fullQuestion,
-      desynced
-    });
 
     const searchKey = `${normalizedQuestion}|${mediaLens}|${chatSpoilers}|${user?.uid ?? ""}|${currentItem || ""}`;
     const lastKeys = Array.isArray(lastSearchKeyRef.current) ? lastSearchKeyRef.current : [lastSearchKeyRef.current];
 
     if (activeExecutionRef.current?.searchKey === searchKey && activeExecutionRef.current?.status === "running") {
-      console.log("[SEARCH EXIT]", {
-        reason: "ALREADY_RUNNING",
-        searchKey,
-        queryItem,
-        currentItem
-      });
       return;
     }
 
     const primaryQueryKey = `${normalizedQuestion}|${mediaLens}|${currentItem || ""}`;
     if (lastPrimaryQueryRef.current !== primaryQueryKey || isAutocompleteSelectionRef.current || desynced) {
-      setActiveVisualOwner(null);
-      setActiveVisualOwnerMetadata(null);
+      const currentVisualOwner = activeVisualOwnerRef.current;
+      const normalizedCurrentItem = extractProviderId(currentItem);
+      const normalizedOwnerId = extractProviderId(currentVisualOwner?.providerId || null);
+
+      const isAlreadyCorrect = currentVisualOwner && (
+        (currentVisualOwner.canonicalTitle && currentVisualOwner.canonicalTitle.trim().toLowerCase() === normalizedQuestion.toLowerCase()) ||
+        (contextPacket?.canonicalEntity && currentVisualOwner.canonicalTitle && currentVisualOwner.canonicalTitle.trim().toLowerCase() === contextPacket.canonicalEntity.trim().toLowerCase()) ||
+        (normalizedCurrentItem && normalizedOwnerId && normalizedCurrentItem === normalizedOwnerId) ||
+        (currentItem && currentItem.endsWith(currentVisualOwner.providerId)) ||
+        (contextPacket?.providerId && currentVisualOwner.providerId === contextPacket.providerId)
+      );
+
+      if (!isAlreadyCorrect) {
+        setActiveVisualOwner(null);
+        setActiveVisualOwnerMetadata(null);
+      }
       lastPrimaryQueryRef.current = primaryQueryKey;
     }
 
     if (activeExecutionRef.current?.searchKey === searchKey && activeExecutionRef.current?.status === "completed") {
-      console.log("[SEARCH EXIT]", {
-        reason: "ALREADY_COMPLETED",
-        searchKey,
-        queryItem,
-        currentItem
-      });
       setIsLoading(false);
       return;
     }
 
     const shouldSkip = lastKeys.includes(searchKey) && activeExecutionRef.current?.status !== "failed" && activeExecutionRef.current?.status !== "aborted";
-    
-    console.log("[SEARCH SUPPRESSION]", {
-      searchKey,
-      lastKeys,
-      currentItem,
-      queryItem,
-      fullQuestion,
-      shouldSkip
-    });
 
     if (shouldSkip) {
-      console.log("[SEARCH EXIT]", {
-        reason: "SUPPRESSED_DUPLICATE",
-        searchKey,
-        queryItem,
-        currentItem
-      });
       setIsLoading(false);
       return;
     }
@@ -691,10 +648,6 @@ export default function AskPage({
       clearExplorationState();
       setReadingOrder(null);
       setContinuationSuggestions(null);
-      
-      console.log("[SEARCH EXIT]", {
-        reason: "EMPTY_QUERY"
-      });
       return () => {
         isCancelled = true;
         if (activeTraceIdRef.current) {
@@ -2113,8 +2066,8 @@ export default function AskPage({
                         activeTraceId={activeTraceId}
                         activeVisualOwner={activeVisualOwner}
                         onVisualLocked={(owner) => {
-                          setActiveVisualOwner(owner);
-                          setActiveVisualOwnerMetadata({
+                           setActiveVisualOwner(owner);
+                           setActiveVisualOwnerMetadata({
                             providerId: owner.providerId,
                             canonicalTitle: owner.canonicalTitle,
                             mediaType: owner.mediaType,

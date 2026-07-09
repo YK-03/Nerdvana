@@ -301,6 +301,8 @@ function mapTMDBToCandidate(r: any, type: string): ResolverCandidate {
     popularity: typeof r.vote_average === "number" ? r.vote_average * 10 : null,
     genres: [],
     raw: r,
+    posterUrl: r.poster_path ? `https://image.tmdb.org/t/p/w780${r.poster_path}` : (r.backdrop_path ? `https://image.tmdb.org/t/p/w780${r.backdrop_path}` : null),
+    backdropUrl: r.backdrop_path ? `https://image.tmdb.org/t/p/w1280${r.backdrop_path}` : null,
   };
 }
 
@@ -319,6 +321,8 @@ async function fetchJikan(query: string, mediaType: string): Promise<ResolverCan
         year: r.aired?.prop?.from?.year ?? null,
         popularity: r.score ? r.score * 10 : null,
         raw: r,
+        posterUrl: r.images?.jpg?.large_image_url ?? r.images?.jpg?.image_url ?? null,
+        backdropUrl: null,
       } as ResolverCandidate)));
     }
   } catch (err) {}
@@ -338,6 +342,8 @@ async function fetchJikan(query: string, mediaType: string): Promise<ResolverCan
           year: r.published?.prop?.from?.year ?? null,
           popularity: r.score ? r.score * 10 : null,
           raw: r,
+          posterUrl: r.images?.jpg?.large_image_url ?? r.images?.jpg?.image_url ?? null,
+          backdropUrl: null,
         } as ResolverCandidate)));
       }
     } catch (err) {}
@@ -361,6 +367,8 @@ async function fetchRAWG(query: string, apiKey: string): Promise<ResolverCandida
       popularity: r.rating ? r.rating * 20 : null,
       genres: (r.genres ?? []).map((g: any) => g.name),
       raw: r,
+      posterUrl: r.background_image ?? null,
+      backdropUrl: r.background_image ?? null,
     }));
   } catch { return []; }
 }
@@ -393,6 +401,8 @@ async function fetchIGDB(query: string, clientId: string, clientSecret: string):
       genres: r.genres?.map((g: any) => g.name) || [],
       publisher: r.involved_companies?.[0]?.company?.name || null,
       raw: r,
+      posterUrl: r.cover?.url ? `https:${r.cover.url.replace("t_thumb", "t_cover_big")}` : null,
+      backdropUrl: null,
     }));
   } catch { return []; }
 }
@@ -413,6 +423,8 @@ async function fetchComicVine(query: string, apiKey: string): Promise<ResolverCa
       popularity: null,
       publisher: r.publisher?.name || null,
       raw: r,
+      posterUrl: r.image?.super_url || r.image?.medium_url || null,
+      backdropUrl: null,
     }));
   } catch { return []; }
 }
@@ -433,6 +445,8 @@ async function fetchGoogleBooks(query: string): Promise<ResolverCandidate[]> {
         year: info.publishedDate ? parseInt(info.publishedDate.slice(0, 4)) : null,
         popularity: null,
         raw: info,
+        posterUrl: info.imageLinks?.thumbnail?.replace("http://", "https://") || null,
+        backdropUrl: null,
       };
     });
   } catch { return []; }
@@ -632,6 +646,8 @@ function tryValidate(
     overview: sanitizeExternalDescription(rawOverview),
     genres: best.genres ?? [],
     raw: best.raw,
+    posterUrl: best.posterUrl ?? best.imageUrl ?? null,
+    backdropUrl: best.backdropUrl ?? null,
   };
 
   const validated = validateVisualAssetCompatibility(visualDataInput, resolution, validationContext);
@@ -919,7 +935,9 @@ async function fetchAnimeVisualByCanonicalId(anilistId: number): Promise<Resolve
       year: media.startDate?.year ?? null,
       popularity: media.meanScore ?? null,
       genres: media.genres ?? [],
-      raw: media
+      raw: media,
+      posterUrl: media.coverImage?.extraLarge ?? media.coverImage?.large ?? null,
+      backdropUrl: media.bannerImage ?? null,
     };
   } catch (err) {
     console.error("[Nerdvana] fetchAnimeVisualByCanonicalId error:", err);
@@ -976,6 +994,8 @@ async function adaptiveRetrieve(
       year: candidate.year,
       overview: candidate.raw?.description ?? "",
       raw: candidate.raw,
+      posterUrl: candidate.posterUrl ?? candidate.imageUrl ?? null,
+      backdropUrl: candidate.backdropUrl ?? null,
     };
 
     return {
@@ -1089,6 +1109,8 @@ async function adaptiveRetrieve(
         year: directCandidate.year,
         overview: directCandidate.raw?.overview ?? "",
         raw: directCandidate.raw,
+        posterUrl: directCandidate.posterUrl ?? directCandidate.imageUrl ?? null,
+        backdropUrl: directCandidate.backdropUrl ?? null,
       };
       return {
         asset,

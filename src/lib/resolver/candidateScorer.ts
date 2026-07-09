@@ -63,6 +63,8 @@ export interface ResolverCandidate {
   publisher?: string | null;
   genres?: string[];
   raw?: unknown;
+  posterUrl?: string | null;
+  backdropUrl?: string | null;
 }
 
 export interface ResolverDebug {

@@ -19,6 +19,12 @@ interface LorebookItem {
   topic: string;
   conversation: { role: "user" | "assistant"; content: string }[];
   results: any[];
+  visual?: {
+    posterUrl: string;
+    backdropUrl?: string | null;
+    mediaType: string;
+    provider: string;
+  } | null;
   visualAsset?: {
     url: string;
     posterUrl?: string | null;
@@ -96,10 +102,13 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data()
-      })) as LorebookItem[];
+      const items = snapshot.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          ...data
+        };
+      }) as LorebookItem[];
       setLorebooks(items);
     });
 
@@ -266,13 +275,13 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
           </h1>
           
           <div 
-            className="w-full border rounded-md p-6 sm:p-10 md:p-16 flex flex-col gap-16 md:gap-24 transition-colors duration-300"
+            className="w-full border rounded-md p-6 sm:p-8 md:p-10 flex flex-col gap-0 transition-colors duration-300"
             style={{ 
               borderColor: "var(--nerdvana-border)", 
               }}
           >
             {/* Hero Section */}
-            <section className="flex flex-col items-center text-center gap-6 w-full mt-4 md:mt-8">
+            <section className="flex flex-col items-center text-center gap-4 sm:gap-6 w-full mt-2 md:mt-4">
               <div className="relative group shrink-0">
                 {/* Upload button wrapper (future-ready) */}
                 {avatarUrl && !imgError ? (
@@ -296,13 +305,13 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               </div>
               
               <div className="pt-2 md:pt-4 w-full">
-                <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-black tracking-[-0.02em] leading-none mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
+                <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-black tracking-[-0.02em] leading-none mb-4" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}>
                   {username}
                 </h1>
                 
                 {/* Bio */}
                 {bio && (
-                  <div className="max-w-md mx-auto mb-12">
+                  <div className="max-w-md mx-auto mb-4">
                     <p className="text-[1rem] md:text-[1.1rem] leading-relaxed opacity-90" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
                       {bio}
                     </p>
@@ -312,14 +321,17 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               </div>
             </section>
 
-            <hr style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
+            <hr className="my-5 sm:my-6" style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
 
             {/* Continue Exploring (Featured Panel) */}
             <section className="w-full max-w-4xl mx-auto flex flex-col items-center">
               {lorebooks.length > 0 ? (() => {
                 const activeStory = lorebooks[0];
-                const asset = activeStory.visualAsset;
-                const artworkUrl = asset?.backdropUrl || asset?.posterUrl || asset?.url || null;
+                const visual = activeStory.visual;
+                const visualAsset = activeStory.visualAsset;
+                const artworkUrl = visual 
+                  ? (visual.backdropUrl || visual.posterUrl || null) 
+                  : (visualAsset?.backdropUrl || visualAsset?.posterUrl || visualAsset?.url || null);
                 
                 return (
                   <div 
@@ -350,8 +362,12 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       
                       <div>
                         <button 
-                          className="text-[0.7rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full transition-opacity duration-200 shadow-sm flex items-center gap-3 hover:opacity-80" 
-                          style={{ backgroundColor: "var(--nerdvana-text)", color: "var(--nerdvana-surface)", borderColor: "var(--nerdvana-text)" }}
+                          className="nerdvana-clickable text-[0.7rem] uppercase tracking-[0.15em] px-5 py-2 border-[2px] auth-button flex items-center gap-3 transition-all duration-300" 
+                          style={{ 
+                            fontFamily: '"Courier New", monospace',
+                            boxShadow: "2px 2px 0 var(--nerdvana-accent)",
+                            color: "var(--nerdvana-surface)"
+                          }}
                         >
                           Continue <span>→</span>
                         </button>
@@ -375,19 +391,22 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               )}
             </section>
 
-            <hr style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
+            <hr className="my-5 sm:my-6" style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
 
             {/* Your Library (Media Cards) */}
             <section className="w-full flex flex-col items-center">
-              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-10 opacity-40 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-6 opacity-40 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
                 Your Library
               </h2>
               
               {lorebooks.length > 0 ? (
-                <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center max-w-4xl">
+                <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 justify-items-center max-w-4xl">
                   {lorebooks.map((item) => {
-                    const asset = item.visualAsset;
-                    const artworkUrl = asset?.posterUrl || asset?.backdropUrl || asset?.url || null;
+                    const visual = item.visual;
+                    const visualAsset = item.visualAsset;
+                    const artworkUrl = visual 
+                      ? (visual.posterUrl || visual.backdropUrl || null) 
+                      : (visualAsset?.posterUrl || visualAsset?.backdropUrl || visualAsset?.url || null);
                     
                     return (
                       <div 
@@ -426,11 +445,11 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               )}
             </section>
 
-            <hr style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
+            <hr className="my-5 sm:my-6" style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
 
             {/* Collections Section */}
             <section className="w-full flex flex-col items-center">
-              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-6 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-4 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
                 Collections
               </h2>
               <div className="flex flex-wrap justify-center gap-3">
@@ -447,14 +466,14 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
               </div>
             </section>
 
-            <hr style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
+            <hr className="my-5 sm:my-6" style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
 
             {/* Settings Section (Minimal) */}
             <section className="w-full flex flex-col items-center">
-              <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-12 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+              <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-6 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
                 Preferences
               </h2>
-              <div className="w-full max-w-sm flex flex-col gap-10">
+              <div className="w-full max-w-sm flex flex-col gap-6">
                 
                 <div className="group text-left">
                   <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
@@ -542,6 +561,8 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
         }
         .nerdvana-paper-texture-conversation { opacity: 0.04; transition: opacity 0.3s ease; }
         .dark .nerdvana-paper-texture-conversation { opacity: 0.08; }
+        .auth-button { background-color: var(--nerdvana-border); border-color: var(--nerdvana-border); color: var(--nerdvana-surface); transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease; }
+        .auth-button:hover { background-color: var(--nerdvana-accent); border-color: var(--nerdvana-accent); transform: translateY(-1px); }
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
         }

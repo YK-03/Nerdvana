@@ -54,6 +54,8 @@ export type ValidatedVisualAsset = {
   year?: number | null;
   genres?: string[];
   overview?: string;
+  posterUrl?: string | null;
+  backdropUrl?: string | null;
 };
 
 export type VisualAssetValidationInput = {
@@ -67,6 +69,8 @@ export type VisualAssetValidationInput = {
   raw?: unknown;
   publisher?: string | null;
   year?: number | null;
+  posterUrl?: string | null;
+  backdropUrl?: string | null;
 };
 
 export type CandidateMetadata = {
@@ -718,5 +722,7 @@ export function validateVisualAssetCompatibility(
     year: asset.year,
     genres: asset.genres,
     overview: asset.overview,
+    posterUrl: asset.posterUrl ?? url,
+    backdropUrl: asset.backdropUrl ?? null,
   };
 }

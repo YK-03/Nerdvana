@@ -147,16 +147,16 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
         else if (outcome.mode === "ENTITY") setSearchPhase("entity");
         else if (outcome.mode === "POPULARITY") setSearchPhase("best-available");
 
-        if (outcome.state === "SUCCESS" && outcome.asset) {
-          if (activeTraceId) {
-            recordRetrieval(activeTraceId, {
-              success: true,
-              provider: outcome.asset.source
-            });
-          }
-          setVisual(outcome.asset);
-          setConfidence(outcome.confidence ?? "high");
-          setSearchPhase("done");
+         if (outcome.state === "SUCCESS" && outcome.asset) {
+           if (activeTraceId) {
+             recordRetrieval(activeTraceId, {
+               success: true,
+               provider: outcome.asset.source
+             });
+           }
+           setVisual(outcome.asset);
+           setConfidence(outcome.confidence ?? "high");
+           setSearchPhase("done");
 
           if (onVisualLocked) {
             onVisualLocked({

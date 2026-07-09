@@ -88,6 +88,17 @@ export interface ActiveVisualOwner extends ActiveVisualOwnerMetadata {
   lockedAt: number;
 }
 
+export function extractProviderId(identifier: string | null): string | null {
+  if (!identifier) return null;
+  // Handle the unified format (e.g. tmdb::movie::496243)
+  const unifiedParts = identifier.split("::");
+  if (unifiedParts.length === 3) {
+    return unifiedParts[2];
+  }
+  // Fallback for raw IDs or unknown formats
+  return identifier;
+}
+
 import {
   sourceSupportsLens,
   lensScore,
