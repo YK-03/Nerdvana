@@ -16,6 +16,8 @@ function Header({ onNavigate }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [username, setUsername] = useState<string>("Explorer");
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [imgError, setImgError] = useState(false);
   const { user, login, logout } = useAuth();
   const navItems = ["Explore", "Debates", "Community", "About"];
   const userMenuRef = useRef<HTMLDivElement | null>(null);
@@ -48,6 +50,8 @@ function Header({ onNavigate }: HeaderProps) {
   useEffect(() => {
     if (!user) {
       setUsername("Explorer");
+      setAvatarUrl("");
+      setImgError(false);
       return;
     }
 
@@ -56,12 +60,19 @@ function Header({ onNavigate }: HeaderProps) {
     const unsubscribe = onSnapshot(
       userRef,
       (snapshot) => {
-        const data = snapshot.data() as { username?: unknown } | undefined;
+        const data = snapshot.data() as { username?: unknown; avatar?: unknown } | undefined;
         const nextUsername =
           typeof data?.username === "string" && data.username.trim()
             ? data.username.trim()
             : user.displayName || "Explorer";
         setUsername(nextUsername);
+
+        const hasCustomAvatar = typeof data?.avatar === "string" && data.avatar.trim() !== "";
+        const nextAvatar = hasCustomAvatar
+          ? (data.avatar as string).trim()
+          : (user.photoURL || "");
+        setAvatarUrl(nextAvatar);
+        setImgError(false);
       },
       () => undefined
     );
@@ -225,23 +236,38 @@ function Header({ onNavigate }: HeaderProps) {
 
           {user ? (
             <>
-              <div ref={userMenuRef} className="relative">
+              <div ref={userMenuRef} className="relative flex items-center">
                 <button
                   onClick={(event) => {
                     event.stopPropagation();
                     setOpen((prev) => !prev);
                   }}
-                  className="nerdvana-clickable flex items-center gap-2 px-2.5 py-2 border-[2px] transition-all duration-200 hover:-translate-y-0.5 min-h-10 max-w-[44vw] sm:max-w-none"
+                  className="nerdvana-clickable flex items-center justify-center w-11 h-11 rounded-full border-[2px] transition-all duration-200 hover:scale-105 hover:opacity-90 cursor-pointer overflow-hidden relative shadow-sm"
                   style={{
                     borderColor: "var(--nerdvana-border)",
                     backgroundColor: "var(--nerdvana-surface)",
-                    color: "var(--nerdvana-text)",
-                    fontFamily: '"Courier New", monospace'
                   }}
+                  aria-label="User menu"
                 >
-                  <span className="text-[0.66rem] sm:text-[0.72rem] uppercase tracking-[0.08em] truncate">
-                    {`Hi, ${username} !`}
-                  </span>
+                  {avatarUrl && !imgError ? (
+                    <img 
+                      src={avatarUrl} 
+                      alt={username} 
+                      onError={() => setImgError(true)}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover" 
+                    />
+                  ) : (
+                    <span 
+                      className="text-[0.95rem] font-black uppercase" 
+                      style={{ 
+                        fontFamily: 'Impact, "Arial Black", sans-serif',
+                        color: "var(--nerdvana-text)" 
+                      }}
+                    >
+                      {username ? username.charAt(0) : "?"}
+                    </span>
+                  )}
                 </button>
                 {open && <UserDropdown onNavigate={navigateToPath} onLogout={handleLogout} />}
               </div>
