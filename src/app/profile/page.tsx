@@ -50,6 +50,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
   const [bioDraft, setBioDraft] = useState("");
   const [savingBio, setSavingBio] = useState(false);
   const [lorebooks, setLorebooks] = useState<LorebookItem[]>([]);
+  const [currentExploration, setCurrentExploration] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onTriggerFilePicker = () => {
@@ -125,6 +126,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
       setAvatarUrl("");
       setImgError(false);
       setLorebooks([]);
+      setCurrentExploration(null);
       return;
     }
 
@@ -179,7 +181,18 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
       setLorebooks(items);
     });
 
-    return () => unsubscribe();
+    const unsubExploration = onSnapshot(doc(db, "users", user.uid, "state", "currentExploration"), (docSnap) => {
+      if (docSnap.exists()) {
+        setCurrentExploration({ id: docSnap.id, ...docSnap.data() });
+      } else {
+        setCurrentExploration(null);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubExploration();
+    };
   }, [user]);
 
   const canSaveUsername = useMemo(() => {
@@ -236,7 +249,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
     }
   };
 
-  const handleLorebookClick = (item: LorebookItem) => {
+  const handleLorebookClick = (item: any) => {
     let restoredAnswer = { summary: "", categories: [], spoilers: "" };
     let restoredConversation: any[] = [];
 
@@ -255,18 +268,19 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
     }
 
     const stateToPush = {
-      query: item.topic,
+      query: item.title || item.topic,
       conversation: restoredConversation,
-      results: item.results,
+      results: item.results || [],
       answer: restoredAnswer,
       rehydrated: true,
-      mediaLens: normalizeMediaLens(item.mediaLens)
+      mediaLens: normalizeMediaLens(item.mediaLens),
+      item: item.providerId || null
     };
 
     window.history.pushState(
       stateToPush,
       "",
-      buildAskUrl(item.topic, { lens: normalizeMediaLens(item.mediaLens) })
+      buildAskUrl(item.title || item.topic, { lens: normalizeMediaLens(item.mediaLens), item: item.providerId })
     );
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
@@ -411,8 +425,8 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
 
             {/* Continue Exploring (Featured Panel) */}
             <section className="w-full max-w-4xl mx-auto flex flex-col items-center">
-              {lorebooks.length > 0 ? (() => {
-                const activeStory = lorebooks[0];
+              {currentExploration ? (() => {
+                const activeStory = currentExploration;
                 const visual = activeStory.visual;
                 const visualAsset = activeStory.visualAsset;
                 const artworkUrl = visual 
@@ -428,7 +442,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                     {artworkUrl ? (
                       <img 
                         src={artworkUrl} 
-                        alt={activeStory.topic} 
+                        alt={activeStory.title || activeStory.topic} 
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.02]"
                       />
                     ) : (
@@ -443,7 +457,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                         Continue Exploring
                       </span>
                       <h3 className="text-[clamp(2rem,5vw,3.75rem)] font-bold uppercase tracking-tight leading-[1] mb-6 drop-shadow-md transition-transform duration-500 origin-bottom-left group-hover:scale-[1.01]" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "white" }}>
-                        {activeStory.topic}
+                        {activeStory.title || activeStory.topic}
                       </h3>
                       
                       <div>
@@ -468,8 +482,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                   </p>
                   <button 
                     onClick={() => onNavigatePage("home")}
-                    className="text-[0.65rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full hover:bg-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] transition-all"
-                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                    className="text-[0.65rem] uppercase tracking-[0.15em] px-6 py-2.5 border rounded-full text-[var(--nerdvana-text)] border-[var(--nerdvana-border)] hover:bg-[var(--nerdvana-text)] hover:text-[var(--nerdvana-surface)] transition-all"
                   >
                     Explore
                   </button>

@@ -20,7 +20,7 @@ import type { MockAnswer } from "../mockAnswers";
 import { buildAskUrl, DEFAULT_MEDIA_LENS, normalizeMediaLens } from "../mediaLens";
 import { shouldMaintainFranchiseLock, type ResolverContextPacket, type ActiveVisualOwner, type ActiveVisualOwnerMetadata, extractProviderId } from "../canonicalResolver";
 import { auth, db } from "../lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc } from "firebase/firestore";
 import { startNewSession, useQuerySessionStore, useAutocompleteStore, useIntentStore } from "../store/resolverSession";
 import { useExplorationStore, type ExplorationRecommendation } from "../store/explorationSession";
 import { detectQueryMode } from "../canonicalResolver";
@@ -178,6 +178,8 @@ export default function AskPage({
   };
   const [grounding, setGrounding] = useState<CanonicalGroundingResult | null>(null);
   const [renderEntityPacket, setRenderEntityPacket] = useState<RenderEntityPacket | null>(null);
+  const [visualResolutionStatus, setVisualResolutionStatus] = useState<'idle' | 'pending' | 'resolved' | 'failed'>('idle');
+  const lastExploredEntityRef = useRef("");
   const resolvedItem = (contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && renderEntityPacket)
     ? renderEntityPacket.title
     : (contextPacket?.canonicalEntity ?? null);
@@ -714,6 +716,7 @@ export default function AskPage({
     const runSearch = async (context: ExecutionContext) => {
       try {
         setIsLoading(true);
+        setVisualResolutionStatus('pending');
         setReadingOrder(null);
         setContinuationSuggestions(null);
 
@@ -1307,6 +1310,39 @@ export default function AskPage({
     lastSavedCaseKey.current = caseKey;
   }, [answer.summary, contextIsValid, fullQuestion, isAmbiguous, mediaLens, resolvedItem, saveCaseMemory, user]);
 
+  // Current Exploration automatic state updater
+  useEffect(() => {
+    if (!contextIsValid || isAmbiguous || !resolvedItem) return;
+    if (!answer.summary.trim()) return;
+    if (visualResolutionStatus !== 'resolved' && visualResolutionStatus !== 'failed') return;
+    
+    const explorationKey = `${resolvedItem}|${mediaLens}`;
+    if (lastExploredEntityRef.current === explorationKey) return;
+    
+    if (user) {
+      const currentExplorationData = {
+        title: renderEntityPacket?.title || contextPacket?.canonicalEntity || resolvedItem,
+        providerId: renderEntityPacket?.providerId || contextPacket?.providerId || resolvedItem,
+        mediaLens,
+        visual: activeVisualOwnerRef.current?.asset ? {
+          title: activeVisualOwnerRef.current.asset.title,
+          posterUrl: activeVisualOwnerRef.current.asset.posterUrl || activeVisualOwnerRef.current.asset.url || null,
+          backdropUrl: activeVisualOwnerRef.current.asset.backdropUrl || null,
+          mediaType: activeVisualOwnerRef.current.mediaType || activeVisualOwnerRef.current.asset.mediaType || "",
+          provider: activeVisualOwnerRef.current.asset.source || ""
+        } : null,
+        timestamp: serverTimestamp()
+      };
+      
+      const docRef = doc(db, "users", user.uid, "state", "currentExploration");
+      setDoc(docRef, currentExplorationData).catch((error) => {
+        console.warn("Current Exploration sync failed", error);
+      });
+    }
+    
+    lastExploredEntityRef.current = explorationKey;
+  }, [answer.summary, contextIsValid, isAmbiguous, mediaLens, resolvedItem, user, visualResolutionStatus, renderEntityPacket, contextPacket]);
+
   const handleFollowUpSubmit = async (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
 
@@ -1325,6 +1361,7 @@ export default function AskPage({
     setConversation(prev => [...prev, userMessage, assistantPlaceholder]);
     setFollowUpQuery("");
     setIsGeneratingFollowUp(true);
+    setVisualResolutionStatus('pending');
 
     const requestId = Math.random().toString(36).substring(2, 15);
     const traceId = `trace-${requestId}`;
@@ -2076,6 +2113,7 @@ export default function AskPage({
                             executionMode: owner.executionMode
                           });
                         }}
+                        onVisualResolutionComplete={setVisualResolutionStatus}
                       />
                   )}
                   {explorationStatus === "completed" && explorationRecs.length > 0 && (

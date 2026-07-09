@@ -10,6 +10,7 @@ interface VisualPanelProps {
   activeTraceId: string | null;
   activeVisualOwner?: ActiveVisualOwner | null;
   onVisualLocked?: (owner: ActiveVisualOwner) => void;
+  onVisualResolutionComplete?: (status: 'resolved' | 'failed') => void;
 }
 
 type RetrievalConfidence = "high" | "medium" | "low" | "fallback";
@@ -56,7 +57,7 @@ const CONFIDENCE_BADGE: Record<RetrievalConfidence, string | null> = {
 
 // ─── Component ────────────────────────────────────────────────────────
 
-export default function VisualPanel({ contextPacket, activeTraceId, activeVisualOwner, onVisualLocked }: VisualPanelProps) {
+export default function VisualPanel({ contextPacket, activeTraceId, activeVisualOwner, onVisualLocked, onVisualResolutionComplete }: VisualPanelProps) {
   const [visual, setVisual] = useState<ValidatedVisualAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchPhase, setSearchPhase] = useState<SearchPhase>("idle");
@@ -90,6 +91,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
           setConfidence("high"); // Locked visuals are always high confidence
           setSearchPhase("done");
           setLoading(false);
+          onVisualResolutionComplete?.("resolved");
           return;
         }
       } else if (activeVisualOwner) {
@@ -170,6 +172,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
               lockedAt: Date.now()
             });
           }
+          onVisualResolutionComplete?.("resolved");
           return;
         }
 
@@ -193,6 +196,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
             : outcome.error || outcome.reason || VISUAL_PHASE_LABELS.NO_IMAGE;
 
         setErrorState(userFriendlyError);
+        onVisualResolutionComplete?.("failed");
       } catch (err: any) {
         if (cancelled) return;
 
@@ -206,6 +210,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
         setSearchPhase("done");
         setVisual(null);
         setErrorState(err.message || "Visual retrieval failed safely.");
+        onVisualResolutionComplete?.("failed");
       } finally {
         if (!cancelled) setLoading(false);
       }
