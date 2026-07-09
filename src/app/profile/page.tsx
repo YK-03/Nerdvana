@@ -51,6 +51,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
   const [savingBio, setSavingBio] = useState(false);
   const [lorebooks, setLorebooks] = useState<LorebookItem[]>([]);
 
+
   useEffect(() => {
     if (!user) {
       setUsername("Explorer");
@@ -412,7 +413,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       <div 
                         key={item.id} 
                         onClick={() => handleLorebookClick(item)} 
-                        className="group relative nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 w-full aspect-[2/3] max-w-[260px]" 
+                        className="group relative nerdvana-clickable cursor-pointer overflow-hidden rounded-lg border shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 w-full aspect-[2/3] max-w-[260px] flex items-center justify-center p-5 text-center" 
                         style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}
                       >
                         {artworkUrl ? (
@@ -422,16 +423,13 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                           />
                         ) : (
-                          <div className="absolute inset-0 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 bg-[var(--nerdvana-text)]" />
-                        )}
-                        
-                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--nerdvana-conversation-bg)] via-[var(--nerdvana-conversation-bg)]/20 to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-500 z-10" />
-                        
-                        <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 z-20 flex flex-col justify-end h-full text-center items-center">
-                          <h3 className="text-lg md:text-xl font-bold leading-tight line-clamp-3 mb-2 drop-shadow-lg" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                          <span 
+                            className="text-sm md:text-base font-medium opacity-80 leading-snug line-clamp-4 group-hover:opacity-100 transition-opacity duration-300"
+                            style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}
+                          >
                             {item.topic}
-                          </h3>
-                        </div>
+                          </span>
+                        )}
                       </div>
                     );
                   })}
