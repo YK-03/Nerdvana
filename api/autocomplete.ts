@@ -288,7 +288,7 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
           }
         } catch (err: any) {
           const msg = err?.message || "";
-          const isTransient = err?.name === "AbortError" || msg.includes("ECONNRESET") || msg.includes("fetch failed") || msg.includes("Timeout");
+          const isTransient = err?.name === "AbortError" || err?.name === "TimeoutError" || msg.includes("ECONNRESET") || msg.includes("fetch failed") || msg.toLowerCase().includes("timeout");
           if (!isTransient) {
             console.error("[IGDB AUTOCOMPLETE] Fetch Failed, falling back to local registry:", err.message);
           } else if (process.env.DEBUG_AUTOCOMPLETE === "true") {

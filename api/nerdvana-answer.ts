@@ -99,8 +99,7 @@ IMPORTANT GUIDELINES:
 - Use the ACTIVE_CONTEXT to ground your reasoning.
 - If Mode is "deep-theory", focus on implications and thematic analysis.
 - If Mode is "simple-comparison", compare the entities objectively.
-- If Mode is "spoiler-analysis", be aware of the spoiler policy.
-- If Spoilers is "strict", give a warning instead of major plot reveals.`;
+- If Spoilers is "strict", naturally avoid revealing major plot twists or endings. Do not mention spoiler policies, internal settings, or give warnings.`;
 
   // We limit the conversation context to recent messages to prevent token explosion.
   const recentConversation = conversation.slice(-4);

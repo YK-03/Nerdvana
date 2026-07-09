@@ -230,7 +230,9 @@ export default function AskPage({
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [followUpQuery, setFollowUpQuery] = useState("");
   const [isGeneratingFollowUp, setIsGeneratingFollowUp] = useState(false);
-  const [chatSpoilers, setChatSpoilers] = useState(false);
+  const [spoilerPolicy, setSpoilerPolicy] = useState(false);
+  const [isRegeneratingAnswer, setIsRegeneratingAnswer] = useState(false);
+  const [revealedMessageIndices, setRevealedMessageIndices] = useState<Set<number>>(new Set());
   const [readingOrder, setReadingOrder] = useState<any[] | null>(null);
   const [continuationSuggestions, setContinuationSuggestions] = useState<any[] | null>(null);
 
@@ -594,7 +596,7 @@ export default function AskPage({
 
     const desynced = (queryItem || null) !== currentItem;
 
-    const searchKey = `${normalizedQuestion}|${mediaLens}|${chatSpoilers}|${user?.uid ?? ""}|${currentItem || ""}`;
+    const searchKey = `${normalizedQuestion}|${mediaLens}|${user?.uid ?? ""}|${currentItem || ""}`;
     const lastKeys = Array.isArray(lastSearchKeyRef.current) ? lastSearchKeyRef.current : [lastSearchKeyRef.current];
 
     if (activeExecutionRef.current?.searchKey === searchKey && activeExecutionRef.current?.status === "running") {
@@ -718,6 +720,7 @@ export default function AskPage({
         setIsLoading(true);
         setVisualResolutionStatus('pending');
         setReadingOrder(null);
+        setRevealedMessageIndices(new Set());
         setContinuationSuggestions(null);
 
         if (abortControllerRef.current) {
@@ -811,7 +814,7 @@ export default function AskPage({
             query: context.query,
             mediaLens,
             item: finalItem || undefined,
-            spoilerMode: chatSpoilers,
+            spoilerMode: spoilerPolicy,
             conversation: [],
             previousEntity: null,
             temporaryEntities: useQuerySessionStore.getState().temporaryEntities,
@@ -1054,7 +1057,7 @@ export default function AskPage({
 
         // Defensive: Set the search key ref immediately to prevent state-change re-renders 
         // from re-triggering the search pipeline.
-        const newSearchKey = `${canonicalTitle.trim()}|${mediaLens}|${chatSpoilers}|${user?.uid ?? ""}|${canonicalItem}`;
+        const newSearchKey = `${canonicalTitle.trim()}|${mediaLens}|${user?.uid ?? ""}|${canonicalItem}`;
         lastSearchKeyRef.current = newSearchKey;
 
         if (payload?.grounding) {
@@ -1143,7 +1146,7 @@ export default function AskPage({
         }
 
         // Visual check and spoiler block check
-        const isSpoilerBlocked = !chatSpoilers && /\b(die|dies|death|dead|ending|kills|killed|final scene|spoiler|plot twist)\b/i.test(aiAnswer);
+        const isSpoilerBlocked = !spoilerPolicy && /\b(die|dies|death|dead|ending|kills|killed|final scene|spoiler|plot twist)\b/i.test(aiAnswer);
 
         finalizeRenderVerification(context.traceId, RENDER_CONTRACTS.selectors.aiResponse, (result) => {
           if (context.requestId !== activeRequestIdRef.current) {
@@ -1263,7 +1266,105 @@ export default function AskPage({
         recordLifecyclePhase(activeTraceIdRef.current, "CANCELLATION");
       }
     };
-  }, [chatSpoilers, fullQuestion, mediaLens, user, queryItem, urlParams.providerMetadata, contextPacket, renderEntityPacket]);
+  }, [fullQuestion, mediaLens, user, queryItem, urlParams.providerMetadata, contextPacket, renderEntityPacket]);
+
+  const handleSpoilerToggle = async (newValue: boolean) => {
+    setSpoilerPolicy(newValue);
+    if (!newValue) return;
+
+    const isMainAnswer = conversation.length === 0;
+
+    if (isMainAnswer) {
+      if (!fullQuestion || !answer.summary) return;
+      setIsRegeneratingAnswer(true);
+      try {
+        const followUpPayload = {
+          sessionId,
+          query: fullQuestion,
+          mediaLens,
+          item: renderEntityPacket?.providerId || contextPacket?.providerId || resolvedItem || undefined,
+          providerMetadata: renderEntityPacket?.providerMetadata || contextPacket?.providerMetadata || urlParams.providerMetadata || undefined,
+          spoilerMode: newValue,
+          conversation: [],
+          previousEntity: shouldMaintainFranchiseLock(resolvedItem, fullQuestion) ? resolvedItem : null,
+          intentResolution: useIntentStore.getState().intent
+            ? {
+                intent: { intent: useIntentStore.getState().intent, entities: [] },
+                ambiguity: useIntentStore.getState().ambiguity,
+                groundingDecision: { strategy: useIntentStore.getState().strategy },
+                candidateGraph: useIntentStore.getState().candidateGraph
+              }
+            : undefined
+        };
+
+        const res = await fetch("/api/nerdvana-answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(followUpPayload)
+        });
+
+        if (!res.ok) throw new Error("API failed");
+        const data = await res.json();
+        
+        setAnswer(prev => ({ ...prev, summary: data.answer || "" }));
+        setRevealedMessageIndices(new Set());
+      } catch (err) {
+        console.error("Failed to regenerate answer", err);
+      } finally {
+        setIsRegeneratingAnswer(false);
+      }
+    } else {
+      const lastAssistantIdx = conversation.map(m => m.role).lastIndexOf("assistant");
+      if (lastAssistantIdx === -1) return;
+
+      const userQuery = conversation[lastAssistantIdx - 1]?.content || fullQuestion;
+      const history = conversation.slice(0, lastAssistantIdx - 1);
+
+      setConversation(prev => {
+        const next = [...prev];
+        next[lastAssistantIdx] = { ...next[lastAssistantIdx], content: "" };
+        return next;
+      });
+      setIsGeneratingFollowUp(true);
+      
+      try {
+        const followUpPayload = {
+          sessionId,
+          query: userQuery,
+          mediaLens,
+          item: renderEntityPacket?.providerId || contextPacket?.providerId || resolvedItem || undefined,
+          providerMetadata: renderEntityPacket?.providerMetadata || contextPacket?.providerMetadata || urlParams.providerMetadata || undefined,
+          spoilerMode: newValue,
+          conversation: [
+            { role: "user", content: fullQuestion },
+            { role: "assistant", content: answer.summary || "No answer available" },
+            ...history
+          ],
+          previousEntity: shouldMaintainFranchiseLock(resolvedItem, userQuery) ? resolvedItem : null
+        };
+
+        const res = await fetch("/api/nerdvana-answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(followUpPayload)
+        });
+
+        if (!res.ok) throw new Error("API failed");
+        const data = await res.json();
+        
+        setConversation(prev => {
+          const next = [...prev];
+          next[lastAssistantIdx] = { ...next[lastAssistantIdx], content: data.answer || "" };
+          return next;
+        });
+        setRevealedMessageIndices(new Set());
+      } catch (err) {
+        console.error("Failed to regenerate follow-up", err);
+      } finally {
+        setIsGeneratingFollowUp(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!contextIsValid || isAmbiguous || !resolvedItem) {
@@ -1409,7 +1510,7 @@ export default function AskPage({
         mediaLens,
         item: renderEntityPacket?.providerId || contextPacket?.providerId || resolvedItem || undefined,
         providerMetadata: renderEntityPacket?.providerMetadata || contextPacket?.providerMetadata || urlParams.providerMetadata || undefined,
-        spoilerMode: chatSpoilers,
+        spoilerMode: spoilerPolicy,
         conversation: [
           { role: "user", content: fullQuestion },
           { role: "assistant", content: answer.summary || "No answer available" },
@@ -1615,7 +1716,7 @@ export default function AskPage({
       });
 
       // Visual check and spoiler block check
-      const isSpoilerBlocked = !chatSpoilers && /\b(die|dies|death|dead|ending|kills|killed|final scene|spoiler|plot twist)\b/i.test(fullAssistantAnswer);
+      const isSpoilerBlocked = !spoilerPolicy && /\b(die|dies|death|dead|ending|kills|killed|final scene|spoiler|plot twist)\b/i.test(fullAssistantAnswer);
 
       finalizeRenderVerification(followUpContext.traceId, RENDER_CONTRACTS.selectors.assistantBubble, (result) => {
         if (followUpContext.requestId !== activeRequestIdRef.current) {
@@ -1781,7 +1882,7 @@ export default function AskPage({
 
             <div className="mb-4 flex flex-wrap justify-start sm:justify-end gap-3 sm:gap-6 items-center">
               {[
-                { label: "Conversation Spoilers", checked: chatSpoilers, set: setChatSpoilers }
+                { label: "Conversation Spoilers", checked: spoilerPolicy, set: handleSpoilerToggle }
               ].map((sw, idx) => (
                 <label key={idx} className="nerdvana-clickable flex items-center gap-2 group select-none">
                   <span
@@ -1854,7 +1955,7 @@ export default function AskPage({
                   >
                     <AIResponse
                       text={answer.summary}
-                      isLoading={false}
+                      isLoading={isRegeneratingAnswer}
                       disableProgressiveReveal
                     />
 
@@ -2068,7 +2169,7 @@ export default function AskPage({
 
                         const spoilerKeywords = /\b(die|dies|death|dead|ending|kills|killed|final scene|spoiler|plot twist)\b/i;
                         const isRisky = spoilerKeywords.test(msg.content) || spoilerKeywords.test(userQueryContext);
-                        const showWarning = !chatSpoilers && isRisky && msg.role === "assistant";
+                        const showWarning = !spoilerPolicy && isRisky && msg.role === "assistant" && !revealedMessageIndices.has(index);
 
                         const isLast = index === conversation.length - 1;
                         const isBubbleLoading = isGeneratingFollowUp && isLast && msg.role === "assistant";
@@ -2085,7 +2186,13 @@ export default function AskPage({
                             }}
                             warning={showWarning}
                             isLoading={isBubbleLoading}
-                            onWarningClick={() => setChatSpoilers(true)}
+                            onWarningClick={() => {
+                              setRevealedMessageIndices(prev => {
+                                const next = new Set(prev);
+                                next.add(index);
+                                return next;
+                              });
+                            }}
                           />
                         );
                       })}
