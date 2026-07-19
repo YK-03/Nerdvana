@@ -5,7 +5,7 @@
  */
 
 import type { MediaLens } from "../../app/mediaLens.js";
-import { tokenize } from "./queryNormalizer.js";
+import { tokenize, cleanAlphanumeric } from "./queryNormalizer.js";
 import { classifyComicsQueryType, normalizeComicVineResourceType } from "./providerMetadata.js";
 
 const CANONICAL_PUBLISHERS: Record<string, string> = {
@@ -513,43 +513,7 @@ export function buildDebugEntry(
   };
 }
 
-export function logResolverTelemetry(
-  debugEntries: ResolverDebug[],
-  winner: string,
-  extra?: {
-    rawQuery?: string;
-    mediaLens?: string;
-    parentFranchise?: string;
-    contextualSearchQuery?: string;
-    confidence?: number;
-  },
-): void {
-  if (typeof console !== "undefined" && typeof console.table === "function") {
-    console.log(`\n[Canonical Resolver] Winner: "${winner}"`);
-    if (extra) {
-      console.log(`  rawQuery: "${extra.rawQuery ?? ""}"`
-        + ` | mediaLens: ${extra.mediaLens ?? ""}`
-        + ` | parentFranchise: ${extra.parentFranchise ?? "none"}`
-        + ` | confidence: ${extra.confidence ?? 0}`
-        + `\n  contextualSearchQuery: "${extra.contextualSearchQuery ?? ""}"`);
-    }
-    console.table(
-      debugEntries
-        .sort((a, b) => b.score - a.score)
-        .map((d) => ({
-          candidate: d.candidate,
-          source: d.source,
-          bucket: d.bucket,
-          eligible: d.eligible ?? true,
-          rejectionReasons: (d.rejectionReasons ?? []).join(", "),
-          score: d.score,
-          boosts: d.boosts.join(", "),
-          penalties: d.penalties.join(", "),
-          confidenceAdjustment: d.confidenceAdjustment ?? 0,
-        })),
-    );
-  }
-}
+
 
 export function rankCandidates(
   candidates: ResolverCandidate[],
@@ -569,8 +533,8 @@ export function rankCandidates(
     
     let isFranchiseCollision = false;
     if (ctx.franchiseRoot) {
-      const normTitle = normalizedCandidate.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const normRoot = ctx.franchiseRoot.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const normTitle = cleanAlphanumeric(normalizedCandidate.name);
+      const normRoot = cleanAlphanumeric(ctx.franchiseRoot);
       if (!normTitle.includes(normRoot)) {
         isFranchiseCollision = true;
       }
@@ -584,7 +548,6 @@ export function rankCandidates(
       eligible = false;
       finalReasons.push("Franchise root mismatch");
       adjustedScore = -9999;
-      if (typeof console !== 'undefined') console.log(`[FRANCHISE COLLISION] Candidate "${normalizedCandidate.name}" rejected against root "${ctx.franchiseRoot}"`);
     }
 
     debug.push(buildDebugEntry(

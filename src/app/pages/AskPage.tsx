@@ -30,6 +30,24 @@ import ClarificationOverlay from "../components/ClarificationOverlay";
 import { resolveQueryIntent } from "../../intent/intentUniverseEngine";
 import { arbitrateQueryRoute } from "../../intent/queryModeArbitrator";
 import { validateNerdvanaAnswerResponse } from "../../lib/resolver/schemaValidator.js";
+import { 
+  getFollowUpSuggestions, 
+  evaluateSpoilerRisk, 
+  processSemanticPivots 
+} from "../lib/resolver/followUpEngine";
+
+function mapVisualAsset(owner: ActiveVisualOwner | null) {
+  if (!owner?.asset) return null;
+  const asset = owner.asset;
+  return {
+    title: asset.title,
+    posterUrl: asset.posterUrl || asset.url || null,
+    backdropUrl: asset.backdropUrl || null,
+    mediaType: owner.mediaType || asset.mediaType || "",
+    provider: asset.source || ""
+  };
+}
+
 import {
   createScopedTrace,
   recordAI,
@@ -320,12 +338,6 @@ export default function AskPage({
   const handleSelectSuggestion = (suggestion: any) => {
     const startedAt = activeExecutionRef.current?.startedAt ?? Date.now();
     const executionAgeMs = Date.now() - startedAt;
-    console.log("[EXECUTION INVALIDATED]", {
-      searchKey: activeExecutionRef.current?.searchKey ?? "none",
-      previousStatus: activeExecutionRef.current?.status ?? "idle",
-      executionAgeMs,
-      reason: "AUTOCOMPLETE_SELECTION"
-    });
 
     activeExecutionRef.current = null;
     isAutocompleteSelectionRef.current = true;
@@ -335,7 +347,6 @@ export default function AskPage({
     const newQuery = suggestion.displayTitle;
     const nextItem = suggestion.selectionValue;
 
-    console.log("[AUTOCOMPLETE_RAW_SUGGESTION]", suggestion);
 
     console.log(
       "[AUTOCOMPLETE_PROVIDER_SELECTED]",
@@ -343,12 +354,6 @@ export default function AskPage({
       suggestion.providerMetadata
     );
     if (suggestion.providerMetadata?.providerType) {
-      console.log("[TYPED_PROVIDER_PROPAGATED]", {
-        stage: "autocomplete_selection",
-        providerId: suggestion.selectionValue,
-        providerType: suggestion.providerMetadata.providerType,
-        providerResourceType: suggestion.providerMetadata.providerResourceType ?? null,
-      });
     }
 
     console.log(
@@ -356,7 +361,6 @@ export default function AskPage({
       nextItem
     );
 
-    console.log("[Nerdvana] [SelectSuggestion] history.state BEFORE:", window.history.state);
 
     window.history.replaceState(
       { mediaLens, item: nextItem, providerMetadata: suggestion.providerMetadata },
@@ -364,7 +368,6 @@ export default function AskPage({
       buildAskUrl(newQuery, { lens: mediaLens, item: nextItem })
     );
 
-    console.log("[Nerdvana] [SelectSuggestion] history.state AFTER:", window.history.state);
 
     onQuestionChange?.(newQuery);
     setQueryInput(newQuery);
@@ -402,19 +405,12 @@ export default function AskPage({
 
     const startedAt = activeExecutionRef.current?.startedAt ?? Date.now();
     const executionAgeMs = Date.now() - startedAt;
-    console.log("[EXECUTION INVALIDATED]", {
-      searchKey: activeExecutionRef.current?.searchKey ?? "none",
-      previousStatus: activeExecutionRef.current?.status ?? "idle",
-      executionAgeMs,
-      reason: "MANUAL_SUBMISSION"
-    });
 
     isManualSubmitRef.current = true;
     selectedSuggestionRef.current = null;
     lastSearchKeyRef.current = "";
     activeExecutionRef.current = null; // Clear execution state synchronously
 
-    console.log("[Nerdvana] [Submission] history.state BEFORE:", window.history.state);
 
     // Invalidate ALL deterministic restoration sources simultaneously first
     setGrounding(null);
@@ -428,7 +424,6 @@ export default function AskPage({
       buildAskUrl(newQuery, { lens: mediaLens })
     );
 
-    console.log("[Nerdvana] [Submission] history.state AFTER:", window.history.state);
 
     onQuestionChange?.(newQuery);
   };
@@ -451,17 +446,7 @@ export default function AskPage({
     if (fullSession.length === 0) return;
 
     try {
-      let visual = null;
-      if (activeVisualOwner?.asset) {
-        const asset = activeVisualOwner.asset;
-        visual = {
-           title: asset.title,
-           posterUrl: asset.posterUrl || asset.url || null,
-           backdropUrl: asset.backdropUrl || null,
-           mediaType: activeVisualOwner.mediaType || asset.mediaType || "",
-           provider: asset.source || ""
-        };
-      }
+      const visual = mapVisualAsset(activeVisualOwner);
 
       const docRef = await addDoc(collection(db, "users", user.uid, "lorebooks"), {
         topic: fullQuestion,
@@ -640,7 +625,6 @@ export default function AskPage({
     lastSearchKeyRef.current = searchKey;
 
     if (ENABLE_NERDVANA_TELEMETRY) {
-      console.log("[RESET PATH TRIGGERED]", "Search Key Mismatch or First Mount", { searchKey, lastKeys });
     }
 
     if (!normalizedQuestion) {
@@ -664,20 +648,7 @@ export default function AskPage({
     const isDeterministic = Boolean(currentItem) || isExplicitTmdb;
     const mode = isDeterministic ? "DETERMINISTIC" : "EXPLORATORY";
 
-    console.log("[TV TRACE]", {
-      fullQuestion,
-      currentItem,
-      queryItem,
-      historyItem: window.history.state?.item,
-      urlItem: urlParams.item,
-      mode,
-      mediaLens,
-      manualSubmit: isManualSubmit
-    });
 
-    console.log("[Nerdvana] [Pipeline] Current Item Lock:", currentItem);
-    console.log("[Nerdvana] [Pipeline] Current SearchKey:", searchKey);
-    console.log("[Nerdvana] [Pipeline] Execution Mode:", mode);
 
     const requestId = Math.random().toString(36).substring(2, 15);
     const traceId = `trace-${requestId}`;
@@ -691,19 +662,8 @@ export default function AskPage({
       providerMetadata
     };
     if (providerMetadata?.providerType) {
-      console.log("[TYPED_PROVIDER_PROPAGATED]", {
-        stage: "execution_context",
-        providerId: currentItem,
-        providerType: providerMetadata.providerType,
-        providerResourceType: providerMetadata.providerResourceType ?? null,
-      });
     }
 
-    console.log("[EXECUTION STATE]", {
-      searchKey,
-      previousStatus: activeExecutionRef.current?.status ?? "idle",
-      nextStatus: "running"
-    });
     activeExecutionRef.current = {
       searchKey,
       status: "running",
@@ -838,13 +798,7 @@ export default function AskPage({
           mode: context.mode
         });
 
-        console.log("[API_DISPATCH_PAYLOAD]", {
-          item: finalItem,
-          providerMetadata: finalMetadata,
-          executionMode: finalExecutionMode
-        });
 
-        console.log("[FETCH_PATH_A] Dispatching runSearch fetch to endpoint:", endpoint, "with bodyPayload:", bodyPayload);
 
         const response = await fetch(endpoint, {
           method: "POST",
@@ -875,19 +829,11 @@ export default function AskPage({
 
         // Execution Ownership Protection against stale async completions
         if (activeExecutionRef.current?.searchKey !== searchKey) {
-          console.log("[STALE EXECUTION DISCARDED]", {
-            staleSearchKey: searchKey,
-            activeSearchKey: activeExecutionRef.current?.searchKey
-          });
           return;
         }
         
         if (payload?.contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && payload.contextPacket.ownershipGenerationId) {
             if (activeExecutionRef.current.ownershipGenerationId && activeExecutionRef.current.ownershipGenerationId !== payload.contextPacket.ownershipGenerationId) {
-                console.log("[STALE OWNERSHIP REJECTED]", { 
-                    expected: activeExecutionRef.current.ownershipGenerationId, 
-                    received: payload.contextPacket.ownershipGenerationId 
-                });
                 return;
             }
             activeExecutionRef.current.ownershipGenerationId = payload.contextPacket.ownershipGenerationId;
@@ -934,7 +880,6 @@ export default function AskPage({
         }
 
         if (isIncomingDeterministic && renderVerified) {
-          console.log("[RENDER_OWNERSHIP_VERIFIED] Render candidate matches provider ownership:", incomingProviderId);
           const nextRenderPacket: RenderEntityPacket = {
             title: payload?.contextPacket?.canonicalEntity || payload?.grounding?.selectedCanonicalEntity || context.query,
             providerId: incomingProviderId!,
@@ -1036,11 +981,6 @@ export default function AskPage({
               });
             });
 
-            console.log("[EXECUTION STATE]", {
-              searchKey,
-              previousStatus: "running",
-              nextStatus: "completed"
-            });
             activeExecutionRef.current = {
               searchKey,
               status: "completed",
@@ -1215,11 +1155,6 @@ export default function AskPage({
           }
         }
 
-        console.log("[EXECUTION STATE]", {
-          searchKey,
-          previousStatus: "running",
-          nextStatus: "completed"
-        });
         activeExecutionRef.current = {
           searchKey,
           status: "completed",
@@ -1230,11 +1165,6 @@ export default function AskPage({
         console.error("[Nerdvana] Answer Pipeline Error:", error);
 
         const nextStatus = error.name === "AbortError" ? "aborted" : "failed";
-        console.log("[EXECUTION STATE]", {
-          searchKey,
-          previousStatus: "running",
-          nextStatus
-        });
         activeExecutionRef.current = {
           searchKey,
           status: nextStatus,
@@ -1425,13 +1355,7 @@ export default function AskPage({
         title: renderEntityPacket?.title || contextPacket?.canonicalEntity || resolvedItem,
         providerId: renderEntityPacket?.providerId || contextPacket?.providerId || resolvedItem,
         mediaLens,
-        visual: activeVisualOwnerRef.current?.asset ? {
-          title: activeVisualOwnerRef.current.asset.title,
-          posterUrl: activeVisualOwnerRef.current.asset.posterUrl || activeVisualOwnerRef.current.asset.url || null,
-          backdropUrl: activeVisualOwnerRef.current.asset.backdropUrl || null,
-          mediaType: activeVisualOwnerRef.current.mediaType || activeVisualOwnerRef.current.asset.mediaType || "",
-          provider: activeVisualOwnerRef.current.asset.source || ""
-        } : null,
+        visual: mapVisualAsset(activeVisualOwnerRef.current),
         timestamp: serverTimestamp()
       };
       
@@ -1521,9 +1445,7 @@ export default function AskPage({
         executionMode: mode === "DETERMINISTIC" ? "DETERMINISTIC_PROVIDER" : "SEMANTIC"
       };
 
-      console.log("[API_DISPATCH_PAYLOAD]", followUpPayload);
 
-      console.log("[FETCH_PATH_B] Dispatching follow-up fetch with payload:", followUpPayload);
 
       const response = await fetch("/api/nerdvana-answer", {
         method: "POST",
@@ -1590,9 +1512,6 @@ export default function AskPage({
 
           if ((incomingId && currentId && incomingId !== currentId) ||
               (incomingFranchise && currentFranchise && incomingFranchise !== currentFranchise)) {
-            console.log("[VISUAL_OWNERSHIP_PIVOT] Follow-up query shifted entities or franchises. Clearing visual lock.", {
-              currentId, incomingId, currentFranchise, incomingFranchise
-            });
             setActiveVisualOwner(null);
             setActiveVisualOwnerMetadata(null);
           }
@@ -1610,7 +1529,6 @@ export default function AskPage({
       }
 
       if (isIncomingDeterministic && renderVerified) {
-        console.log("[RENDER_OWNERSHIP_VERIFIED] Follow-up render candidate matches provider ownership:", incomingProviderId);
         const nextRenderPacket: RenderEntityPacket = {
           title: renderEntityPacket?.title || payload?.contextPacket?.canonicalEntity || payload?.grounding?.selectedCanonicalEntity || fullQuestion,
           providerId: expectedProviderId || incomingProviderId!,
@@ -1808,13 +1726,6 @@ export default function AskPage({
   };
 
   if (ENABLE_NERDVANA_TELEMETRY) {
-    console.log("[ASKPAGE RENDER]", {
-      isLoading,
-      answerSummary: answer?.summary,
-      fullQuestion,
-      queryItem,
-      canonicalItem: grounding?.selectedSelectionValue || "",
-    });
   }
 
   return (

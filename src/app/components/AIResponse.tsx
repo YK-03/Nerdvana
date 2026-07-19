@@ -22,17 +22,6 @@ export default function AIResponse({
   const firstTokenEmittedRef = useRef(false);
 
   useEffect(() => {
-    if (ENABLE_NERDVANA_TELEMETRY) {
-      console.log("[AIResponse] mounted");
-    }
-    return () => {
-      if (ENABLE_NERDVANA_TELEMETRY) {
-        console.log("[AIResponse] unmounted");
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     if (!text.trim()) {
       setVisibleText("");
       firstTokenEmittedRef.current = false;

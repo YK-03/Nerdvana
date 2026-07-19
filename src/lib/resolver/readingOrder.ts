@@ -1,4 +1,5 @@
 import { continuityGraphInstance, type ContinuityNode } from "./continuityGraph.js";
+import { cleanAlphanumeric } from "./queryNormalizer.js";
 
 export interface ReadingOrderItem {
   title: string;
@@ -92,7 +93,7 @@ function applySpoilerFilter(title: string): boolean {
 }
 
 export function buildReadingOrder(providerId: string, canonicalTitle: string): ReadingOrderItem[] {
-  const normKey = canonicalTitle.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+  const normKey = cleanAlphanumeric(canonicalTitle);
 
   // 1. Curated Sequences (Landmark runs stay isolated & high confidence)
   if (CURATED_READING_ORDERS[normKey]) {
@@ -175,7 +176,7 @@ export function buildReadingOrder(providerId: string, canonicalTitle: string): R
 }
 
 export function buildContinuationSuggestions(providerId: string, canonicalTitle: string): ContinuationSuggestionItem[] {
-  const normKey = canonicalTitle.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+  const normKey = cleanAlphanumeric(canonicalTitle);
 
   // 1. Curated Sequel Timelines (isolated & minimal)
   if (CURATED_CONTINUATION_SUGGESTIONS[normKey]) {

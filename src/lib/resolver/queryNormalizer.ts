@@ -44,6 +44,16 @@ export function normalizeText(value: unknown): string {
     .trim();
 }
 
+/**
+ * Strips all non-alphanumeric characters and whitespace for strict identity comparison.
+ */
+export function cleanAlphanumeric(value: unknown): string {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+}
+
 export const GENERIC_ALIAS_BLACKLIST = [
   "dark",
   "monster",

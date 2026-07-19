@@ -36,16 +36,22 @@ import {
   normalizeText,
   uniqueNormalized,
   tokenize,
+  cleanAlphanumeric,
   CANONICAL_ALIASES,
   type NormalizedQuery
 } from "../lib/resolver/queryNormalizer.js";
+
+import {
+  parseProviderId,
+  extractRawId as extractProviderId,
+  extractNamespace
+} from "../lib/resolver/providerIdUtility.js";
 
 import {
   scoreCandidate,
   computeConfidence,
   rankCandidates,
   buildDebugEntry,
-  logResolverTelemetry,
   classifyBucket,
   getFranchiseAliases,
   SOURCE_PRIORITY,
@@ -88,16 +94,7 @@ export interface ActiveVisualOwner extends ActiveVisualOwnerMetadata {
   lockedAt: number;
 }
 
-export function extractProviderId(identifier: string | null): string | null {
-  if (!identifier) return null;
-  // Handle the unified format (e.g. tmdb::movie::496243)
-  const unifiedParts = identifier.split("::");
-  if (unifiedParts.length === 3) {
-    return unifiedParts[2];
-  }
-  // Fallback for raw IDs or unknown formats
-  return identifier;
-}
+// Implementation moved to providerIdUtility.ts, exported via the bottom re-exports.
 
 import {
   sourceSupportsLens,
@@ -111,12 +108,12 @@ export {
   normalizeText,
   uniqueNormalized,
   tokenize,
+  extractProviderId,
   CANONICAL_ALIASES,
   scoreCandidate,
   computeConfidence,
   rankCandidates,
   buildDebugEntry,
-  logResolverTelemetry,
   classifyBucket,
   getFranchiseAliases,
   validateCandidateCompatibility,
@@ -768,15 +765,6 @@ export async function resolveCanonicalEntity(
     fallbackUsed: !findFranchiseContext(canonicalEntity, mt),
   };
 
-  // Log telemetry with full context
-  logResolverTelemetry(debug, canonicalEntity, {
-    rawQuery: rawQuery,
-    mediaLens,
-    parentFranchise: parentFranchise ?? undefined,
-    contextualSearchQuery,
-    confidence,
-    ...groundingTelemetry,
-  });
 
   return {
     canonicalEntity,
@@ -900,7 +888,7 @@ async function resolveAnimeThroughAniList(
 
   // Normalize string for exact matching
   const cleanString = (str: string) => {
-    return str.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+    return cleanAlphanumeric(str);
   };
 
   const cleanResolved = cleanString(resolvedTitle);
@@ -1150,9 +1138,9 @@ export async function buildContextPacket(
     const env = (globalThis as any).process?.env ?? {};
     const comicVineKey = (env.COMICVINE_API_KEY || env.VITE_COMICVINE_API_KEY)?.trim() || undefined;
     if (comicVineKey) {
-      const cvParts = providerId.split("::");
-      const resourceType = cvParts[1];
-      const cvId = cvParts[2];
+      const parsedId = parseProviderId(providerId);
+      const resourceType = parsedId.resourceType;
+      const cvId = parsedId.id;
       const prefixMap: Record<string, string> = {
         character: "4005",
         volume: "4050",
@@ -1165,7 +1153,6 @@ export async function buildContextPacket(
       const prefix = prefixMap[resourceType];
       if (prefix) {
         try {
-          console.log(`[COMICVINE_DIRECT_FETCH] Hydrating continuity context for direct ID ${providerId}`);
           const url = `https://comicvine.gamespot.com/api/${resourceType}/${prefix}-${cvId}/?api_key=${comicVineKey}&format=json&field_list=id,name,description,deck,start_year,publisher,aliases,concepts,teams,character_credits,volume_credits`;
           const res = await fetch(url, { headers: { "User-Agent": "Nerdvana/1.0" } });
           if (res.ok) {
@@ -1180,22 +1167,19 @@ export async function buildContextPacket(
                 start_year: fetchedComicVineData.start_year
               });
             }
-          } else {
-            console.error(`[COMICVINE_DIRECT_FETCH] Failed with status ${res.status}`);
           }
         } catch (e) {
-          console.error("[COMICVINE_DIRECT_FETCH] Exception during hydration:", e);
+          // Ignore fetch failure
         }
       }
     }
   }
 
   if (executionMode === "DETERMINISTIC_PROVIDER") {
-    console.log("[SEMANTIC_ENRICHMENT_ONLY] Semantic systems locked as read-only. Ownership, type, and franchise root mutations disabled.");
     // EXACT PROVIDER GOVERNANCE ONLY
     if (fetchedComicVineData) {
-      const cvParts = providerId ? providerId.split("::") : [];
-      const resourceType = cvParts[1];
+      const parsedId = parseProviderId(providerId);
+      const resourceType = parsedId.resourceType;
       const safeNameForFranchise = typeof fetchedComicVineData.name === 'string' ? fetchedComicVineData.name : "";
       const franchiseRoot = safeNameForFranchise ? safeNameForFranchise.split(/[:\- ]/)[0].toLowerCase() : null;
       const concepts = fetchedComicVineData.concepts || [];
@@ -1324,8 +1308,8 @@ export async function buildContextPacket(
 
   let providerMetadata: ProviderMetadata | null = null;
   if (fetchedComicVineData) {
-    const cvParts = providerId ? providerId.split("::") : [];
-    const resourceType = cvParts[1];
+    const parsedId = parseProviderId(providerId);
+    const resourceType = parsedId.resourceType;
     const safeNameForFranchise = typeof fetchedComicVineData.name === 'string' ? fetchedComicVineData.name : "";
     const franchiseRoot = safeNameForFranchise ? safeNameForFranchise.split(/[:\- ]/)[0].toLowerCase() : null;
     const concepts = fetchedComicVineData.concepts || [];
