@@ -543,27 +543,6 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
 
             <hr className="my-5 sm:my-6" style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
 
-            {/* Collections Section */}
-            <section className="w-full flex flex-col items-center">
-              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-4 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
-                Collections
-              </h2>
-              <div className="flex flex-wrap justify-center gap-3">
-                {["Favorites", "Read Later", "Deep Dives", "Game Lore"].map((col) => (
-                  <div 
-                    key={col} 
-                    className="flex-none px-6 py-2.5 border rounded-full text-[0.7rem] uppercase tracking-[0.15em] opacity-50 hover:opacity-100 cursor-not-allowed transition-opacity" 
-                    style={{ borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)", backgroundColor: "var(--nerdvana-surface)" }}
-                    title="Collections coming soon"
-                  >
-                    {col}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <hr className="my-5 sm:my-6" style={{ borderColor: "var(--nerdvana-border)", opacity: 0.6 }} />
-
             {/* Settings Section (Minimal) */}
             <section className="w-full flex flex-col items-center">
               <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-6 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
