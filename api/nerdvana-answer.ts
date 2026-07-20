@@ -334,8 +334,8 @@ export default async function handler(req: any, res?: any) {
 
     console.log("[REQUEST_PAYLOAD_RECEIVED]", {
       item: body?.item,
-      providerMetadata: body?.providerMetadata,
-      body
+      mediaLens: body?.mediaLens,
+      providerMetadata: body?.providerMetadata
     });
 
     const rawQuery = String(body?.query ?? "").trim();

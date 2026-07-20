@@ -35,8 +35,6 @@ export default async function handler(req: any, res?: any) {
 
     const data = await r.json()
 
-    console.log("[Nerdvana] SERPER RAW:", data)
-
     const rows = Array.isArray(data?.organic) ? data.organic : []
 
     const results = rows.map((r: any) => ({
