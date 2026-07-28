@@ -139,6 +139,7 @@ function LandingPage({
     activeIndex,
     loading,
     setAutocompleteState,
+    setAutocompleteLoading,
     setActiveIndex,
     clearAutocompleteState
   } = useAutocompleteStore();
@@ -179,14 +180,26 @@ function LandingPage({
         const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(query)}&lens=${mediaLens}`, {
           signal: abortController.signal
         });
-        if (!res.ok) throw new Error("Fetch failed");
-        const data = await res.json();
+        if (!res.ok) {
+          if (currentQueryRef.current === query) {
+            setAutocompleteLoading(false);
+          }
+          return;
+        }
+        const payload = await res.json();
         if (currentQueryRef.current === query) {
-          setAutocompleteState(data, null, false);
+          if (payload.status === "ok") {
+            setAutocompleteState(payload.data, null, false);
+          } else if (payload.status === "empty") {
+            setAutocompleteState([], null, false);
+          } else {
+            // Keep existing suggestions for timeouts, rate limits, provider errors
+            setAutocompleteLoading(false);
+          }
         }
       } catch (err: any) {
         if (err.name !== "AbortError" && currentQueryRef.current === query) {
-          setAutocompleteState([], null, false);
+          setAutocompleteLoading(false);
         }
       }
     }, 250);

@@ -882,13 +882,25 @@ async function fetchDirectProvider(
     }
   }
 
+  if (source === "anilist" || source === "jikan") {
+    try {
+      const animeId = parseInt(id);
+      if (!isNaN(animeId)) {
+        return await fetchAnimeVisualByCanonicalId(animeId, source === "jikan");
+      }
+    } catch (e) {
+      console.error("[Nerdvana] Direct anime fetch failed:", e);
+    }
+  }
+
   return null;
 }
 
-async function fetchAnimeVisualByCanonicalId(anilistId: number): Promise<ResolverCandidate | null> {
+async function fetchAnimeVisualByCanonicalId(animeId: number, isMal: boolean = false): Promise<ResolverCandidate | null> {
+  const queryField = isMal ? "idMal: $id" : "id: $id";
   const query = `
     query ($id: Int) {
-      Media (id: $id, type: ANIME) {
+      Media (${queryField}, type: ANIME) {
         id
         title {
           romaji
@@ -919,7 +931,7 @@ async function fetchAnimeVisualByCanonicalId(anilistId: number): Promise<Resolve
       },
       body: JSON.stringify({
         query,
-        variables: { id: anilistId }
+        variables: { id: animeId }
       })
     });
     if (!response.ok) return null;

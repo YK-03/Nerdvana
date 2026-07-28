@@ -14,6 +14,9 @@ import { validateExpansion } from "../lib/resolver/ml/deterministicValidator.js"
 import { SemanticSuggestion } from "../lib/resolver/ml/expansionTypes.js";
 import { getNeighborhoodEngine } from "../lib/resolver/embeddings/semanticNeighborhoodEngine.js";
 import { CandidateHistoryEntry } from "../lib/resolver/provenanceTypes.js";
+import { ExplorationBuilder } from "../lib/resolver/explorationBuilder.js";
+import { type ExplorationDTO } from "../lib/explorationTypes.js";
+import { getIGDBToken } from "../../api/igdbAuth.js";
 import type { CanonicalGroundingResult } from "../lib/resolver/canonicalGrounding.js";
 import { 
   type CanonRelationship,
@@ -865,7 +868,7 @@ export function getCanonicalName(query: string): string | null {
 async function resolveAnimeThroughAniList(
   resolvedTitle: string,
   rawQuery: string
-): Promise<{ id: number; confidence: number; name: string } | null> {
+): Promise<{ id: number; confidence: number; name: string; rawData?: any } | null> {
   const queryGraphQL = `
     query ($search: String) {
       Page (page: 1, perPage: 10) {
@@ -881,114 +884,135 @@ async function resolveAnimeThroughAniList(
           startDate {
             year
           }
+          characters(perPage: 15, sort: [ROLE, RELEVANCE]) {
+            edges {
+              role
+              node {
+                id
+                name { full native userPreferred }
+                description
+                image { large medium }
+              }
+            }
+          }
         }
       }
     }
   `;
 
-  // Normalize string for exact matching
-  const cleanString = (str: string) => {
-    return cleanAlphanumeric(str);
-  };
-
+  const cleanString = (str: string) => cleanAlphanumeric(str);
   const cleanResolved = cleanString(resolvedTitle);
   const cleanRaw = cleanString(rawQuery);
 
-  const searchTerms = [resolvedTitle, rawQuery].filter(Boolean);
+  const searchTerms = Array.from(new Set([resolvedTitle, rawQuery].filter(Boolean)));
   
-  for (const term of searchTerms) {
-    try {
-      const response = await fetch("https://graphql.anilist.co", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({
-          query: queryGraphQL,
-          variables: { search: term }
-        })
-      });
+  const fetchPromises = searchTerms.map(async (term) => {
+    const response = await fetch("https://graphql.anilist.co", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        query: queryGraphQL,
+        variables: { search: term }
+      })
+    });
+    if (!response.ok) throw new Error("Network response was not ok");
+    const json = await response.json();
+    return json?.data?.Page?.media || [];
+  });
 
-      if (!response.ok) continue;
-      const json = await response.json();
-      const mediaList = json?.data?.Page?.media;
-      if (!Array.isArray(mediaList) || mediaList.length === 0) continue;
+  const results = await Promise.allSettled(fetchPromises);
+  
+  let globalBestCandidate: any = null;
+  let globalMaxConfidence = 0.0;
 
-      let bestCandidate: any = null;
-      let maxConfidence = 0.0;
+  for (const result of results) {
+    if (result.status !== "fulfilled") continue;
+    const mediaList = result.value;
+    if (!Array.isArray(mediaList) || mediaList.length === 0) continue;
 
-      for (const media of mediaList) {
-        const english = media.title?.english || "";
-        const romaji = media.title?.romaji || "";
-        const native = media.title?.native || "";
-        const synonyms = media.synonyms || [];
+    for (const media of mediaList) {
+      const english = media.title?.english || "";
+      const romaji = media.title?.romaji || "";
+      const native = media.title?.native || "";
+      const synonyms = media.synonyms || [];
 
-        const titles = [english, romaji, native, ...synonyms].filter(Boolean);
-        let matchConfidence = 0.0;
+      const primaryTitles = [english, romaji].filter(Boolean);
+      let matchConfidence = 0.0;
 
-        for (const title of titles) {
-          const cleanTitle = cleanString(title);
-          // 1. Exact alias match or exact title match = 1.0
-          if (cleanTitle === cleanResolved || cleanTitle === cleanRaw) {
-            matchConfidence = 1.0;
+      for (const title of primaryTitles) {
+        const cleanTitle = cleanString(title);
+        if (cleanTitle === cleanResolved || cleanTitle === cleanRaw) {
+          matchConfidence = 1.0;
+          break;
+        }
+        if (cleanTitle.startsWith(cleanResolved) || cleanTitle.startsWith(cleanRaw)) {
+          matchConfidence = Math.max(matchConfidence, 0.98);
+        }
+      }
+
+      if (matchConfidence < 1.0) {
+        for (const syn of synonyms) {
+          const cleanSyn = cleanString(syn);
+          if (cleanSyn === cleanResolved || cleanSyn === cleanRaw) {
+            matchConfidence = Math.max(matchConfidence, 0.95);
             break;
           }
         }
+      }
 
-        // 2. Strong synonym overlap = 0.9+
-        if (matchConfidence < 1.0) {
-          const resolvedTokens = resolvedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
-          const rawTokens = rawQuery.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
-          
-          for (const title of titles) {
-            const titleTokens = title.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
-            if (titleTokens.length === 0) continue;
+      if (matchConfidence < 0.95) {
+        const resolvedTokens = resolvedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+        const rawTokens = rawQuery.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+        const allTitles = [...primaryTitles, ...synonyms].filter(Boolean);
+        
+        for (const title of allTitles) {
+          const titleTokens = title.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+          if (titleTokens.length === 0) continue;
 
-            const getOverlap = (tokens: string[]) => {
-              if (tokens.length === 0) return 0;
-              const shared = tokens.filter(t => titleTokens.includes(t));
-              return shared.length / Math.min(tokens.length, titleTokens.length);
-            };
+          const getOverlap = (tokens: string[]) => {
+            if (tokens.length === 0) return 0;
+            const shared = tokens.filter(t => titleTokens.includes(t));
+            return shared.length / Math.min(tokens.length, titleTokens.length);
+          };
 
-            const overlap = Math.max(getOverlap(resolvedTokens), getOverlap(rawTokens));
-            if (overlap >= 0.85) {
-              matchConfidence = Math.max(matchConfidence, 0.9);
-            }
+          const overlap = Math.max(getOverlap(resolvedTokens), getOverlap(rawTokens));
+          if (overlap >= 0.85) {
+            matchConfidence = Math.max(matchConfidence, 0.9);
           }
         }
-
-        if (matchConfidence > maxConfidence) {
-          maxConfidence = matchConfidence;
-          bestCandidate = media;
-        } else if (matchConfidence === maxConfidence && bestCandidate && media.meanScore > bestCandidate.meanScore) {
-          bestCandidate = media;
-        }
       }
 
-      if (bestCandidate && maxConfidence >= 0.85) {
-        const result = {
-          id: bestCandidate.id,
-          confidence: maxConfidence,
-          name: bestCandidate.title?.english ?? bestCandidate.title?.romaji ?? bestCandidate.title?.native ?? resolvedTitle
-        };
-
-        // Explicit Logging Constraint 7
-        console.log("[Anime Resolver]", {
-          query: rawQuery,
-          selectedTitle: resolvedTitle,
-          anilistId: result.id,
-          confidence: result.confidence
-        });
-
-        return result;
+      if (matchConfidence > globalMaxConfidence) {
+        globalMaxConfidence = matchConfidence;
+        globalBestCandidate = media;
+      } else if (matchConfidence === globalMaxConfidence && globalBestCandidate && (media.meanScore ?? 0) > (globalBestCandidate.meanScore ?? 0)) {
+        globalBestCandidate = media;
       }
-    } catch (err) {
-      console.error("[Nerdvana] resolveAnimeThroughAniList error:", err);
     }
   }
 
-  // Explicit Logging Constraint 7 for failed/low confidence resolutions
+  if (globalBestCandidate && globalMaxConfidence >= 0.85) {
+    const result = {
+      id: globalBestCandidate.id,
+      confidence: globalMaxConfidence,
+      name: globalBestCandidate.title?.english ?? globalBestCandidate.title?.romaji ?? globalBestCandidate.title?.native ?? resolvedTitle,
+      rawData: globalBestCandidate
+    };
+
+    console.log("[Anime Resolver]", {
+      query: rawQuery,
+      selectedTitle: resolvedTitle,
+      anilistId: result.id,
+      selectedName: result.name,
+      confidence: result.confidence
+    });
+    
+    return result;
+  }
+  
   console.log("[Anime Resolver] Failed to deterministically ground anime", {
     query: rawQuery,
     selectedTitle: resolvedTitle
@@ -1057,9 +1081,9 @@ export async function buildContextPacket(
   spoilerMode: boolean,
   previousEntity?: string | null,
   grounding?: CanonicalGroundingResult | null
-): Promise<ResolverContextPacket> {
+): Promise<{ packet: ResolverContextPacket; exploration: ExplorationDTO }> {
   const selectionVal = grounding?.selectedSelectionValue;
-  const isProviderId = selectionVal?.startsWith("tmdb::") || selectionVal?.startsWith("rawg::") || selectionVal?.startsWith("igdb::") || selectionVal?.startsWith("comicvine::") || selectionVal?.startsWith("jikan::") || selectionVal?.startsWith("googlebooks::");
+  const isProviderId = Boolean(selectionVal && (selectionVal.includes("::") || selectionVal.startsWith("tmdb::") || selectionVal.startsWith("anilist::") || selectionVal.startsWith("rawg::") || selectionVal.startsWith("igdb::") || selectionVal.startsWith("comicvine::") || selectionVal.startsWith("jikan::") || selectionVal.startsWith("googlebooks::")));
 
   const hasValidProviderOwnership = isProviderId && 
     selectionVal && 
@@ -1073,11 +1097,11 @@ export async function buildContextPacket(
     providerId
   );
 
-  console.log("[EXECUTION_MODE]", {
-    mode: executionMode,
+  console.log("=== STAGE 1: PROVIDER SELECTION ===", {
     query,
     providerId,
-    deterministic: executionMode === "DETERMINISTIC_PROVIDER"
+    executionMode,
+    selectionVal
   });
 
   const explicitSelectionUsed = grounding?.telemetry?.explicitSelectionUsed === true;
@@ -1134,42 +1158,139 @@ export async function buildContextPacket(
   let context = null;
 
   let fetchedComicVineData: any = null;
-  if (executionMode === "DETERMINISTIC_PROVIDER" && providerId?.startsWith("comicvine::")) {
+  let fetchedProviderData: any = null;
+
+  if (executionMode === "DETERMINISTIC_PROVIDER" && providerId) {
     const env = (globalThis as any).process?.env ?? {};
-    const comicVineKey = (env.COMICVINE_API_KEY || env.VITE_COMICVINE_API_KEY)?.trim() || undefined;
-    if (comicVineKey) {
-      const parsedId = parseProviderId(providerId);
-      const resourceType = parsedId.resourceType;
-      const cvId = parsedId.id;
-      const prefixMap: Record<string, string> = {
-        character: "4005",
-        volume: "4050",
-        issue: "4000",
-        story_arc: "4045",
-        event: "4015",
-        team: "4060",
-        publisher: "4010"
-      };
-      const prefix = prefixMap[resourceType];
-      if (prefix) {
+
+    if (providerId.startsWith("comicvine::")) {
+      const comicVineKey = (env.COMICVINE_API_KEY || env.VITE_COMICVINE_API_KEY)?.trim() || undefined;
+      if (comicVineKey) {
+        const parsedId = parseProviderId(providerId);
+        const resourceType = parsedId.resourceType;
+        const cvId = parsedId.id;
+        const prefixMap: Record<string, string> = {
+          character: "4005",
+          volume: "4050",
+          issue: "4000",
+          story_arc: "4045",
+          event: "4015",
+          team: "4060",
+          publisher: "4010"
+        };
+        const prefix = prefixMap[resourceType];
+        if (prefix) {
+          try {
+            const url = `https://comicvine.gamespot.com/api/${resourceType}/${prefix}-${cvId}/?api_key=${comicVineKey}&format=json&field_list=id,name,description,deck,start_year,publisher,aliases,concepts,teams,character_credits,volume_credits`;
+            const res = await fetch(url, { headers: { "User-Agent": "Nerdvana/1.0" } });
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.results) {
+                fetchedComicVineData = data.results;
+                fetchedProviderData = data.results;
+                hydrateContinuityGraphFromComicVine(providerId!, fetchedComicVineData);
+                const charCredits = fetchedComicVineData.character_credits || fetchedComicVineData.characters;
+                console.log("=== STAGE 2: PROVIDER RESPONSE (ComicVine) ===", {
+                  hasData: true,
+                  characterCreditsLength: Array.isArray(charCredits) ? charCredits.length : 0
+                });
+              }
+            }
+          } catch (e) {}
+        }
+      }
+    } else if (providerId.startsWith("tmdb::")) {
+      const tmdbKey = (env.TMDB_API_KEY || env.VITE_TMDB_API_KEY)?.trim();
+      if (tmdbKey) {
+        const parsedId = parseProviderId(providerId);
+        const type = parsedId.resourceType === "tv" ? "tv" : "movie";
+        const tmdbId = parsedId.id;
         try {
-          const url = `https://comicvine.gamespot.com/api/${resourceType}/${prefix}-${cvId}/?api_key=${comicVineKey}&format=json&field_list=id,name,description,deck,start_year,publisher,aliases,concepts,teams,character_credits,volume_credits`;
-          const res = await fetch(url, { headers: { "User-Agent": "Nerdvana/1.0" } });
+          const url = `https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${tmdbKey}&append_to_response=credits`;
+          const res = await fetch(url);
+          if (res.ok) {
+            fetchedProviderData = await res.json();
+            const cast = fetchedProviderData?.credits?.cast;
+            console.log("=== STAGE 2: PROVIDER RESPONSE (TMDB) ===", {
+              hasData: true,
+              castLength: Array.isArray(cast) ? cast.length : 0
+            });
+          }
+        } catch (e) {}
+      }
+    } else if (providerId.startsWith("anilist::") || providerId.startsWith("jikan::")) {
+      const parsedId = parseProviderId(providerId);
+      const animeId = parseInt(parsedId.id);
+      const isJikan = providerId.startsWith("jikan::");
+      if (!isNaN(animeId)) {
+        try {
+          const queryGraphQL = `
+            query ($id: Int) {
+              Media(${isJikan ? "idMal: $id" : "id: $id"}, type: ANIME) {
+                id
+                title { english romaji native }
+                characters(perPage: 15, sort: [ROLE, RELEVANCE]) {
+                  edges {
+                    role
+                    node {
+                      id
+                      name { full native userPreferred }
+                      description
+                      image { large medium }
+                    }
+                  }
+                }
+              }
+            }
+          `;
+          const res = await fetch("https://graphql.anilist.co", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ query: queryGraphQL, variables: { id: animeId } })
+          });
           if (res.ok) {
             const data = await res.json();
-            if (data?.results) {
-              fetchedComicVineData = data.results;
-              hydrateContinuityGraphFromComicVine(providerId!, fetchedComicVineData);
-              console.log("[DIRECT_PROVIDER_CONTEXT] Successfully hydrated ComicVine metadata:", {
-                id: cvId,
-                name: fetchedComicVineData.name,
-                publisher: fetchedComicVineData.publisher?.name,
-                start_year: fetchedComicVineData.start_year
-              });
-            }
+            fetchedProviderData = data?.data?.Media;
+            const edges = fetchedProviderData?.characters?.edges;
+            console.log("=== STAGE 2: PROVIDER RESPONSE (AniList) ===", {
+              hasData: true,
+              edgesLength: Array.isArray(edges) ? edges.length : 0
+            });
           }
-        } catch (e) {
-          // Ignore fetch failure
+        } catch (e) {}
+      }
+    } else if (providerId.startsWith("igdb::")) {
+      const igdbIdKey = (env.IGDB_CLIENT_ID || env.VITE_IGDB_CLIENT_ID)?.trim();
+      const igdbSecretKey = (env.IGDB_CLIENT_SECRET || env.VITE_IGDB_CLIENT_SECRET)?.trim();
+      if (igdbIdKey && igdbSecretKey) {
+        const parsedId = parseProviderId(providerId);
+        const gameId = parseInt(parsedId.id);
+        if (!isNaN(gameId)) {
+          try {
+            const token = await getIGDBToken(igdbIdKey, igdbSecretKey);
+            if (token) {
+              const res = await fetch("https://api.igdb.com/v4/games", {
+                method: "POST",
+                headers: {
+                  "Client-ID": igdbIdKey,
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "text/plain"
+                },
+                body: `fields name, summary, characters.name, characters.description, characters.mug_shot.url; where id = ${gameId};`
+              });
+              if (res.ok) {
+                const games = await res.json();
+                if (Array.isArray(games) && games.length > 0) {
+                  fetchedProviderData = games[0];
+                  const chars = fetchedProviderData?.characters;
+                  console.log("=== STAGE 2: PROVIDER RESPONSE (IGDB) ===", {
+                    hasData: true,
+                    charactersLength: Array.isArray(chars) ? chars.length : 0
+                  });
+                }
+              }
+            }
+          } catch (e) {}
         }
       }
     }
@@ -1340,6 +1461,7 @@ export async function buildContextPacket(
         confidence: resolution.confidence,
         providerType: "anime",
       };
+      fetchedProviderData = resolution.rawData;
     }
   }
   const retrievalDescriptor = generateRetrievalDescriptor(
@@ -1393,20 +1515,22 @@ export async function buildContextPacket(
     embeddingRecallConfidence = multimodalConfidence;
   }
 
-  let overallConfidence = Number((
-    (authoritativeConfidence * 0.4) + 
-    (inferredConfidence * 0.2) + 
-    (embeddingRecallConfidence * 0.2) +
-    (topologyConfidence * 0.1) +
-    (continuityConfidence * 0.1)
-  ).toFixed(2));
+  let overallConfidence: number;
 
-  if (executionMode === "DETERMINISTIC_PROVIDER") {
-    overallConfidence = 0.99;
-  } else if (isProviderId) {
-    overallConfidence = grounding?.providerMetadata?.confidence ?? 0.99;
+  if (executionMode === "DETERMINISTIC_PROVIDER" || isProviderId) {
+    overallConfidence = providerMetadata?.confidence ?? 0.99;
+  } else if (providerMetadata?.confidence && providerMetadata.confidence >= 0.8) {
+    overallConfidence = providerMetadata.confidence;
   } else if (grounding && grounding.confidence >= 0.95 && grounding.telemetry?.exactTitleHit) {
     overallConfidence = grounding.confidence;
+  } else {
+    overallConfidence = Number((
+      (authoritativeConfidence * 0.4) + 
+      (inferredConfidence * 0.2) + 
+      (embeddingRecallConfidence * 0.2) +
+      (topologyConfidence * 0.1) +
+      (continuityConfidence * 0.1)
+    ).toFixed(2));
   }
 
   const resolutionCourage =
@@ -1532,5 +1656,72 @@ export async function buildContextPacket(
     Object.freeze(packet);
   }
 
-  return packet;
+  const finalExplorationProvider = providerId ?? (packet.providerMetadata ? `${packet.providerMetadata.provider}::${packet.providerMetadata.id}` : null) ?? packet.telemetry.qualifiedId;
+  
+  if (!fetchedProviderData && finalExplorationProvider && typeof (globalThis as any).process !== "undefined") {
+    const env = (globalThis as any).process.env ?? {};
+    if (finalExplorationProvider.startsWith("igdb::")) {
+      const igdbIdKey = (env.IGDB_CLIENT_ID || env.VITE_IGDB_CLIENT_ID)?.trim();
+      const igdbSecretKey = (env.IGDB_CLIENT_SECRET || env.VITE_IGDB_CLIENT_SECRET)?.trim();
+      if (igdbIdKey && igdbSecretKey) {
+        const parsedId = parseProviderId(finalExplorationProvider);
+        const gameId = parseInt(parsedId.id);
+        if (!isNaN(gameId)) {
+          try {
+            const token = await getIGDBToken(igdbIdKey, igdbSecretKey);
+            if (token) {
+              const res = await fetch("https://api.igdb.com/v4/games", {
+                method: "POST",
+                headers: { "Client-ID": igdbIdKey, Authorization: `Bearer ${token}`, "Content-Type": "text/plain" },
+                body: `fields name, summary, characters.name, characters.description, characters.mug_shot.url; where id = ${gameId};`
+              });
+              if (res.ok) {
+                const games = await res.json();
+                if (Array.isArray(games) && games.length > 0) fetchedProviderData = games[0];
+              }
+            }
+          } catch (e) {}
+        }
+      }
+    } else if (finalExplorationProvider.startsWith("comicvine::")) {
+      const comicVineKey = (env.COMICVINE_API_KEY || env.VITE_COMICVINE_API_KEY)?.trim();
+      if (comicVineKey) {
+        const parsedId = parseProviderId(finalExplorationProvider);
+        const prefixMap: Record<string, string> = { character: "4005", volume: "4050", issue: "4000", story_arc: "4045", event: "4015", team: "4060", publisher: "4010" };
+        const prefix = prefixMap[parsedId.resourceType];
+        if (prefix) {
+          try {
+            const url = `https://comicvine.gamespot.com/api/${parsedId.resourceType}/${prefix}-${parsedId.id}/?api_key=${comicVineKey}&format=json&field_list=id,name,description,deck,start_year,publisher,aliases,concepts,teams,character_credits,volume_credits`;
+            const res = await fetch(url, { headers: { "User-Agent": "Nerdvana/1.0" } });
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.results) fetchedProviderData = data.results;
+            }
+          } catch (e) {}
+        }
+      }
+    } else if (finalExplorationProvider.startsWith("tmdb::")) {
+      const tmdbKey = (env.TMDB_API_KEY || env.VITE_TMDB_API_KEY)?.trim();
+      if (tmdbKey) {
+        const parsedId = parseProviderId(finalExplorationProvider);
+        const type = parsedId.resourceType === "tv" ? "tv" : "movie";
+        try {
+          const res = await fetch(`https://api.themoviedb.org/3/${type}/${parsedId.id}?api_key=${tmdbKey}&append_to_response=credits`);
+          if (res.ok) fetchedProviderData = await res.json();
+        } catch (e) {}
+      }
+    }
+  }
+
+  const exploration = await ExplorationBuilder.build({
+    provider: finalExplorationProvider,
+    rawData: fetchedProviderData
+  }, finalContextualEntity, mediaLens);
+
+  console.log("=== STAGE 4: CANONICAL RESOLVER ===", {
+    explorationCharactersLength: exploration.characters.length,
+    firstCharacter: exploration.characters[0] ?? null
+  });
+
+  return { packet, exploration };
 }

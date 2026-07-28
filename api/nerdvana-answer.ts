@@ -74,16 +74,6 @@ function buildPrompt(
   packet: ResolverContextPacket,
   conversation: ConversationMessage[],
 ) {
-  let activeTopic = query;
-
-  if (conversation.length > 0) {
-    const lastUserMsg = [...conversation]
-      .reverse()
-      .find((msg) => msg.role === "user");
-
-    if (lastUserMsg) activeTopic = lastUserMsg.content;
-  }
-
   const activeContext = packet.queryMode === "exploration"
     ? `- Mode: Exploration\n- Lens: ${packet.mediaLens}`
     : `- Entity: ${packet.canonicalEntity ?? "Unknown"}\n- Franchise: ${packet.parentFranchise ?? "Unknown"}\n- Lens: ${packet.mediaLens}\n- Spoilers: ${packet.spoilerPolicy}\n- Mode: ${packet.conversationMode}\n- Confidence: ${packet.confidence}`;
@@ -102,7 +92,11 @@ IMPORTANT GUIDELINES:
 - If Spoilers is "strict", naturally avoid revealing major plot twists or endings. Do not mention spoiler policies, internal settings, or give warnings.`;
 
   // We limit the conversation context to recent messages to prevent token explosion.
-  const recentConversation = conversation.slice(-4);
+  // As per architectural rules, conversation is only consulted for ambiguous follow-ups.
+  // Deterministic navigations must be strictly isolated to prevent cross-entity leaks.
+  const isAmbiguousFollowUp = packet.executionMode === "SEMANTIC";
+  const recentConversation = isAmbiguousFollowUp ? conversation.slice(-4) : [];
+  
   const conversationContext =
     recentConversation.length > 0
       ? "\n\nRECENT CONVERSATION STATE:\n" +
@@ -332,10 +326,12 @@ export default async function handler(req: any, res?: any) {
   try {
     const body = await readBody(req);
 
-    console.log("[REQUEST_PAYLOAD_RECEIVED]", {
+    console.log("[INCOMING_REQUEST_LOG]", {
+      query: body?.query,
       item: body?.item,
-      mediaLens: body?.mediaLens,
-      providerMetadata: body?.providerMetadata
+      lens: body?.mediaLens,
+      providerId: body?.item || body?.canonicalSelection || null,
+      previousEntity: body?.previousEntity || null
     });
 
     const rawQuery = String(body?.query ?? "").trim();
@@ -353,6 +349,17 @@ export default async function handler(req: any, res?: any) {
     const explicitSelection =
       String(body?.item ?? body?.canonicalSelection ?? "").trim() || undefined;
     const providerMetadata = body?.providerMetadata || undefined;
+    const requestId = body?.requestId || undefined;
+    
+    console.log("[LIFECYCLE_DEBUG_BACKEND] Payload received:", JSON.stringify({
+      requestId,
+      query: rawQuery,
+      item: explicitSelection,
+      lens: mediaLens,
+      conversation: body?.conversation,
+      previousEntity: body?.previousEntity,
+      executionMode: body?.executionMode
+    }, null, 2));
     if (providerMetadata?.providerType) {
       console.log("[TYPED_PROVIDER_PROPAGATED]", {
         stage: "request_payload",
@@ -386,6 +393,13 @@ export default async function handler(req: any, res?: any) {
       temporaryEntities,
       providerMetadata,
       allowLooseSemantic: false // STRICT CANONICAL MATCHING ONLY
+    });
+
+    console.log("[CANONICAL_RESOLUTION_RESULT_LOG]", {
+      selectedCanonicalEntity: grounding.selectedCanonicalEntity,
+      selectedSelectionValue: grounding.selectedSelectionValue,
+      providerId: grounding.selectedSelectionValue, // Alias for clarity
+      ambiguityLevel: grounding.ambiguityLevel
     });
 
     const env =
@@ -495,6 +509,7 @@ export default async function handler(req: any, res?: any) {
     // 1. Generate Context Packet(s) based on Strategy
     let packet: ResolverContextPacket;
     let packet2: ResolverContextPacket | null = null;
+    let exploration: any = null;
     let isMultiGround = false;
 
     const intentResolution = body?.intentResolution;
@@ -551,16 +566,22 @@ export default async function handler(req: any, res?: any) {
       const g1 = groundCanonicalIntent({ query: e1, mediaLens, temporaryEntities });
       const g2 = groundCanonicalIntent({ query: e2, mediaLens, temporaryEntities });
 
-      packet = await buildContextPacket(e1, mediaLens, spoilerMode, previousEntity, g1);
-      packet2 = await buildContextPacket(e2, mediaLens, spoilerMode, previousEntity, g2);
+      const res1 = await buildContextPacket(e1, mediaLens, spoilerMode, previousEntity, g1);
+      packet = res1.packet;
+      exploration = res1.exploration;
+      
+      const res2 = await buildContextPacket(e2, mediaLens, spoilerMode, previousEntity, g2);
+      packet2 = res2.packet;
     } else {
-      packet = await buildContextPacket(
+      const res = await buildContextPacket(
         rawQuery,
         mediaLens,
         spoilerMode,
         previousEntity,
         grounding
       );
+      packet = res.packet;
+      exploration = res.exploration;
     }
 
     if (packet.providerMetadata?.providerType) {
@@ -573,6 +594,12 @@ export default async function handler(req: any, res?: any) {
         providerResourceType: packet.providerMetadata.providerResourceType ?? null,
       });
     }
+
+    console.log("[CONTEXT_PACKET_GENERATED_LOG]", {
+      canonicalEntity: packet.canonicalEntity,
+      providerId: packet.providerId,
+      executionMode: packet.executionMode
+    });
 
     if (packet.deterministicOwnershipFailure) {
       console.log(
@@ -678,7 +705,8 @@ IMPORTANT GUIDELINES:
 - Do not greet the user. Start immediately with the answer content.
 - Compare the two entities objectively using the provided canonical information.`;
 
-      const recentConversation = conversation.slice(-4);
+      const isAmbiguousFollowUp = packet.executionMode === "SEMANTIC";
+      const recentConversation = isAmbiguousFollowUp ? conversation.slice(-4) : [];
       const conversationContext = recentConversation.length > 0
         ? "\n\nRECENT CONVERSATION STATE:\n" + recentConversation.map(msg => `${msg.role === "user" ? "User" : "Nerdvana"}: ${msg.content}`).join("\n")
         : "";
@@ -741,6 +769,11 @@ IMPORTANT GUIDELINES:
       ? buildContinuationSuggestions(packet.providerId!, packet.canonicalEntity || query)
       : null;
 
+    console.log("=== STAGE 5: API ROUTE RESPONDING ===", {
+      explorationCharactersLength: exploration?.characters?.length ?? 0,
+      firstCharacter: exploration?.characters?.[0] ?? null
+    });
+
     return jsonResponse(
       {
         answer,
@@ -752,10 +785,12 @@ IMPORTANT GUIDELINES:
         readingOrder,
         continuationSuggestions,
         contextPacket: packet, // Universal source of truth exported to frontend
+        exploration,
         alternatives: grounding.suggestions,
         grounding,
         requiresGrounding: false,
         temporaryEntityCreated: newTempEntity,
+        requestId,
         ambiguityWarning: strategy === "SOFT_GROUND" ? "Ambiguous query resolved to most likely candidate" : undefined,
         diagnostics: {
           normalizedQuery: grounding.normalizedQuery,

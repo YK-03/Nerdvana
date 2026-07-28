@@ -3,10 +3,10 @@ import { generateFollowUps } from "../utils/suggestionGenerator";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ChatBubble from "../components/ChatBubble";
-import AIResponse from "../components/AIResponse";
+import ResultContent from "../components/ResultContent";
 import ThinkingScreen from "../components/ThinkingScreen";
-import SourcesPanel from "../components/SourcesPanel";
 import VisualPanel from "../pages/VisualPanel";
+import ResultLayout from "../components/ResultLayout";
 import { motion } from "motion/react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -104,6 +104,7 @@ interface ConversationMessage {
 interface ResponseData {
   answer: MockAnswer;
   results: ResultLink[];
+  exploration?: any;
 }
 
 function readAskQueryParams() {
@@ -175,6 +176,7 @@ export default function AskPage({
 
   useEffect(() => {
     const handlePopState = () => {
+      clearActiveEntityState();
       setUrlParams(readAskQueryParams());
     };
     window.addEventListener("popstate", handlePopState);
@@ -183,7 +185,14 @@ export default function AskPage({
 
   const fullQuestion = question.trim();
   const [queryInput, setQueryInput] = useState(fullQuestion);
-  const [contextPacket, setContextPacket] = useState<ResolverContextPacket | null>(null);
+  const [_contextPacket, _setContextPacket] = useState<ResolverContextPacket | null>(null);
+  const contextPacket = _contextPacket;
+  const setContextPacket = (val: React.SetStateAction<ResolverContextPacket | null>, requestIdOverride?: string) => {
+    const isFn = typeof val === "function";
+    const newVal = isFn ? null : (val as ResolverContextPacket | null);
+    console.log(`------------------------\nSTATE WRITE\n\nrequestId: ${requestIdOverride || activeRequestIdRef.current || "none"}\nreason: Tracing state mutation\ncomponent: AskPage\ncaller: setContextPacket\nentity: ${isFn ? "function" : (newVal?.canonicalEntity || "none")}\nproviderId: ${isFn ? "function" : (newVal?.providerId || "none")}\nstack trace:\n${new Error().stack}\n------------------------`);
+    _setContextPacket(val);
+  };
   const activeVisualOwnerRef = useRef<ActiveVisualOwner | null>(null);
   const [activeVisualOwner, _setActiveVisualOwner] = useState<ActiveVisualOwner | null>(null);
   const setActiveVisualOwner = (val: ActiveVisualOwner | null) => {
@@ -194,8 +203,22 @@ export default function AskPage({
   const setActiveVisualOwnerMetadata = (val: ActiveVisualOwnerMetadata | null) => {
     _setActiveVisualOwnerMetadata(val);
   };
-  const [grounding, setGrounding] = useState<CanonicalGroundingResult | null>(null);
-  const [renderEntityPacket, setRenderEntityPacket] = useState<RenderEntityPacket | null>(null);
+  const [_grounding, _setGrounding] = useState<CanonicalGroundingResult | null>(null);
+  const grounding = _grounding;
+  const setGrounding = (val: React.SetStateAction<CanonicalGroundingResult | null>, requestIdOverride?: string) => {
+    const isFn = typeof val === "function";
+    const newVal = isFn ? null : (val as CanonicalGroundingResult | null);
+    console.log(`------------------------\nSTATE WRITE\n\nrequestId: ${requestIdOverride || activeRequestIdRef.current || "none"}\nreason: Tracing state mutation\ncomponent: AskPage\ncaller: setGrounding\nentity: ${isFn ? "function" : (newVal?.selectedCanonicalEntity || "none")}\nproviderId: ${isFn ? "function" : (newVal?.selectedSelectionValue || "none")}\nstack trace:\n${new Error().stack}\n------------------------`);
+    _setGrounding(val);
+  };
+  const [_renderEntityPacket, _setRenderEntityPacket] = useState<RenderEntityPacket | null>(null);
+  const renderEntityPacket = _renderEntityPacket;
+  const setRenderEntityPacket = (val: React.SetStateAction<RenderEntityPacket | null>, requestIdOverride?: string) => {
+    const isFn = typeof val === "function";
+    const newVal = isFn ? null : (val as RenderEntityPacket | null);
+    console.log(`------------------------\nSTATE WRITE\n\nrequestId: ${requestIdOverride || activeRequestIdRef.current || "none"}\nreason: Tracing state mutation\ncomponent: AskPage\ncaller: setRenderEntityPacket\nentity: ${isFn ? "function" : (newVal?.title || "none")}\nproviderId: ${isFn ? "function" : (newVal?.providerId || "none")}\nstack trace:\n${new Error().stack}\n------------------------`);
+    _setRenderEntityPacket(val);
+  };
   const [visualResolutionStatus, setVisualResolutionStatus] = useState<'idle' | 'pending' | 'resolved' | 'failed'>('idle');
   const lastExploredEntityRef = useRef("");
   const resolvedItem = (contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && renderEntityPacket)
@@ -216,10 +239,15 @@ export default function AskPage({
     window.location.search = params.toString();
   };
 
-  const [answer, setAnswer] = useState<MockAnswer>({ summary: "", categories: [], spoilers: "" });
-  const [results, setResults] = useState<ResultLink[]>([]);
+    const [results, setResults] = useState<ResultLink[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [responseData, setResponseData] = useState<ResponseData | null>(null);
+  const [_responseData, _setResponseData] = useState<ResponseData | null>(null);
+  const responseData = _responseData;
+  const setResponseData = (val: React.SetStateAction<ResponseData | null>, requestIdOverride?: string) => {
+    const isFn = typeof val === "function";
+    console.log(`------------------------\nSTATE WRITE\n\nrequestId: ${requestIdOverride || activeRequestIdRef.current || "none"}\nreason: Tracing state mutation\ncomponent: AskPage\ncaller: setResponseData\nentity: ${isFn ? "function" : "N/A"}\nproviderId: ${isFn ? "function" : "N/A"}\nstack trace:\n${new Error().stack}\n------------------------`);
+    _setResponseData(val);
+  };
   const { save: saveCaseMemory } = useInvestigationMemory();
   const [user] = useAuthState(auth);
   const lastSavedCaseKey = useRef("");
@@ -245,7 +273,13 @@ export default function AskPage({
   } = useExplorationStore();
 
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
-  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
+  const [_conversation, _setConversation] = useState<ConversationMessage[]>([]);
+  const conversation = _conversation;
+  const setConversation = (val: React.SetStateAction<ConversationMessage[]>, requestIdOverride?: string) => {
+    const isFn = typeof val === "function";
+    console.log(`------------------------\nSTATE WRITE\n\nrequestId: ${requestIdOverride || activeRequestIdRef.current || "none"}\nreason: Tracing state mutation\ncomponent: AskPage\ncaller: setConversation\nentity: ${isFn ? "function" : "N/A"}\nproviderId: ${isFn ? "function" : "N/A"}\nstack trace:\n${new Error().stack}\n------------------------`);
+    _setConversation(val);
+  };
   const [followUpQuery, setFollowUpQuery] = useState("");
   const [isGeneratingFollowUp, setIsGeneratingFollowUp] = useState(false);
   const [spoilerPolicy, setSpoilerPolicy] = useState(false);
@@ -268,6 +302,7 @@ export default function AskPage({
     activeIndex,
     loading,
     setAutocompleteState,
+    setAutocompleteLoading,
     setActiveIndex,
     clearAutocompleteState
   } = useAutocompleteStore();
@@ -307,14 +342,29 @@ export default function AskPage({
         const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(query)}&lens=${mediaLens}`, {
           signal: abortController.signal
         });
-        if (!res.ok) throw new Error("Fetch failed");
-        const data = await res.json();
-        if (inputCurrentQueryRef.current === query) {
-          setAutocompleteState(data, null, false);
+        if (!res.ok) {
+          if (inputCurrentQueryRef.current === query) {
+            setAutocompleteLoading(false);
+          }
+          return;
         }
-      } catch (err: any) {
-        if (err.name !== "AbortError" && inputCurrentQueryRef.current === query) {
-          setAutocompleteState([], null, false);
+        const payload = await res.json();
+        if (inputCurrentQueryRef.current === query) {
+          if (payload.status === "ok") {
+            setAutocompleteState(payload.data, null, false);
+          } else if (payload.status === "empty") {
+            setAutocompleteState([], null, false);
+          } else {
+            // Keep existing suggestions for timeouts, rate limits, provider errors
+            setAutocompleteLoading(false);
+          }
+        }
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          return;
+        }
+        if (inputCurrentQueryRef.current === query) {
+          setAutocompleteLoading(false);
         }
       }
     }, 250);
@@ -335,6 +385,15 @@ export default function AskPage({
     };
   }, [clearAutocompleteState]);
 
+  const clearActiveEntityState = () => {
+    setContextPacket(null, "clearActiveEntityState");
+    setRenderEntityPacket(null, "clearActiveEntityState");
+    setGrounding(null, "clearActiveEntityState");
+    setActiveVisualOwner(null);
+    setActiveVisualOwnerMetadata(null);
+    clearExplorationState();
+  };
+
   const handleSelectSuggestion = (suggestion: any) => {
     const startedAt = activeExecutionRef.current?.startedAt ?? Date.now();
     const executionAgeMs = Date.now() - startedAt;
@@ -344,6 +403,7 @@ export default function AskPage({
     selectedSuggestionRef.current = suggestion;
 
     clearAutocompleteState();
+    clearActiveEntityState();
     const newQuery = suggestion.displayTitle;
     const nextItem = suggestion.selectionValue;
 
@@ -413,9 +473,7 @@ export default function AskPage({
 
 
     // Invalidate ALL deterministic restoration sources simultaneously first
-    setGrounding(null);
-    setContextPacket(null);
-    setRenderEntityPacket(null);
+    clearActiveEntityState();
     setUrlParams({ item: "", mediaLens });
 
     window.history.replaceState(
@@ -441,7 +499,7 @@ export default function AskPage({
 
     const fullSession = [];
     if (fullQuestion) fullSession.push({ role: "user", content: fullQuestion });
-    if (answer.summary) fullSession.push({ role: "assistant", content: answer.summary });
+    if (responseData?.answer?.summary) fullSession.push({ role: "assistant", content: responseData.answer.summary });
     fullSession.push(...conversation);
     if (fullSession.length === 0) return;
 
@@ -485,26 +543,25 @@ export default function AskPage({
 
         const restoredResults = parsed.results || [];
 
-        setAnswer(restoredAnswer);
         setResults(restoredResults);
 
         setResponseData({
           answer: restoredAnswer,
           results: restoredResults
-        });
+        }, "session-restore");
 
-        setConversation(parsed.conversation || []);
+        setConversation(parsed.conversation || [], "session-restore");
 
         if (parsed.contextPacket) {
-          setContextPacket(parsed.contextPacket);
+          setContextPacket(parsed.contextPacket, "session-restore");
         }
 
         if (parsed.grounding) {
-          setGrounding(parsed.grounding);
+          setGrounding(parsed.grounding, "session-restore");
         }
 
         if (parsed.renderEntityPacket) {
-          setRenderEntityPacket(parsed.renderEntityPacket);
+          setRenderEntityPacket(parsed.renderEntityPacket, "session-restore");
         }
 
         if (parsed.activeVisualOwnerMetadata) {
@@ -523,7 +580,7 @@ export default function AskPage({
       "nerdvana_active_session",
       JSON.stringify({
         topic: fullQuestion,
-        answer,
+        answer: responseData?.answer || { summary: "", categories: [], spoilers: "" },
         results,
         conversation,
         contextPacket,
@@ -533,7 +590,7 @@ export default function AskPage({
         activeVisualOwnerMetadata
       })
     );
-  }, [fullQuestion, answer, results, conversation, mediaLens, contextPacket, grounding, renderEntityPacket, activeVisualOwnerMetadata]);
+  }, [fullQuestion, responseData?.answer, results, conversation, mediaLens, contextPacket, grounding, renderEntityPacket, activeVisualOwnerMetadata]);
 
   useEffect(() => {
     if (!fullQuestion) return;
@@ -567,7 +624,7 @@ export default function AskPage({
       null;
     const isManualSubmit = isManualSubmitRef.current;
 
-    if (isManualSubmitRef.current) {
+    if (isManualSubmitRef.current || !currentItem) {
       currentItem = null;
       providerMetadata = null;
       isManualSubmitRef.current = false;
@@ -594,13 +651,8 @@ export default function AskPage({
       const normalizedCurrentItem = extractProviderId(currentItem);
       const normalizedOwnerId = extractProviderId(currentVisualOwner?.providerId || null);
 
-      const isAlreadyCorrect = currentVisualOwner && (
-        (currentVisualOwner.canonicalTitle && currentVisualOwner.canonicalTitle.trim().toLowerCase() === normalizedQuestion.toLowerCase()) ||
-        (contextPacket?.canonicalEntity && currentVisualOwner.canonicalTitle && currentVisualOwner.canonicalTitle.trim().toLowerCase() === contextPacket.canonicalEntity.trim().toLowerCase()) ||
-        (normalizedCurrentItem && normalizedOwnerId && normalizedCurrentItem === normalizedOwnerId) ||
-        (currentItem && currentItem.endsWith(currentVisualOwner.providerId)) ||
-        (contextPacket?.providerId && currentVisualOwner.providerId === contextPacket.providerId)
-      );
+      // Only retain visual owner if the deterministic provider IDs exactly match
+      const isAlreadyCorrect = currentVisualOwner && normalizedCurrentItem && normalizedOwnerId && (normalizedCurrentItem === normalizedOwnerId);
 
       if (!isAlreadyCorrect) {
         setActiveVisualOwner(null);
@@ -628,11 +680,10 @@ export default function AskPage({
     }
 
     if (!normalizedQuestion) {
-      setAnswer({ summary: "", categories: [], spoilers: "" });
       setResults([]);
-      setResponseData(null);
+      setResponseData(null, "empty-query");
       setIsLoading(false);
-      setGrounding(null);
+      setGrounding(null, "empty-query");
       clearExplorationState();
       setReadingOrder(null);
       setContinuationSuggestions(null);
@@ -676,6 +727,13 @@ export default function AskPage({
     setActiveTraceId(traceId);
 
     const runSearch = async (context: ExecutionContext) => {
+        console.log(`[ORCHESTRATION_DEBUG] runSearch Invoked!
+requestId: ${context.requestId}
+query: ${context.query}
+item: ${context.item}
+stack trace:
+${new Error().stack}
+----------------------------------------`);
       try {
         setIsLoading(true);
         setVisualResolutionStatus('pending');
@@ -763,9 +821,8 @@ export default function AskPage({
         const runMode = arbitration.route === "exploration" ? "exploration" : "entity";
         const newSessionId = startNewSession(context.query, mediaLens, runMode);
 
-        const selectedSuggestion = selectedSuggestionRef.current;
-        const finalItem = urlParams.item || selectedSuggestion?.selectionValue || context.item || null;
-        const finalMetadata = urlParams.providerMetadata || selectedSuggestion?.providerMetadata || context.providerMetadata || null;
+        const finalItem = context.item || null;
+        const finalMetadata = context.providerMetadata || null;
         const finalExecutionMode = (finalItem && String(finalItem).includes("::")) ? "DETERMINISTIC_PROVIDER" : "SEMANTIC";
 
         let endpoint = "/api/nerdvana-answer";
@@ -780,8 +837,18 @@ export default function AskPage({
             temporaryEntities: useQuerySessionStore.getState().temporaryEntities,
             intentResolution: resolution,
             providerMetadata: finalMetadata || undefined,
-            executionMode: finalExecutionMode
+            executionMode: finalExecutionMode,
+            requestId: context.requestId
         };
+
+        console.log(`[LIFECYCLE_DEBUG_FRONTEND] Request leaving AskPage [${context.requestId}]:`, JSON.stringify({
+            query: context.query,
+            item: finalItem,
+            lens: mediaLens,
+            conversation: [],
+            previousEntity: null,
+            contextPacket: contextPacket
+        }, null, 2));
 
         if (runMode === "exploration") {
           endpoint = "/api/nerdvana-exploration";
@@ -800,6 +867,8 @@ export default function AskPage({
 
 
 
+        console.log(`[ASYNC_TRACE] Fetch START [${context.requestId}] for entity: ${context.query} (Item: ${finalItem})`);
+        
         const response = await fetch(endpoint, {
           method: "POST",
           signal: abortController.signal,
@@ -826,6 +895,8 @@ export default function AskPage({
         recordAI(context.traceId, { started: true, provider: "Gemini" });
 
         const payload = await response.json();
+        console.log(`[RAW_BACKEND_RESPONSE] [${context.requestId}]`, JSON.stringify(payload, null, 2));
+        console.log(`[ASYNC_TRACE] Fetch COMPLETE [${context.requestId}] for entity: ${context.query}. Active Request is: ${activeRequestIdRef.current}`);
 
         // Execution Ownership Protection against stale async completions
         if (activeExecutionRef.current?.searchKey !== searchKey) {
@@ -888,9 +959,11 @@ export default function AskPage({
             contextPacket: payload.contextPacket
           };
           Object.freeze(nextRenderPacket);
-          setRenderEntityPacket(nextRenderPacket);
+          setRenderEntityPacket(nextRenderPacket, payload.requestId);
+          console.log(`[LIFECYCLE_DEBUG_FRONTEND] State mutation (renderEntityPacket) [${context.requestId}]:`, nextRenderPacket);
         } else if (!isIncomingDeterministic) {
-          setRenderEntityPacket(null);
+          setRenderEntityPacket(null, payload.requestId);
+          console.log(`[LIFECYCLE_DEBUG_FRONTEND] State mutation (renderEntityPacket) [${context.requestId}]: null`);
         }
 
         recordAI(context.traceId, { returned: true });
@@ -949,8 +1022,7 @@ export default function AskPage({
             }
 
             const nextAnswer = { summary: aiAnswer, categories: [], spoilers: "" } satisfies MockAnswer;
-            setAnswer(nextAnswer);
-            setResponseData({ answer: nextAnswer, results: [] });
+            setResponseData({ answer: nextAnswer, results: [], exploration: payload?.exploration }, payload.requestId);
             lastSearchKeyRef.current = searchKey;
             
             finalizeRenderVerification(context.traceId, RENDER_CONTRACTS.selectors.aiResponse, (result) => {
@@ -997,11 +1069,11 @@ export default function AskPage({
 
         // Defensive: Set the search key ref immediately to prevent state-change re-renders 
         // from re-triggering the search pipeline.
-        const newSearchKey = `${canonicalTitle.trim()}|${mediaLens}|${user?.uid ?? ""}|${canonicalItem}`;
+        const newSearchKey = `${canonicalTitle.toLowerCase().trim()}|${mediaLens}|${user?.uid ?? ""}|${canonicalItem}`;
         lastSearchKeyRef.current = newSearchKey;
 
         if (payload?.grounding) {
-          setGrounding(payload.grounding);
+          setGrounding(payload.grounding, payload.requestId);
           if (payload.grounding.selectedCanonicalEntity) {
             const params = new URLSearchParams(window.location.search);
             const nextMeta = payload.contextPacket?.providerMetadata || payload.grounding?.providerMetadata || urlParams.providerMetadata || window.history.state?.providerMetadata || null;
@@ -1066,8 +1138,19 @@ export default function AskPage({
 
         const nextAnswer = { summary: aiAnswer, categories: [], spoilers: "" } satisfies MockAnswer;
         setResults(rawResults);
-        setAnswer(nextAnswer);
-        setResponseData({ answer: nextAnswer, results: rawResults });
+        console.log("=== STAGE 6: FRONTEND RECEIVED HTTP RESPONSE ===", {
+          hasExploration: !!payload?.exploration,
+          explorationCharactersLength: payload?.exploration?.characters?.length ?? 0,
+          firstCharacter: payload?.exploration?.characters?.[0] ?? null
+        });
+
+        setResponseData({ answer: nextAnswer, results: rawResults, exploration: payload?.exploration }, payload.requestId);
+
+        console.log("=== STAGE 7: ASKPAGE STORED RESPONSE DATA ===", {
+          hasExploration: !!payload?.exploration,
+          storedCharactersLength: payload?.exploration?.characters?.length ?? 0,
+          firstCharacter: payload?.exploration?.characters?.[0] ?? null
+        });
 
         if (payload?.readingOrder) {
           setReadingOrder(payload.readingOrder);
@@ -1082,7 +1165,13 @@ export default function AskPage({
         }
 
         if (payload?.contextPacket) {
-          setContextPacket(payload.contextPacket);
+          console.log("[ENTITY_IDENTITY] Canonical Resolution Complete", {
+            entity: payload.contextPacket.providerId || payload.contextPacket.canonicalEntity,
+            title: payload.contextPacket.canonicalEntity,
+            provider: payload.contextPacket.provider,
+            providerId: payload.contextPacket.providerId
+          });
+          setContextPacket(payload.contextPacket, payload.requestId);
         }
 
         // Visual check and spoiler block check
@@ -1149,6 +1238,7 @@ export default function AskPage({
             });
 
             if (context.requestId !== activeRequestIdRef.current) return;
+            if (abortController.signal.aborted) return;
             setCurrentHistoryId(docRef.id);
           } catch (error) {
             console.error("Failed to save history session", error);
@@ -1171,13 +1261,13 @@ export default function AskPage({
           startedAt: activeExecutionRef.current?.startedAt ?? Date.now()
         };
 
-        setAnswer({
+        const errorAnswer = {
           summary: `### ⚠️ Response Pipeline Error\n\nUnable to generate AI response. Please try again.\n\n*Diagnostics: ${error?.message || "Unknown network or API failure"}*`,
           categories: [],
           spoilers: ""
-        });
+        };
         setResults([]);
-        setResponseData(null);
+        setResponseData({ answer: errorAnswer, results: [], exploration: undefined }, context.requestId);
         lastSearchKeyRef.current = searchKey;
         
         recordRender(context.traceId, { renderBlocked: true, renderFailureReason: error.message });
@@ -1202,10 +1292,27 @@ export default function AskPage({
     setSpoilerPolicy(newValue);
     if (!newValue) return;
 
+    const requestId = Math.random().toString(36).substring(2, 15);
+    const traceId = `trace-${requestId}`;
+
+    activeRequestIdRef.current = requestId;
+    activeTraceIdRef.current = traceId;
+    setActiveRequestId(requestId);
+    setActiveTraceId(traceId);
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      if (activeTraceIdRef.current) {
+        recordLifecyclePhase(activeTraceIdRef.current, "CANCELLATION");
+      }
+    }
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     const isMainAnswer = conversation.length === 0;
 
     if (isMainAnswer) {
-      if (!fullQuestion || !answer.summary) return;
+      if (!fullQuestion || !responseData?.answer?.summary) return;
       setIsRegeneratingAnswer(true);
       try {
         const followUpPayload = {
@@ -1222,26 +1329,33 @@ export default function AskPage({
                 intent: { intent: useIntentStore.getState().intent, entities: [] },
                 ambiguity: useIntentStore.getState().ambiguity,
                 groundingDecision: { strategy: useIntentStore.getState().strategy },
-                candidateGraph: useIntentStore.getState().candidateGraph
               }
-            : undefined
+            : undefined,
+          requestId
         };
 
         const res = await fetch("/api/nerdvana-answer", {
           method: "POST",
+          signal: abortController.signal,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(followUpPayload)
         });
 
+        if (requestId !== activeRequestIdRef.current) return;
         if (!res.ok) throw new Error("API failed");
         const data = await res.json();
         
-        setAnswer(prev => ({ ...prev, summary: data.answer || "" }));
+        console.log(`[RAW_BACKEND_RESPONSE] [${requestId}]`, JSON.stringify(data, null, 2));
+        
+        setResponseData(prev => prev ? { ...prev, answer: { ...prev.answer, summary: data.answer || "" } } : null, requestId);
         setRevealedMessageIndices(new Set());
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === "AbortError") return;
         console.error("Failed to regenerate answer", err);
       } finally {
-        setIsRegeneratingAnswer(false);
+        if (requestId === activeRequestIdRef.current) {
+          setIsRegeneratingAnswer(false);
+        }
       }
     } else {
       const lastAssistantIdx = conversation.map(m => m.role).lastIndexOf("assistant");
@@ -1254,7 +1368,7 @@ export default function AskPage({
         const next = [...prev];
         next[lastAssistantIdx] = { ...next[lastAssistantIdx], content: "" };
         return next;
-      });
+      }, "system-reset");
       setIsGeneratingFollowUp(true);
       
       try {
@@ -1267,31 +1381,39 @@ export default function AskPage({
           spoilerMode: newValue,
           conversation: [
             { role: "user", content: fullQuestion },
-            { role: "assistant", content: answer.summary || "No answer available" },
+            { role: "assistant", content: responseData?.answer?.summary || "No answer available" },
             ...history
           ],
-          previousEntity: shouldMaintainFranchiseLock(resolvedItem, userQuery) ? resolvedItem : null
+          previousEntity: shouldMaintainFranchiseLock(resolvedItem, userQuery) ? resolvedItem : null,
+          requestId
         };
 
         const res = await fetch("/api/nerdvana-answer", {
           method: "POST",
+          signal: abortController.signal,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(followUpPayload)
         });
 
+        if (requestId !== activeRequestIdRef.current) return;
         if (!res.ok) throw new Error("API failed");
         const data = await res.json();
+        
+        console.log(`[RAW_BACKEND_RESPONSE] [${requestId}]`, JSON.stringify(data, null, 2));
         
         setConversation(prev => {
           const next = [...prev];
           next[lastAssistantIdx] = { ...next[lastAssistantIdx], content: data.answer || "" };
           return next;
-        });
+        }, requestId);
         setRevealedMessageIndices(new Set());
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === "AbortError") return;
         console.error("Failed to regenerate follow-up", err);
       } finally {
-        setIsGeneratingFollowUp(false);
+        if (requestId === activeRequestIdRef.current) {
+          setIsGeneratingFollowUp(false);
+        }
       }
     }
   };
@@ -1301,7 +1423,7 @@ export default function AskPage({
       return;
     }
 
-    if (!answer.summary.trim()) {
+    if (!responseData?.answer?.summary?.trim()) {
       return;
     }
 
@@ -1339,12 +1461,12 @@ export default function AskPage({
     }
 
     lastSavedCaseKey.current = caseKey;
-  }, [answer.summary, contextIsValid, fullQuestion, isAmbiguous, mediaLens, resolvedItem, saveCaseMemory, user]);
+  }, [responseData?.answer?.summary, contextIsValid, fullQuestion, isAmbiguous, mediaLens, resolvedItem, saveCaseMemory, user]);
 
   // Current Exploration automatic state updater
   useEffect(() => {
     if (!contextIsValid || isAmbiguous || !resolvedItem) return;
-    if (!answer.summary.trim()) return;
+    if (!responseData?.answer?.summary?.trim()) return;
     if (visualResolutionStatus !== 'resolved' && visualResolutionStatus !== 'failed') return;
     
     const explorationKey = `${resolvedItem}|${mediaLens}`;
@@ -1366,7 +1488,7 @@ export default function AskPage({
     }
     
     lastExploredEntityRef.current = explorationKey;
-  }, [answer.summary, contextIsValid, isAmbiguous, mediaLens, resolvedItem, user, visualResolutionStatus, renderEntityPacket, contextPacket]);
+  }, [responseData?.answer?.summary, contextIsValid, isAmbiguous, mediaLens, resolvedItem, user, visualResolutionStatus, renderEntityPacket, contextPacket]);
 
   const handleFollowUpSubmit = async (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
@@ -1383,7 +1505,7 @@ export default function AskPage({
       content: ""
     };
 
-    setConversation(prev => [...prev, userMessage, assistantPlaceholder]);
+    setConversation(prev => [...prev, userMessage, assistantPlaceholder], "follow-up-init");
     setFollowUpQuery("");
     setIsGeneratingFollowUp(true);
     setVisualResolutionStatus('pending');
@@ -1437,12 +1559,13 @@ export default function AskPage({
         spoilerMode: spoilerPolicy,
         conversation: [
           { role: "user", content: fullQuestion },
-          { role: "assistant", content: answer.summary || "No answer available" },
+          { role: "assistant", content: responseData?.answer?.summary || "No answer available" },
           ...conversation
         ],
         previousEntity: franchiseLocked ? resolvedItem : null,
         temporaryEntities: useQuerySessionStore.getState().temporaryEntities,
-        executionMode: mode === "DETERMINISTIC" ? "DETERMINISTIC_PROVIDER" : "SEMANTIC"
+        executionMode: mode === "DETERMINISTIC" ? "DETERMINISTIC_PROVIDER" : "SEMANTIC",
+        requestId: followUpContext.requestId
       };
 
 
@@ -1505,13 +1628,12 @@ export default function AskPage({
 
       if (payload?.contextPacket) {
         if (activeVisualOwner) {
-          const incomingId = payload.contextPacket.providerId;
-          const currentId = activeVisualOwner.providerId;
-          const incomingFranchise = payload.contextPacket.parentFranchise;
-          const currentFranchise = activeVisualOwner.franchiseRoot;
+          const incomingId = payload.contextPacket.providerId || null;
+          const currentId = activeVisualOwner.providerId || null;
+          const incomingFranchise = payload.contextPacket.parentFranchise || null;
+          const currentFranchise = activeVisualOwner.franchiseRoot || null;
 
-          if ((incomingId && currentId && incomingId !== currentId) ||
-              (incomingFranchise && currentFranchise && incomingFranchise !== currentFranchise)) {
+          if (incomingId !== currentId || incomingFranchise !== currentFranchise) {
             setActiveVisualOwner(null);
             setActiveVisualOwnerMetadata(null);
           }
@@ -1537,7 +1659,9 @@ export default function AskPage({
           contextPacket: payload.contextPacket
         };
         Object.freeze(nextRenderPacket);
-        setRenderEntityPacket(nextRenderPacket);
+        setRenderEntityPacket(nextRenderPacket, payload.requestId);
+      } else if (!isIncomingDeterministic) {
+        setRenderEntityPacket(null, payload.requestId);
       }
 
       recordAI(traceId, { returned: true });
@@ -1583,10 +1707,11 @@ export default function AskPage({
       recordAI(traceId, { normalized: true });
 
       if (payload?.grounding) {
-        setGrounding(payload.grounding);
+        setGrounding(payload.grounding, payload.requestId);
       }
       if (payload?.contextPacket) {
-        setContextPacket(payload.contextPacket);
+        setContextPacket(payload.contextPacket, payload.requestId);
+        console.log(`[LIFECYCLE_DEBUG_FRONTEND] State mutation (contextPacket) [${followUpContext.requestId}]:`, payload.contextPacket);
       }
 
       const rawData = Array.isArray(payload?.sources) ? payload.sources : [];
@@ -1631,7 +1756,7 @@ export default function AskPage({
           content: fullAssistantAnswer
         };
         return newConv;
-      });
+      }, payload.requestId);
 
       // Visual check and spoiler block check
       const isSpoilerBlocked = !spoilerPolicy && /\b(die|dies|death|dead|ending|kills|killed|final scene|spoiler|plot twist)\b/i.test(fullAssistantAnswer);
@@ -1703,7 +1828,7 @@ export default function AskPage({
           newConv.push({ role: "assistant", content: errorMessage });
         }
         return newConv;
-      });
+      }, followUpContext.requestId);
 
       recordRender(traceId, { renderBlocked: true, renderFailureReason: error.message });
     } finally {
@@ -1855,163 +1980,22 @@ export default function AskPage({
             )}
 
             {/* Main content + Visual Panel side by side */}
-            <div className="flex flex-col-reverse lg:flex-row gap-8 items-start">
-              <div className="flex-1 min-w-0 w-full">
-                {!isLoading && fullQuestion && answer.summary.trim() && (
-                  <motion.div
-                    key={responseData ? `${fullQuestion}-${responseData.answer.summary.length}` : `empty-${fullQuestion}`}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, ease: "easeOut" }}
-                  >
-                    <AIResponse
-                      text={answer.summary}
-                      isLoading={isRegeneratingAnswer}
-                      disableProgressiveReveal
-                    />
-
-                    {/* Timeline & Reading Order Progression Panel */}
-                    {ENABLE_CONTINUITY_TIMELINE && readingOrder && readingOrder.length > 0 && (
-                      <div className="mt-6 mb-6 p-5 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(135deg,rgba(25,25,35,0.85),rgba(15,15,22,0.95))] backdrop-blur-md shadow-2xl transition-all duration-300">
-                        <div className="flex items-center justify-between mb-4 border-b border-[rgba(255,255,255,0.06)] pb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[var(--nerdvana-accent)] text-[0.65rem] lg:text-[0.6rem] animate-pulse">●</span>
-                            <h3 className="text-[0.68rem] uppercase tracking-[0.2em] font-semibold text-gray-300 font-mono">
-                              Continuity Timeline & Reading Order
-                            </h3>
-                          </div>
-                          {contextPacket?.providerMetadata?.publisherLabel && (
-                            <span
-                              className="text-[0.65rem] lg:text-[0.58rem] uppercase tracking-[0.1em] px-2 py-0.5 rounded font-mono font-semibold"
-                              style={{
-                                backgroundColor: (() => {
-                                  const pub = contextPacket.providerMetadata.publisherLabel.toLowerCase();
-                                  if (pub.includes("marvel")) return "rgba(229, 9, 20, 0.15)";
-                                  if (pub.includes("dc")) return "rgba(0, 75, 145, 0.15)";
-                                  if (pub.includes("image")) return "rgba(102, 51, 153, 0.15)";
-                                  return "rgba(255, 255, 255, 0.05)";
-                                })(),
-                                color: (() => {
-                                  const pub = contextPacket.providerMetadata.publisherLabel.toLowerCase();
-                                  if (pub.includes("marvel")) return "#ff5c5c";
-                                  if (pub.includes("dc")) return "#5cafff";
-                                  if (pub.includes("image")) return "#dca3ff";
-                                  return "#cccccc";
-                                })(),
-                                border: `1px solid ${(() => {
-                                  const pub = contextPacket.providerMetadata.publisherLabel.toLowerCase();
-                                  if (pub.includes("marvel")) return "rgba(229, 9, 20, 0.3)";
-                                  if (pub.includes("dc")) return "rgba(0, 75, 145, 0.3)";
-                                  if (pub.includes("image")) return "rgba(102, 51, 153, 0.3)";
-                                  return "rgba(255, 255, 255, 0.1)";
-                                })()}`
-                              }}
-                            >
-                              {contextPacket.providerMetadata.publisherLabel}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Reading Order List */}
-                        <div className="relative mt-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 relative z-10">
-                            {readingOrder.map((item, idx) => (
-                              <div
-                                key={idx}
-                                className="group relative p-3.5 rounded-lg bg-[rgba(255,255,255,0.015)] hover:bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.04)] hover:border-[var(--nerdvana-accent)] transition-all duration-300 hover:-translate-y-0.5 shadow-md flex flex-col justify-between"
-                              >
-                                <div>
-                                  <div className="flex items-center gap-1.5 mb-2">
-                                    <span className="text-[0.65rem] lg:text-[0.6rem] font-mono text-[var(--nerdvana-accent)] font-bold">
-                                      {String(idx + 1).padStart(2, "0")}
-                                    </span>
-                                    <span className="text-[0.65rem] lg:text-[0.52rem] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[rgba(255,255,255,0.06)] text-gray-400 font-mono">
-                                      {item.type}
-                                    </span>
-                                    {item.year && (
-                                      <span className="text-[0.65rem] lg:text-[0.58rem] font-mono text-gray-400 ml-auto">
-                                        {item.year}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <h4 className="text-[0.82rem] font-bold text-white mb-1.5 group-hover:text-[var(--nerdvana-accent)] transition-colors duration-300 font-serif">
-                                    {item.title}
-                                  </h4>
-                                </div>
-                                {item.reason && (
-                                  <p className="text-[0.7rem] text-gray-400 leading-relaxed font-sans line-clamp-3 mt-1 opacity-80">
-                                    {item.reason}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Continuation Sequel Timelines */}
-                        {continuationSuggestions && continuationSuggestions.length > 0 && (
-                          <div className="mt-5 pt-4 border-t border-[rgba(255,255,255,0.05)]">
-                            <p className="text-[0.65rem] lg:text-[0.62rem] uppercase tracking-[0.15em] text-gray-400 font-mono mb-2.5">
-                              Next Arc & Sequel Timeline Continuation:
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {continuationSuggestions.map((item, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)] hover:border-[var(--nerdvana-accent)] transition-colors duration-300"
-                                >
-                                  <span className="w-1 h-1 rounded-full bg-[var(--nerdvana-accent)]" />
-                                  <span className="text-[0.74rem] font-semibold text-gray-300">
-                                    {item.title}
-                                  </span>
-                                  <span className="text-[0.65rem] lg:text-[0.52rem] uppercase font-mono px-1.5 py-0.2 bg-[rgba(255,255,255,0.05)] text-gray-400 rounded">
-                                    {item.type}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {grounding?.behavior === "require_selection" && grounding.suggestions.length > 1 && (
-                      <div
-                        className="mt-5 rounded-lg border px-4 py-3 text-sm"
-                        style={{
-                          borderColor: "var(--nerdvana-border)",
-                          backgroundColor: "rgba(50, 50, 50, 0.03)",
-                          color: "var(--nerdvana-text)"
-                        }}
-                      >
-                        <p
-                          className="mb-2 uppercase tracking-[0.16em] text-[0.68rem] font-semibold"
-                          style={{ fontFamily: '"Courier New", monospace' }}
-                        >
-                          Looking for:
-                        </p>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {grounding.suggestions.slice(0, 3).map((suggestion) => (
-                            <li
-                              key={`${suggestion.selectionValue}-${suggestion.mediaLens}`}
-                              className="text-[0.92rem] leading-6"
-                              style={{ fontFamily: '"Times New Roman", serif' }}
-                            >
-                              <span className="font-semibold">{suggestion.displayTitle}</span>
-                              {suggestion.metadataLabel ? ` — ${suggestion.metadataLabel}` : ""}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    <SourcesPanel
-                      sources={results.map((result) => ({
-                        title: result.title,
-                        link: result.url
-                      }))}
-                    />
-                    
-                    {/* Phase 8E: Experience Intelligence Discovery Rails Disabled for Phase 9A */}
-                  </motion.div>
+            <ResultLayout
+              main={
+                <>
+                {!isLoading && fullQuestion && responseData?.answer?.summary?.trim() && (
+                  <ResultContent 
+                    isLoading={isLoading}
+                    fullQuestion={fullQuestion}
+                    answerSummary={responseData?.answer?.summary || ""}
+                    responseData={responseData}
+                    isRegeneratingAnswer={isRegeneratingAnswer}
+                    readingOrder={readingOrder}
+                    contextPacket={contextPacket}
+                    grounding={grounding}
+                    results={results}
+                    continuationSuggestions={continuationSuggestions}
+                  />
                 )}
 
                 {!isLoading && fullQuestion && (
@@ -2110,16 +2094,16 @@ export default function AskPage({
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Visual Panel — sticky sidebar */}
-              {(contextPacket || explorationStatus === "completed") && (
-                <div className="w-full max-w-md mx-auto lg:mx-0 lg:w-72 flex-shrink-0 sticky top-24">
+              </>
+              }
+              sidebar={
+                (contextPacket || explorationStatus === "completed") ? (
+                  <>
                   {contextPacket && detectQueryMode(fullQuestion) === "entity" && (
                       <VisualPanel
                         contextPacket={(contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && renderEntityPacket) ? renderEntityPacket.contextPacket : contextPacket}
                         activeTraceId={activeTraceId}
-                        activeVisualOwner={activeVisualOwner}
+                        reusableVisual={activeVisualOwner?.asset || null}
                         onVisualLocked={(owner) => {
                            setActiveVisualOwner(owner);
                            setActiveVisualOwnerMetadata({
@@ -2145,9 +2129,10 @@ export default function AskPage({
                         ))}
                       </div>
                   )}
-                </div>
-              )}
-            </div>
+                  </>
+                ) : null
+              }
+            />
 
 
 

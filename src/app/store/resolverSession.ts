@@ -88,6 +88,7 @@ export interface AutocompleteStore {
   loading: boolean;
   activeIndex: number;
   setAutocompleteState: (suggestions: any[], requestId: string | null, loading: boolean) => void;
+  setAutocompleteLoading: (loading: boolean) => void;
   setActiveIndex: (index: number) => void;
   clearAutocompleteState: () => void;
 }
@@ -100,6 +101,7 @@ export const useAutocompleteStore = create<AutocompleteStore>((set) => ({
   setAutocompleteState: (suggestions, requestId, loading) => set({
     suggestions, requestId, loading, activeIndex: -1
   }),
+  setAutocompleteLoading: (loading) => set({ loading }),
   setActiveIndex: (activeIndex) => set({ activeIndex }),
   clearAutocompleteState: () => set({
     suggestions: [], requestId: null, loading: false, activeIndex: -1

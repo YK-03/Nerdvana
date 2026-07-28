@@ -7,6 +7,13 @@ import {
   type ProviderMetadata,
 } from "../src/lib/resolver/providerMetadata.js";
 
+type CacheEntry = {
+  data: any[];
+  timestamp: number;
+};
+const autocompleteCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 60000;
+
 const CANONICAL_PUBLISHERS: Record<string, string> = {
   "batman": "dc comics",
   "superman": "dc comics",
@@ -102,7 +109,7 @@ function rankAutocompleteCandidates(
     }
 
     score += ((c.popularity || 0) / 100) * 0.10; 
-    if (c.source === "igdb" || c.source === "tmdb" || c.source === "jikan" || c.source === "rawg") score += 0.10;
+    if (c.source === "igdb" || c.source === "tmdb" || c.source === "anilist" || c.source === "rawg") score += 0.10;
     
     score = score * queryCompletenessWeight;
 
@@ -189,7 +196,10 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
       if (!keys.tmdb) return [];
       const endpoint = lens === "movies" ? "movie" : "tv";
       const res = await fetch(`https://api.themoviedb.org/3/search/${endpoint}?query=${encodeURIComponent(query)}&api_key=${keys.tmdb}`, { signal: AbortSignal.timeout(2500) });
-      if (!res.ok) return [];
+      if (!res.ok) {
+        if (res.status === 429) throw new Error("rate_limited");
+        return [];
+      }
       const data = await res.json();
       const rawCandidates = (data.results || []).map((r: any) => ({
         id: r.id,
@@ -203,16 +213,48 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
       return rankAutocompleteCandidates(rawCandidates, query, lens);
     }
     if (lens === "anime") {
-      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=10`, { signal: AbortSignal.timeout(2500) });
-      if (!res.ok) return [];
+      const queryStr = `
+        query ($search: String) {
+          Page(page: 1, perPage: 10) {
+            media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+              id
+              title {
+                english
+                romaji
+              }
+              startDate {
+                year
+              }
+              genres
+              averageScore
+            }
+          }
+        }
+      `;
+      const res = await fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          query: queryStr,
+          variables: { search: query }
+        }),
+        signal: AbortSignal.timeout(2500)
+      });
+      if (!res.ok) {
+        if (res.status === 429) throw new Error("rate_limited");
+        return [];
+      }
       const data = await res.json();
-      const rawCandidates = (data.data || []).map((r: any) => ({
-        id: r.mal_id,
-        name: r.title_english ?? r.title,
-        year: r.aired?.prop?.from?.year,
-        genre: r.genres?.[0]?.name ?? null,
-        source: "jikan",
-        popularity: r.score ? r.score * 10 : 0,
+      const rawCandidates = (data.data?.Page?.media || []).map((r: any) => ({
+        id: r.id,
+        name: r.title?.english || r.title?.romaji,
+        year: r.startDate?.year || null,
+        genre: r.genres?.[0] ?? null,
+        source: "anilist",
+        popularity: r.averageScore ? r.averageScore : 0,
         isEdition: false
       }));
       return rankAutocompleteCandidates(rawCandidates, query, lens);
@@ -327,7 +369,8 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
         console.log("[TYPED_ENTITY_CLASSIFIED]", { query, lens, providerType: classifiedType });
       }
       if (keys.comicVine) {
-         const res = await fetch(`https://comicvine.gamespot.com/api/search/?api_key=${keys.comicVine}&query=${encodeURIComponent(query)}&resources=character,volume,issue,story_arc,team,publisher&field_list=id,name,start_year,publisher,resource_type,issue_number&format=json&limit=12`, { headers: { "User-Agent": "Nerdvana/1.0" }, signal: AbortSignal.timeout(2500) });
+         const res = await fetch(`https://comicvine.gamespot.com/api/search/?api_key=${keys.comicVine}&query=${encodeURIComponent(query)}&resources=volume,story_arc,character&field_list=id,name,start_year,publisher,resource_type,issue_number&format=json&limit=12`, { headers: { "User-Agent": "Nerdvana/1.0" }, signal: AbortSignal.timeout(2500) });
+         if (!res.ok && res.status === 429) throw new Error("rate_limited");
          if (res.ok) {
             const data = await res.json();
             const rawResults = data.results || [];
@@ -490,9 +533,11 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
     const isTransient = err?.name === "AbortError" || msg.includes("ECONNRESET") || msg.includes("fetch failed") || msg.includes("Timeout");
     if (!isTransient) {
       console.error("[Nerdvana Autocomplete] Error:", err);
+      throw new Error("provider_error");
     } else if (process.env.DEBUG_AUTOCOMPLETE === "true") {
       console.log("[Nerdvana Autocomplete] Transient fetch interruption:", err.message);
     }
+    throw new Error("timeout");
   }
   return [];
 }
@@ -512,8 +557,17 @@ export default async function handler(req: any, res?: any) {
     }
 
     if (!q || q.length < 2) {
-      if (res) return res.status(200).json([]);
-      return new Response("[]", { status: 200, headers: { "Content-Type": "application/json" } });
+      const payload = { status: "empty", data: [] };
+      if (res) return res.status(200).json(payload);
+      return new Response(JSON.stringify(payload), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+
+    const cacheKey = `${lens}:${q.toLowerCase()}`;
+    const cached = autocompleteCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      const payload = { status: cached.data.length > 0 ? "ok" : "empty", data: cached.data };
+      if (res) return res.status(200).json(payload);
+      return new Response(JSON.stringify(payload), { status: 200, headers: { "Content-Type": "application/json" } });
     }
 
     const env = (globalThis as any).process?.env ?? {};
@@ -527,7 +581,7 @@ export default async function handler(req: any, res?: any) {
     const results = await fetchAutocomplete(q, lens, keys);
 
     const mapped = results.filter(r => r.name).map((r, i) => {
-      const sourceName = r.source === "tmdb" ? "TMDB" : r.source === "jikan" ? "Jikan" : r.source === "igdb" ? "IGDB" : r.source === "local" ? "Local" : "ComicVine";
+      const sourceName = r.source === "tmdb" ? "TMDB" : r.source === "anilist" ? "AniList" : r.source === "igdb" ? "IGDB" : r.source === "local" ? "Local" : "ComicVine";
       
       const mediaTypeLabel =
         lens === "movies" ? "Movie" :
@@ -595,9 +649,9 @@ export default async function handler(req: any, res?: any) {
           releaseYear: r.year ? parseInt(r.year) : null
         };
       } else if (lens === "anime") {
-        selectionValue = `jikan::anime::${r.id}`;
+        selectionValue = `anilist::anime::${r.id}`;
         providerMetadata = {
-          provider: "jikan",
+          provider: "anilist",
           id: String(r.id),
           confidence: 0.99,
           canonicalTitle: r.name,
@@ -684,10 +738,18 @@ export default async function handler(req: any, res?: any) {
       });
     }
 
-    if (res) return res.status(200).json(mapped);
-    return new Response(JSON.stringify(mapped), { status: 200, headers: { "Content-Type": "application/json" } });
-  } catch (e) {
-    if (res) return res.status(200).json([]);
-    return new Response("[]", { status: 200, headers: { "Content-Type": "application/json" } });
+    autocompleteCache.set(cacheKey, { data: mapped, timestamp: Date.now() });
+
+    const payload = { status: mapped.length > 0 ? "ok" : "empty", data: mapped };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status: 200, headers: { "Content-Type": "application/json" } });
+  } catch (e: any) {
+    let status = "provider_error";
+    if (e.message === "timeout") status = "timeout";
+    if (e.message === "rate_limited") status = "rate_limited";
+    
+    const payload = { status, data: [] };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status: 200, headers: { "Content-Type": "application/json" } });
   }
 }

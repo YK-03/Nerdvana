@@ -8,7 +8,7 @@ import type { ActiveVisualOwner } from "../../app/canonicalResolver.js";
 interface VisualPanelProps {
   contextPacket: ResolverContextPacket;
   activeTraceId: string | null;
-  activeVisualOwner?: ActiveVisualOwner | null;
+  reusableVisual?: ValidatedVisualAsset | null;
   onVisualLocked?: (owner: ActiveVisualOwner) => void;
   onVisualResolutionComplete?: (status: 'resolved' | 'failed') => void;
 }
@@ -57,7 +57,13 @@ const CONFIDENCE_BADGE: Record<RetrievalConfidence, string | null> = {
 
 // ─── Component ────────────────────────────────────────────────────────
 
-export default function VisualPanel({ contextPacket, activeTraceId, activeVisualOwner, onVisualLocked, onVisualResolutionComplete }: VisualPanelProps) {
+export default function VisualPanel({ contextPacket, activeTraceId, reusableVisual, onVisualLocked, onVisualResolutionComplete }: VisualPanelProps) {
+  console.log("[ENTITY_IDENTITY] Sidebar", {
+    entity: contextPacket?.providerId || contextPacket?.canonicalEntity,
+    title: contextPacket?.canonicalEntity,
+    provider: contextPacket?.provider,
+    providerId: contextPacket?.providerId
+  });
   const [visual, setVisual] = useState<ValidatedVisualAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchPhase, setSearchPhase] = useState<SearchPhase>("idle");
@@ -75,38 +81,26 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
     setSearchPhase("searching");
 
     const fetchVisuals = async () => {
-      // Fast-path bypass: Reuse active visual owner if provided and matches intent
-      if (
-         activeVisualOwner &&
-         activeVisualOwner.providerId === contextPacket.providerId
-      ) {
-        console.log("[VISUAL_OWNER_REUSED]", {
-          oldProviderId: activeVisualOwner.providerId,
-          newProviderId: contextPacket.providerId,
-          oldTitle: activeVisualOwner.canonicalTitle,
-          newTitle: contextPacket.canonicalEntity
-        });
-        if (activeVisualOwner.asset) {
-          setVisual(activeVisualOwner.asset);
+      // Fast-path bypass: Reuse visual if AskPage explicitly provides it AND entity matches
+      if (reusableVisual) {
+        const reusableTitle = (reusableVisual.title || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const canonicalTitle = (contextPacket.canonicalEntity || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const providerTitle = (contextPacket.providerMetadata?.canonicalTitle || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        
+        const matchesEntity = reusableTitle.includes(canonicalTitle) || canonicalTitle.includes(reusableTitle) ||
+                              (providerTitle && (reusableTitle.includes(providerTitle) || providerTitle.includes(reusableTitle)));
+
+        if (matchesEntity) {
+          console.log("[VISUAL_OWNER_REUSED]", {
+            reusedTitle: reusableVisual.title
+          });
+          setVisual(reusableVisual);
           setConfidence("high"); // Locked visuals are always high confidence
           setSearchPhase("done");
           setLoading(false);
           onVisualResolutionComplete?.("resolved");
           return;
         }
-      } else if (activeVisualOwner) {
-        console.log("[VISUAL_OWNER_PROVIDER_MISMATCH]", {
-          oldProviderId: activeVisualOwner.providerId,
-          newProviderId: contextPacket.providerId,
-          oldTitle: activeVisualOwner.canonicalTitle,
-          newTitle: contextPacket.canonicalEntity
-        });
-        console.log("[VISUAL_OWNER_INVALIDATED]", {
-          oldProviderId: activeVisualOwner.providerId,
-          newProviderId: contextPacket.providerId,
-          oldTitle: activeVisualOwner.canonicalTitle,
-          newTitle: contextPacket.canonicalEntity
-        });
       }
 
       try {
@@ -296,21 +290,6 @@ export default function VisualPanel({ contextPacket, activeTraceId, activeVisual
                 </div>
               )}
 
-              {visual.raw && (visual.raw as any).rating && contextPacket.mediaLens !== "comics" && (
-                <div className="absolute top-3 right-3">
-                  <span
-                    className="px-2 py-[3px] text-[0.65rem] lg:text-[0.58rem] border"
-                    style={{
-                      fontFamily: '"Courier New", monospace',
-                      borderColor: "var(--nerdvana-border)",
-                      backgroundColor: "var(--nerdvana-surface)",
-                      opacity: 0.9,
-                    }}
-                  >
-                    ★ {(visual.raw as any).rating?.toFixed?.(1) ?? (visual.raw as any).rating}
-                  </span>
-                </div>
-              )}
             </div>
 
             <div className="px-4 pt-0 pb-4 space-y-2">
