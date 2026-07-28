@@ -386,7 +386,7 @@ function LandingPage({
                 opacity: isFocused ? 1 : 0.75
               }}
             >
-              Press Enter To Open The Query
+              Press Enter To Open
             </div>
           </motion.div>
 
