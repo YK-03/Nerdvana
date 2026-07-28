@@ -31,7 +31,7 @@ function UserDropdown({ onNavigate, onLogout }: UserDropdownProps) {
         style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
         onClick={() => onNavigate("/saved")}
       >
-        Saved Lorebooks
+        Library
       </button>
       <button
         className="nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"

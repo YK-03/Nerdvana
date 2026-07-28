@@ -103,12 +103,12 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
     e.stopPropagation();
     if (!user) return;
 
-    if (window.confirm("Are you sure you want to delete this lorebook? This cannot be undone.")) {
+    if (window.confirm("Are you sure you want to delete this item? This cannot be undone.")) {
       try {
         await deleteDoc(doc(db, "users", user.uid, "lorebooks", itemId));
       } catch (error) {
-        console.error("Error deleting lorebook:", error);
-        alert("Failed to delete lorebook.");
+        console.error("Error deleting item:", error);
+        alert("Failed to delete item.");
       }
     }
   };
@@ -124,13 +124,13 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
               className="text-[clamp(2rem,8.6vw,3.2rem)] font-black tracking-[-0.03em] leading-tight uppercase"
               style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "var(--nerdvana-text)" }}
             >
-              Saved Lorebooks
+              Library
             </h1>
 
             {!user ? (
               <div className="mt-5 border p-4" style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}>
                 <p style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
-                  Sign in to view saved lorebooks.
+                  Sign in to view saved items.
                 </p>
                 <button
                   type="button"
@@ -171,7 +171,7 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
                         className="text-[0.85rem] leading-5 opacity-80"
                         style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}
                       >
-                        {item.conversation ? `Chat Session (${item.conversation.length} msgs)` : "Legacy Item"}
+                        {item.conversation ? `Saved Topic (${item.conversation.length} items)` : "Legacy Item"}
                       </p>
                     </button>
 
@@ -179,7 +179,7 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
                       onClick={(e) => handleDelete(e, item.id)}
                       className="absolute top-2 right-2 p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 hover:text-red-500 rounded-md"
                       style={{ color: "var(--nerdvana-text)" }}
-                      title="Delete Lorebook"
+                      title="Delete Item"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -190,7 +190,7 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
                     className="text-[0.78rem] uppercase tracking-[0.12em]"
                     style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.8 }}
                   >
-                    No saved lorebooks yet.
+                    No saved items yet.
                   </p>
                 )}
               </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 const LOADING_LINES = [
   "Checking the fandom wiki...",
   "Connecting plot dots...",
-  "Cooking up your answer..."
+  "Building overview..."
 ];
 
 export default function ThinkingScreen({ isVisible }: { isVisible: boolean }) {

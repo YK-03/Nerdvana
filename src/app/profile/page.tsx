@@ -299,7 +299,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                 <p className="archive-label">STATUS: LOCKED</p>
               </div>
               <div className="archive-modules">
-                <div className="archive-module">Saved Lorebooks</div>
+                <div className="archive-module">Library</div>
                 <div className="archive-module">Search History</div>
                 <div className="archive-module">Bio</div>
               </div>

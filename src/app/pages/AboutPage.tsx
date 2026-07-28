@@ -40,8 +40,8 @@ export default function AboutPage({ onNavigatePage }: AboutPageProps) {
                   color: "var(--nerdvana-text)"
                 }}
               >
-                Nerdvana is an editorial question engine for story-heavy worlds. It helps people
-                decode endings, themes, and canon signals by organizing answers in clear, inspectable
+                Nerdvana is a search and exploration platform for story-heavy worlds. It helps people
+                decode endings, themes, and canon signals by organizing overviews in clear, inspectable
                 buckets instead of collapsing everything into one vague paragraph.
               </p>
               <p
@@ -80,7 +80,7 @@ export default function AboutPage({ onNavigatePage }: AboutPageProps) {
                 >
                   It is not a replacement for source material, and it is not a platform for definitive
                   verdicts on every interpretation. The goal is clarity and context, not to flatten
-                  every debate into one final answer.
+                  every debate into one final overview.
                 </p>
               </section>
 

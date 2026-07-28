@@ -80,7 +80,7 @@ export default function AIResponse({
           opacity: 0.72
         }}
       >
-        Answer
+        Overview
       </h2>
       <div
         className={`${RENDER_CONTRACTS.classes.markdownBody} ${RENDER_CONTRACTS.classes.prose} mt-2 whitespace-pre-wrap text-[0.92rem] leading-7`}

@@ -493,7 +493,7 @@ export default function AskPage({
 
   const handleSaveLorebook = async () => {
     if (!user) {
-      alert("Please sign in to save lorebooks.");
+      alert("Please sign in to save to library.");
       return;
     }
 
@@ -514,7 +514,7 @@ export default function AskPage({
         visual,
         createdAt: serverTimestamp()
       });
-      alert("Session saved to Lorebooks!");
+      alert("Saved to Library!");
     } catch (e) {
       console.error("Error saving lorebook:", e);
       alert("Failed to save.");
@@ -1883,7 +1883,15 @@ ${new Error().stack}
                   onKeyDown={handleInputKeyDown}
                   onFocus={() => setIsInputFocused(true)}
                   onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
-                  placeholder="Ask Nerdvana anything..."
+                  placeholder={
+                    mediaLens === "movies" ? "Search movies..." :
+                    mediaLens === "tv" ? "Search TV shows..." :
+                    mediaLens === "anime" ? "Search anime..." :
+                    mediaLens === "games" ? "Search games..." :
+                    mediaLens === "comics" ? "Search comics..." :
+                    mediaLens === "books" ? "Search books..." :
+                    "Search movies, shows, games, anime & comics..."
+                  }
                   className="askQueryInput w-full px-3 sm:px-4 py-3 text-[0.98rem] sm:text-[1rem] md:text-[1.08rem] focus:outline-none"
                   style={{
                     fontFamily: '"Times New Roman", serif',
@@ -1918,7 +1926,7 @@ ${new Error().stack}
 
             <div className="mb-4 flex flex-wrap justify-start sm:justify-end gap-3 sm:gap-6 items-center">
               {[
-                { label: "Conversation Spoilers", checked: spoilerPolicy, set: handleSpoilerToggle }
+                { label: "Spoilers", checked: spoilerPolicy, set: handleSpoilerToggle }
               ].map((sw, idx) => (
                 <label key={idx} className="nerdvana-clickable flex items-center gap-2 group select-none">
                   <span
@@ -1969,8 +1977,8 @@ ${new Error().stack}
                     className="flex items-center gap-2 text-[0.7rem] sm:text-[0.75rem] uppercase tracking-[0.15em]"
                     style={{ fontFamily: '"Courier New", monospace' }}
                   >
-                    <span>Save</span>
-                    <span>Lorebook</span>
+                    <span>Save To</span>
+                    <span>Library</span>
                   </span>
                   <div
                     className="absolute inset-0 bg-[var(--nerdvana-accent)] opacity-0 group-hover:opacity-5 transition-opacity duration-300"
@@ -2011,7 +2019,7 @@ ${new Error().stack}
                         <input
                           value={followUpQuery}
                           onChange={(e) => setFollowUpQuery(e.target.value)}
-                          placeholder="Ask a follow-up..."
+                          placeholder="Search within this topic..."
                           disabled={isGeneratingFollowUp}
                           className="followUpInput w-full px-3 sm:px-4 py-3 text-[0.98rem] sm:text-[1rem] md:text-[1.08rem] focus:outline-none"
                           spellCheck={false}
