@@ -183,7 +183,7 @@ async function tryGroq(prompt: string, apiKey: string): Promise<string | null> {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "meta-llama/llama-4-maverick-17b-128e-instruct",
           messages: [{ role: "user", content: prompt }],
           max_tokens: 1500,
           temperature: 0.7,
