@@ -143,7 +143,10 @@ async function tryGemini(
       console.log(`[Nerdvana] ${model} status:`, response.status);
 
       if (!response.ok) {
-        console.warn(`[Nerdvana] ${model} failed → trying next`);
+        const category = classifyProviderHttpError(response.status);
+        console.warn(
+          `[Nerdvana] Gemini ${model} failed (${category}, HTTP ${response.status}) → trying next`,
+        );
         continue;
       }
 
@@ -158,13 +161,27 @@ async function tryGemini(
       console.log("[Nerdvana] Success using Gemini:", model);
       return text;
     } catch (err) {
-      console.warn(`[Nerdvana] ${model} crashed → trying next`, err);
+      console.warn(`[Nerdvana] Gemini ${model} crashed (transient provider failure) → trying next`, err);
     } finally {
       clearTimeout(timeout);
     }
   }
 
   return null;
+}
+
+type ProviderErrorCategory =
+  | "authentication/configuration failure"
+  | "unavailable/invalid model"
+  | "quota/rate limit"
+  | "transient provider failure";
+
+function classifyProviderHttpError(status: number): ProviderErrorCategory {
+  if (status === 401 || status === 403) return "authentication/configuration failure";
+  if (status === 404) return "unavailable/invalid model";
+  if (status === 429) return "quota/rate limit";
+  if (status >= 500 && status <= 599) return "transient provider failure";
+  return "transient provider failure";
 }
 
 async function tryGroq(prompt: string, apiKey: string): Promise<string | null> {
@@ -183,7 +200,7 @@ async function tryGroq(prompt: string, apiKey: string): Promise<string | null> {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+          model: "openai/gpt-oss-120b",
           messages: [{ role: "user", content: prompt }],
           max_tokens: 1500,
           temperature: 0.7,
@@ -196,7 +213,11 @@ async function tryGroq(prompt: string, apiKey: string): Promise<string | null> {
     console.log("[Nerdvana] Groq status:", response.status);
 
     if (!response.ok) {
-      console.warn("[Nerdvana] Groq failed:", rawText);
+      const category = classifyProviderHttpError(response.status);
+      console.warn(
+        `[Nerdvana] Groq failed (${category}, HTTP ${response.status}):`,
+        rawText,
+      );
       return null;
     }
 
@@ -221,12 +242,7 @@ async function generateAnswer(
   groqKey: string | undefined,
   mode: "canon-lookup" | "simple-comparison" | "spoiler-analysis" | "deep-theory" | "cross-universe-analysis" | "philosophical-analysis",
 ): Promise<string> {
-  // Model routing based on mode
-  const useProFirst = mode === "deep-theory" || mode === "cross-universe-analysis" || mode === "philosophical-analysis";
-  
-  const models = useProFirst
-    ? ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-pro-latest"]
-    : ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+  const models = ["gemini-3.6-flash"];
   
   // Try Gemini first
   const geminiResult = await tryGemini(prompt, geminiKey, models);
@@ -238,14 +254,12 @@ async function generateAnswer(
     if (groqResult) return groqResult;
   }
 
-  // Final fallback to the remaining Gemini models if not used yet
-  if (!useProFirst) {
-    const fallbackResult = await tryGemini(prompt, geminiKey, ["gemini-pro-latest"]);
-    if (fallbackResult) return fallbackResult;
-  }
+  // Final fallback to the remaining supported Gemini model.
+  const fallbackResult = await tryGemini(prompt, geminiKey, ["gemini-3.5-flash"]);
+  if (fallbackResult) return fallbackResult;
 
   throw new Error(
-    "All models failed — Gemini quota exhausted and Groq unavailable",
+    "All configured providers failed (see categorized provider errors above)",
   );
 }
 
