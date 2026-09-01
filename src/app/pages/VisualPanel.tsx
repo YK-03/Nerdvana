@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import type { ResolverContextPacket, ValidatedVisualAsset } from "../canonicalResolver";
 import { VISUAL_PHASE_LABELS } from "../../lib/experience/experienceLanguage";
@@ -69,6 +70,66 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
   const [searchPhase, setSearchPhase] = useState<SearchPhase>("idle");
   const [errorState, setErrorState] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<RetrievalConfidence | null>(null);
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
+  const [canExpandOverview, setCanExpandOverview] = useState(false);
+
+  const modalWrapperRef = useRef<HTMLDivElement | null>(null);
+  const trailerIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const overviewTextRef = useRef<HTMLParagraphElement | null>(null);
+
+  useEffect(() => {
+    if (!isTrailerOpen) return;
+
+    // Immediately focus modal wrapper on open to capture keyboard events
+    modalWrapperRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsTrailerOpen(false);
+      }
+    };
+
+    const handleWindowBlur = () => {
+      // If user clicks inside the cross-origin trailer iframe (e.g. pause/scrub),
+      // refocus the modal wrapper so Escape key continues capturing in the parent window.
+      setTimeout(() => {
+        if (isTrailerOpen && document.activeElement === trailerIframeRef.current) {
+          modalWrapperRef.current?.focus();
+        }
+      }, 0);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("blur", handleWindowBlur);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [isTrailerOpen]);
+
+  useLayoutEffect(() => {
+    const el = overviewTextRef.current;
+    if (!visual?.overview || !el || isOverviewExpanded) return;
+
+    const measureOverview = () => {
+      const wasClamped = el.classList.contains("line-clamp-4");
+      if (!wasClamped) el.classList.add("line-clamp-4");
+
+      const isOverflowing = el.scrollHeight > el.clientHeight + 2;
+
+      if (!wasClamped) el.classList.remove("line-clamp-4");
+      setCanExpandOverview(isOverflowing);
+    };
+
+    measureOverview();
+
+    const resizeObserver = new ResizeObserver(measureOverview);
+    resizeObserver.observe(el);
+
+    return () => resizeObserver.disconnect();
+  }, [visual?.overview, isOverviewExpanded]);
 
   useEffect(() => {
     if (!contextPacket || !contextPacket.canonicalEntity) return;
@@ -78,6 +139,8 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
     setErrorState(null);
     setVisual(null);
     setConfidence(null);
+    setIsTrailerOpen(false);
+    setIsOverviewExpanded(false);
     setSearchPhase("searching");
 
     const fetchVisuals = async () => {
@@ -219,8 +282,9 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
   const confidenceBadge = confidence ? CONFIDENCE_BADGE[confidence] : null;
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
+    <>
+      <AnimatePresence mode="wait">
+        <motion.div
         key={contextPacket.canonicalEntity}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -335,12 +399,105 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
               )}
 
               {visual.overview && (
-                <p
-                  className="text-[0.67rem] leading-relaxed line-clamp-4"
-                  style={{ fontFamily: '"Times New Roman", serif', opacity: 0.55 }}
-                >
-                  {visual.overview}
-                </p>
+                <div className="space-y-1">
+                  <p
+                    ref={overviewTextRef}
+                    className={`text-[0.67rem] leading-relaxed ${isOverviewExpanded ? "" : "line-clamp-4"}`}
+                    style={{ fontFamily: '"Times New Roman", serif', opacity: 0.55 }}
+                  >
+                    {visual.overview}
+                  </p>
+                  {canExpandOverview && (
+                    <button
+                      type="button"
+                      onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
+                      className="text-[0.62rem] lg:text-[0.54rem] uppercase tracking-[0.12em] font-semibold transition-colors hover:text-[var(--nerdvana-accent)] cursor-pointer block"
+                      style={{
+                        fontFamily: '"Courier New", monospace',
+                        color: isOverviewExpanded ? "var(--nerdvana-text)" : "var(--nerdvana-accent)",
+                        opacity: isOverviewExpanded ? 0.6 : 0.9,
+                      }}
+                      aria-expanded={isOverviewExpanded}
+                    >
+                      {isOverviewExpanded ? "Read less" : "Read more"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Official Trailer Section */}
+              {visual.trailerKey && (
+                <>
+                  <div
+                    className="border-t pt-2 mt-2"
+                    style={{ borderColor: "var(--nerdvana-border)", opacity: 0.25 }}
+                  />
+                  <div className="pt-0.5 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className="text-[0.65rem] lg:text-[0.55rem] uppercase tracking-[0.14em] font-semibold flex items-center gap-1.5"
+                        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-accent)" }}
+                      >
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--nerdvana-accent)]" />
+                        Official Trailer
+                      </span>
+                      <span
+                        className="text-[0.6rem] lg:text-[0.5rem] uppercase tracking-[0.1em] opacity-40"
+                        style={{ fontFamily: '"Courier New", monospace' }}
+                      >
+                        YouTube
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsTrailerOpen(true)}
+                      className="group relative w-full aspect-video overflow-hidden border bg-black/50 block cursor-pointer transition-transform duration-200 hover:-translate-y-0.5"
+                      style={{ borderColor: "var(--nerdvana-border)" }}
+                      aria-label={`Play trailer for ${visual.title}`}
+                    >
+                      <img
+                        src={`https://img.youtube.com/vi/${visual.trailerKey}/hqdefault.jpg`}
+                        alt={`${visual.title} Trailer Thumbnail`}
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                        loading="lazy"
+                      />
+                      {/* Dark gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+
+                      {/* Noir/Newspaper Play Button Icon */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div
+                          className="w-9 h-9 rounded-full border-[2px] flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110"
+                          style={{
+                            borderColor: "var(--nerdvana-accent)",
+                            backgroundColor: "rgba(18, 18, 20, 0.9)",
+                            color: "var(--nerdvana-accent)",
+                            boxShadow: "0 0 12px rgba(229, 9, 20, 0.4)"
+                          }}
+                        >
+                          <svg
+                            className="w-4 h-4 ml-0.5"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Action Caption */}
+                      <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between pointer-events-none">
+                        <span
+                          className="text-[0.62rem] lg:text-[0.52rem] uppercase tracking-[0.12em] font-mono text-white/90 drop-shadow"
+                          style={{ fontFamily: '"Courier New", monospace' }}
+                        >
+                          ▶ Watch Trailer
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </>
@@ -357,5 +514,100 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
         )}
       </motion.div>
     </AnimatePresence>
+
+    {/* Trailer Modal Lightbox via Portal to escape all ancestor stacking contexts */}
+    {typeof document !== "undefined" && createPortal(
+      <AnimatePresence>
+        {isTrailerOpen && visual?.trailerKey && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-10 bg-black/85 backdrop-blur-sm"
+            onClick={() => setIsTrailerOpen(false)}
+          >
+            <motion.div
+              ref={modalWrapperRef}
+              tabIndex={-1}
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative w-full max-w-4xl border-[2px] shadow-2xl overflow-hidden focus:outline-none z-[10000]"
+              style={{
+                borderColor: "var(--nerdvana-border)",
+                backgroundColor: "var(--nerdvana-surface)",
+                color: "var(--nerdvana-text)",
+                boxShadow: "8px 8px 0 var(--nerdvana-border)"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header Bar */}
+              <div
+                className="flex items-center justify-between px-4 py-2.5 border-b-[2px]"
+                style={{
+                  borderColor: "var(--nerdvana-border)",
+                  backgroundColor: "rgba(0, 0, 0, 0.04)"
+                }}
+              >
+                <div className="flex items-center gap-2 overflow-hidden pr-2">
+                  <span
+                    className="inline-block w-2 h-2 rounded-full"
+                    style={{ backgroundColor: "var(--nerdvana-accent)" }}
+                  />
+                  <h4
+                    className="text-[0.8rem] sm:text-[0.88rem] font-bold truncate uppercase tracking-wider"
+                    style={{ fontFamily: '"Special Elite", monospace' }}
+                  >
+                    {visual.title} — Official Trailer
+                  </h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsTrailerOpen(false)}
+                  className="px-2.5 py-1 text-[0.7rem] uppercase tracking-[0.14em] font-semibold border-[1px] transition-colors hover:bg-[var(--nerdvana-accent)] hover:text-white"
+                  style={{
+                    fontFamily: '"Courier New", monospace',
+                    borderColor: "var(--nerdvana-border)",
+                    color: "var(--nerdvana-text)"
+                  }}
+                  aria-label="Close trailer modal"
+                >
+                  [✕ ESC]
+                </button>
+              </div>
+
+              {/* 16:9 Video Container */}
+              <div className="relative w-full bg-black overflow-hidden" style={{ aspectRatio: "16/9" }}>
+                <iframe
+                  ref={trailerIframeRef}
+                  src={`https://www.youtube.com/embed/${visual.trailerKey}?autoplay=1&rel=0`}
+                  title={`${visual.title} Official Trailer`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full border-0"
+                />
+              </div>
+
+              {/* Footer */}
+              <div
+                className="px-4 py-1.5 flex items-center justify-between text-[0.62rem] uppercase tracking-[0.1em] border-t"
+                style={{
+                  borderColor: "var(--nerdvana-border)",
+                  fontFamily: '"Courier New", monospace',
+                  opacity: 0.6
+                }}
+              >
+                <span>Nerdvana Archival Media Player</span>
+                <span>Press ESC or click outside to dismiss</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>,
+      document.body
+    )}
+    </>
   );
 }

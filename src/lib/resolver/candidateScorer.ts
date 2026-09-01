@@ -65,6 +65,7 @@ export interface ResolverCandidate {
   raw?: unknown;
   posterUrl?: string | null;
   backdropUrl?: string | null;
+  trailerKey?: string | null;
 }
 
 export interface ResolverDebug {

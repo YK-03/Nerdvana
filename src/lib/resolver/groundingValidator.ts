@@ -56,6 +56,7 @@ export type ValidatedVisualAsset = {
   overview?: string;
   posterUrl?: string | null;
   backdropUrl?: string | null;
+  trailerKey?: string | null;
 };
 
 export type VisualAssetValidationInput = {
@@ -71,6 +72,7 @@ export type VisualAssetValidationInput = {
   year?: number | null;
   posterUrl?: string | null;
   backdropUrl?: string | null;
+  trailerKey?: string | null;
 };
 
 export type CandidateMetadata = {
@@ -676,6 +678,7 @@ export function validateVisualAssetCompatibility(
     year: asset.year ?? null,
     publisher: asset.publisher ?? null,
     genres: asset.genres ?? [],
+    trailerKey: asset.trailerKey ?? null,
     raw: {
       ...(typeof asset.raw === "object" && asset.raw != null ? asset.raw as Record<string, unknown> : {}),
       overview: asset.overview ?? "",
@@ -724,5 +727,6 @@ export function validateVisualAssetCompatibility(
     overview: asset.overview,
     posterUrl: asset.posterUrl ?? url,
     backdropUrl: asset.backdropUrl ?? null,
+    trailerKey: asset.trailerKey ?? null,
   };
 }

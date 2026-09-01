@@ -44,7 +44,8 @@ function mapVisualAsset(owner: ActiveVisualOwner | null) {
     posterUrl: asset.posterUrl || asset.url || null,
     backdropUrl: asset.backdropUrl || null,
     mediaType: owner.mediaType || asset.mediaType || "",
-    provider: asset.source || ""
+    provider: asset.source || "",
+    trailerKey: asset.trailerKey || null
   };
 }
 

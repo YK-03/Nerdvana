@@ -86,6 +86,17 @@ function jsonResponse(payload: unknown, status: number, res?: any) {
   });
 }
 
+function sanitizeAniListDescription(description: string | null | undefined): string {
+  if (!description) return "";
+
+  return description
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s*\(Source:\s*(?:Crunchyroll|Kodansha USA)\)\s*$/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 async function readBody(req: any): Promise<any> {
   if (req && typeof req.json === "function") return req.json();
   if (req?.body && typeof req.body === "object") return req.body;
@@ -282,6 +293,47 @@ async function fetchTMDB(
     console.warn(`[Nerdvana] TMDB fetch failed for ${type}:`, err);
     return [];
   }
+}
+
+async function fetchTMDBTrailerKey(
+  id: number | string,
+  type: "movie" | "tv",
+  apiKey: string
+): Promise<string | null> {
+  try {
+    const endpoint = type === "movie" ? "movie" : "tv";
+    const res = await fetch(
+      `https://api.themoviedb.org/3/${endpoint}/${id}/videos?api_key=${apiKey}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const results = Array.isArray(data?.results) ? data.results : [];
+    const trailer = results.find(
+      (v: any) => v && v.type === "Trailer" && v.site === "YouTube" && typeof v.key === "string" && v.key.trim()
+    );
+    return trailer?.key?.trim() || null;
+  } catch (err) {
+    console.warn(`[Nerdvana] TMDB trailer fetch failed for ${type} ${id}:`, err);
+    return null;
+  }
+}
+
+async function enrichWinnerAsset(
+  asset: ValidatedVisualAsset,
+  candidate: ResolverCandidate,
+  packet: ResolverContextPacket,
+  keys: { tmdb?: string }
+): Promise<ValidatedVisualAsset> {
+  if (asset.source === "tmdb" && keys.tmdb && candidate.raw && typeof (candidate.raw as any).id === "number") {
+    const tmdbId = (candidate.raw as any).id;
+    const tmdbType: "movie" | "tv" =
+      (candidate.raw as any).media_type === "tv" || packet.mediaLens === "tv" ? "tv" : "movie";
+    const trailerKey = await fetchTMDBTrailerKey(tmdbId, tmdbType, keys.tmdb);
+    if (trailerKey) {
+      asset.trailerKey = trailerKey;
+    }
+  }
+  return asset;
 }
 
 function mapTMDBToCandidate(r: any, type: string): ResolverCandidate {
@@ -648,6 +700,7 @@ function tryValidate(
     raw: best.raw,
     posterUrl: best.posterUrl ?? best.imageUrl ?? null,
     backdropUrl: best.backdropUrl ?? null,
+    trailerKey: best.trailerKey ?? null,
   };
 
   const validated = validateVisualAssetCompatibility(visualDataInput, resolution, validationContext);
@@ -919,6 +972,10 @@ async function fetchAnimeVisualByCanonicalId(animeId: number, isMal: boolean = f
         }
         description
         genres
+        trailer {
+          id
+          site
+        }
       }
     }
   `;
@@ -938,7 +995,17 @@ async function fetchAnimeVisualByCanonicalId(animeId: number, isMal: boolean = f
     const json = await response.json();
     const media = json?.data?.Media;
     if (!media) return null;
+
+    const normalizedMedia = {
+      ...media,
+      description: sanitizeAniListDescription(media.description),
+    };
     
+    let trailerKey: string | null = null;
+    if (media.trailer && media.trailer.id && media.trailer.site?.toLowerCase() === "youtube") {
+      trailerKey = String(media.trailer.id).trim() || null;
+    }
+
     return {
       name: media.title.english ?? media.title.romaji ?? media.title.native ?? "",
       source: "anilist",
@@ -947,9 +1014,10 @@ async function fetchAnimeVisualByCanonicalId(animeId: number, isMal: boolean = f
       year: media.startDate?.year ?? null,
       popularity: media.meanScore ?? null,
       genres: media.genres ?? [],
-      raw: media,
+      raw: normalizedMedia,
       posterUrl: media.coverImage?.extraLarge ?? media.coverImage?.large ?? null,
       backdropUrl: media.bannerImage ?? null,
+      trailerKey,
     };
   } catch (err) {
     console.error("[Nerdvana] fetchAnimeVisualByCanonicalId error:", err);
@@ -1008,6 +1076,7 @@ async function adaptiveRetrieve(
       raw: candidate.raw,
       posterUrl: candidate.posterUrl ?? candidate.imageUrl ?? null,
       backdropUrl: candidate.backdropUrl ?? null,
+      trailerKey: candidate.trailerKey ?? null,
     };
 
     return {
@@ -1123,9 +1192,11 @@ async function adaptiveRetrieve(
         raw: directCandidate.raw,
         posterUrl: directCandidate.posterUrl ?? directCandidate.imageUrl ?? null,
         backdropUrl: directCandidate.backdropUrl ?? null,
+        trailerKey: directCandidate.trailerKey ?? null,
       };
+      const finalAsset = await enrichWinnerAsset(asset, directCandidate, packet, keys);
       return {
-        asset,
+        asset: finalAsset,
         confidence: "high",
         mode: "STRICT",
         trace: [{
@@ -1163,8 +1234,9 @@ async function adaptiveRetrieve(
           for (const best of ranked.slice(0, 3)) {
             const asset = tryValidate(best, resolution, baseValidationContext, "FRANCHISE", trace, packet);
             if (asset) {
+              const finalAsset = await enrichWinnerAsset(asset, best, packet, keys);
               console.log(`[Nerdvana] [FRANCHISE] ✓ Constrained Recovery Winner: "${best.name}" (score: ${best.finalScore})`);
-              return { asset, confidence: "medium", mode: "FRANCHISE", trace, productionTelemetry: mmCtx.telemetry };
+              return { asset: finalAsset, confidence: "medium", mode: "FRANCHISE", trace, productionTelemetry: mmCtx.telemetry };
             }
           }
         }
@@ -1238,8 +1310,9 @@ async function adaptiveRetrieve(
       for (const best of ranked.slice(0, 3)) {
         const asset = tryValidate(best, resolution, baseValidationContext, mode, trace, packet);
         if (asset) {
+          const finalAsset = await enrichWinnerAsset(asset, best, packet, keys);
           console.log(`[Nerdvana] [${mode}] ✓ Winner: "${best.name}" (score: ${best.finalScore})`);
-          return { asset, confidence: "high", mode, trace, productionTelemetry: mmCtx.telemetry };
+          return { asset: finalAsset, confidence: "high", mode, trace, productionTelemetry: mmCtx.telemetry };
         }
       }
     }
@@ -1275,8 +1348,9 @@ async function adaptiveRetrieve(
       for (const best of ranked.slice(0, 3)) {
         const asset = tryValidate(best, resolution, baseValidationContext, mode, trace, packet);
         if (asset) {
+          const finalAsset = await enrichWinnerAsset(asset, best, packet, keys);
           console.log(`[Nerdvana] [${mode}] ✓ Winner: "${best.name}" (score: ${best.finalScore})`);
-          return { asset, confidence: "medium", mode, trace, productionTelemetry: mmCtx.telemetry };
+          return { asset: finalAsset, confidence: "medium", mode, trace, productionTelemetry: mmCtx.telemetry };
         }
       }
     }
@@ -1292,8 +1366,9 @@ async function adaptiveRetrieve(
       for (const best of ranked.slice(0, 3)) {
         const asset = tryValidate(best, resolution, baseValidationContext, mode, trace, packet);
         if (asset) {
+          const finalAsset = await enrichWinnerAsset(asset, best, packet, keys);
           console.log(`[Nerdvana] [${mode}] ✓ Winner: "${best.name}" (score: ${best.finalScore})`);
-          return { asset, confidence: "medium", mode, trace, productionTelemetry: mmCtx.telemetry };
+          return { asset: finalAsset, confidence: "medium", mode, trace, productionTelemetry: mmCtx.telemetry };
         }
       }
     }
@@ -1309,8 +1384,9 @@ async function adaptiveRetrieve(
       for (const best of ranked.slice(0, 3)) {
         const asset = tryValidate(best, resolution, baseValidationContext, mode, trace, packet);
         if (asset) {
+          const finalAsset = await enrichWinnerAsset(asset, best, packet, keys);
           console.log(`[Nerdvana] [${mode}] ✓ Winner: "${best.name}" (score: ${best.finalScore})`);
-          return { asset, confidence: "low", mode, trace, productionTelemetry: mmCtx.telemetry };
+          return { asset: finalAsset, confidence: "low", mode, trace, productionTelemetry: mmCtx.telemetry };
         }
       }
     }
@@ -1340,8 +1416,9 @@ async function adaptiveRetrieve(
         for (const best of ranked.slice(0, 3)) {
           const asset = tryValidate(best, resolution, baseValidationContext, mode, trace, packet);
           if (asset) {
+            const finalAsset = await enrichWinnerAsset(asset, best, packet, keys);
             console.log(`[Nerdvana] [${mode}] ✓ Winner: "${best.name}" (score: ${best.finalScore})`);
-            return { asset, confidence: "fallback", mode, trace, productionTelemetry: mmCtx.telemetry };
+            return { asset: finalAsset, confidence: "fallback", mode, trace, productionTelemetry: mmCtx.telemetry };
           }
         }
       }
