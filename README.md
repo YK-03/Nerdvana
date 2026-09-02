@@ -1,43 +1,43 @@
 # Nerdvana
 
-Nerdvana is an AI powered platform for exploring fictional universes through intelligent search and contextual conversations. It combines real time web search with large language models to help users discover and understand movies, television, anime, games, comics, and books.
+A search tool for movies, TV, anime, games, and comics. Ask about a title and get an answer pulled together from multiple data sources, plus posters, cast, and trailers, instead of ten browser tabs.
 
 **Live app:** [nerdvana-murex.vercel.app](https://nerdvana-murex.vercel.app)
 
-## About
+## What it does
 
-Nerdvana is built around a conversational search experience. Users search for a topic, ask follow up questions, and explore related information without losing context.
-
-The application integrates multiple media data providers with AI generated responses, giving a unified interface for discovering characters, stories, lore, timelines, and recommendations across different fictional universes.
+Search for a title, read the answer, then keep asking. Follow-up questions stay in context, so you can go from "who is this character" to "how does this connect to the sequel" without starting over.
 
 ## Features
 
-**Search and conversation**
-- AI powered conversational search
-- Context aware follow up conversations
-- Dynamic search autocomplete
-- Explore mode for discovering related content
-- Spoiler aware responses
+**Search**
+- Follow-up questions that keep context
+- Autocomplete while typing
+- Explore mode for related titles
+- Spoiler toggle
 
-**Media and content**
-- Visual metadata panels with posters and media information
-- Trailer playback for supported titles
+**Media**
+- Poster and metadata for each title
+- Trailer playback
 
-**Account and persistence**
-- Firebase authentication
-- Search history with cloud synchronization
-- Saved Lorebooks for preserving conversations
-- Responsive interface
+**Account**
+- Sign in with Firebase
+- Search history synced across devices
+- Saved Library to keep conversations for later
 
 ## Screenshots
 
-| Home | Search |
-|---|---|
-| <img src="./public/assets/home.jpg" width="100%" /> | <img src="./public/assets/search.jpg" width="100%" /> |
+### Home
+<img src="./public/assets/home.jpg" width="100%" />
 
-| Conversation | Trailer |
-|---|---|
-| <img src="./public/assets/chat.jpg" width="100%" /> | <img src="./public/assets/trailer.jpg" width="100%" /> |
+### Search
+<img src="./public/assets/search.jpg" width="100%" />
+
+### Conversation
+<img src="./public/assets/chat.jpg" width="100%" />
+
+### Trailer
+<img src="./public/assets/trailer.jpg" width="100%" />
 
 ## Tech stack
 
@@ -45,16 +45,16 @@ The application integrates multiple media data providers with AI generated respo
 |---|---|
 | Frontend | React, TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion, React Markdown |
 | Backend | Vercel Serverless Functions, Firebase Authentication, Cloud Firestore |
-| AI | Google Gemini, Groq |
+| Language models | Google Gemini, Groq |
 | Search | Serper API |
-| External data providers | TMDB, RAWG, IGDB, ComicVine, Jikan, AniList, Google Books |
+| Data providers | TMDB, RAWG, IGDB, ComicVine, Jikan, AniList, Google Books |
 
-## Architecture
+## How it's built
 
-Nerdvana is a client focused single page application backed by serverless APIs. The frontend communicates with Vercel Serverless Functions, which coordinate AI inference, search, and external media providers. Authentication and user data are managed through Firebase Authentication and Cloud Firestore.
+A single page app talking to Vercel Serverless Functions, which handle the language model calls, search, and requests to the media data providers. Firebase handles login and stores user data in Firestore.
 
 ## License
 
 Copyright © 2026 Yash Kaushik. All rights reserved.
 
-This repository is publicly available for viewing and evaluation purposes only. No permission is granted to copy, modify, distribute, sublicense, or use any part of this source code without prior written permission from the copyright holder.
+Public for viewing and evaluation only. Copying, modifying, distributing, or using any part of this code needs written permission from the copyright holder.
