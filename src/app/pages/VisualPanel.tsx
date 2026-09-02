@@ -599,7 +599,6 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                   opacity: 0.6
                 }}
               >
-                <span>Nerdvana Archival Media Player</span>
                 <span>Press ESC or click outside to dismiss</span>
               </div>
             </motion.div>
