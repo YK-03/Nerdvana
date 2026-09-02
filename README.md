@@ -1,6 +1,6 @@
 # Nerdvana
 
-A search tool for movies, TV, anime, games, and comics. Ask about a title and get an answer pulled together from multiple data sources, plus posters, cast, and trailers, instead of ten browser tabs.
+A conversational search tool for movies, TV, anime, games, and comics. Ask about a title, then keep asking. Spoiler control and saved conversations built in for going deep on one universe, not just looking something up.
 
 **Live app:** [nerdvana-murex.vercel.app](https://nerdvana-murex.vercel.app)
 
@@ -51,10 +51,10 @@ Search for a title, read the answer, then keep asking. Follow-up questions stay 
 
 ## How it's built
 
-A single page app talking to Vercel Serverless Functions, which handle the language model calls, search, and requests to the media data providers. Firebase handles login and stores user data in Firestore.
+A single-page app talking to Vercel Serverless Functions, which handle the language model calls, search, and requests to the media data providers. Firebase handles login and stores user data in Firestore.
 
 ## License
 
 Copyright © 2026 Yash Kaushik. All rights reserved.
 
-Public for viewing and evaluation only. Copying, modifying, distributing, or using any part of this code needs written permission from the copyright holder.
+Public for viewing and evaluation only. Copying, modifying, distributing, or using any part of this code requires written permission from the copyright holder.
