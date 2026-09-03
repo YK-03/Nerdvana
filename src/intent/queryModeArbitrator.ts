@@ -7,7 +7,7 @@
 import type { GroundingStrategy } from "./groundingStrategyEngine.js";
 import type { CanonicalSuggestion } from "../lib/resolver/canonicalGrounding.js";
 
-export type ApiRoute = "entity" | "exploration" | "clarification";
+export type ApiRoute = "entity" | "clarification";
 
 export interface IntentResolutionMinimal {
   groundingDecision: {
@@ -37,15 +37,8 @@ export function arbitrateQueryRoute(
     };
   }
 
-  if (strategy === "DEFERRED_GROUND") {
-    return {
-      route: "exploration",
-      shouldShowClarification: false,
-      clarificationSuggestions: []
-    };
-  }
-
-  // STRICT_GROUND, SOFT_GROUND, and MULTI_GROUND route to "entity"
+  // STRICT_GROUND, SOFT_GROUND, and MULTI_GROUND route to "entity".
+  // Unsupported discovery queries are handled by AskPage before dispatch.
   return {
     route: "entity",
     shouldShowClarification: false,

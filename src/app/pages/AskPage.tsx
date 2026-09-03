@@ -22,7 +22,6 @@ import { shouldMaintainFranchiseLock, type ResolverContextPacket, type ActiveVis
 import { auth, db } from "../lib/firebase";
 import { doc, updateDoc, setDoc } from "firebase/firestore";
 import { startNewSession, useQuerySessionStore, useAutocompleteStore, useIntentStore } from "../store/resolverSession";
-import { useExplorationStore, type ExplorationRecommendation } from "../store/explorationSession";
 import { detectQueryMode } from "../canonicalResolver";
 import type { CanonicalGroundingResult } from "../../lib/resolver/canonicalGrounding.js";
 import AutocompleteOverlay from "../components/AutocompleteOverlay";
@@ -263,16 +262,6 @@ export default function AskPage({
   const selectedSuggestionRef = useRef<any>(null);
   const lastPrimaryQueryRef = useRef("");
   
-  const { 
-    status: explorationStatus, 
-    themes: explorationThemes, 
-    recommendations: explorationRecs, 
-    reasoning: explorationReasoning,
-    startExploration,
-    setExplorationResults,
-    clearExplorationState
-  } = useExplorationStore();
-
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [_conversation, _setConversation] = useState<ConversationMessage[]>([]);
   const conversation = _conversation;
@@ -392,7 +381,6 @@ export default function AskPage({
     setGrounding(null, "clearActiveEntityState");
     setActiveVisualOwner(null);
     setActiveVisualOwnerMetadata(null);
-    clearExplorationState();
   };
 
   const handleSelectSuggestion = (suggestion: any) => {
@@ -685,7 +673,6 @@ export default function AskPage({
       setResponseData(null, "empty-query");
       setIsLoading(false);
       setGrounding(null, "empty-query");
-      clearExplorationState();
       setReadingOrder(null);
       setContinuationSuggestions(null);
       return () => {
@@ -761,6 +748,24 @@ ${new Error().stack}
           useQuerySessionStore.getState().temporaryEntities
         );
 
+        if (resolution.intent.intent === "UNSUPPORTED_DISCOVERY") {
+          const unsupportedAnswer = {
+            summary: "Discovery and recommendation searches are not supported yet. Please search for a specific title instead.",
+            categories: [],
+            spoilers: ""
+          } satisfies MockAnswer;
+          setResults([]);
+          setGrounding(null, context.requestId);
+          setResponseData({ answer: unsupportedAnswer, results: [] }, context.requestId);
+          activeExecutionRef.current = {
+            searchKey,
+            status: "completed",
+            startedAt: activeExecutionRef.current?.startedAt ?? Date.now()
+          };
+          setIsLoading(false);
+          return;
+        }
+
         // Assertions for System A deterministic locks (Rule 8 Assertion / Invariant assertions)
         assertInvariant(
           !isExplicitTmdb || context.mode === "DETERMINISTIC",
@@ -819,8 +824,7 @@ ${new Error().stack}
           useIntentStore.getState().setClarification(false, []);
         }
 
-        const runMode = arbitration.route === "exploration" ? "exploration" : "entity";
-        const newSessionId = startNewSession(context.query, mediaLens, runMode);
+        const newSessionId = startNewSession(context.query, mediaLens, "entity");
 
         const finalItem = context.item || null;
         const finalMetadata = context.providerMetadata || null;
@@ -850,16 +854,6 @@ ${new Error().stack}
             previousEntity: null,
             contextPacket: contextPacket
         }, null, 2));
-
-        if (runMode === "exploration") {
-          endpoint = "/api/nerdvana-exploration";
-          startExploration(newSessionId, context.query, mediaLens);
-          bodyPayload = {
-            query: context.query,
-            mediaLens,
-            conversation: []
-          };
-        }
 
         recordRetrieval(context.traceId, {
           started: true,
@@ -920,6 +914,19 @@ ${new Error().stack}
           return;
         }
 
+        // The backend can discover ambiguity after its provider-backed text
+        // search. Reuse the existing clarification UI instead of rendering a
+        // terminal low-confidence answer.
+        if (
+          payload?.requiresGrounding === true &&
+          Array.isArray(payload?.grounding?.suggestions) &&
+          payload.grounding.suggestions.length > 0
+        ) {
+          setIsLoading(false);
+          useIntentStore.getState().setClarification(true, payload.grounding.suggestions);
+          return;
+        }
+
         // --- RENDER OWNERSHIP VERIFICATION GATE ---
         const isIncomingDeterministic = payload?.contextPacket?.executionMode === "DETERMINISTIC_PROVIDER";
         const incomingProviderId = payload?.contextPacket?.providerId || payload?.grounding?.selectedSelectionValue || null;
@@ -970,7 +977,7 @@ ${new Error().stack}
         recordAI(context.traceId, { returned: true });
 
         // Validate Response using lightweight schemaValidator
-        if (runMode !== "exploration") {
+        {
           let isValid = false;
           try {
             isValid = validateNerdvanaAnswerResponse(payload);
@@ -1000,67 +1007,6 @@ ${new Error().stack}
         }
 
         recordAI(context.traceId, { normalized: true });
-
-        if (runMode === "exploration") {
-            const expResult = payload.explorationResult;
-            if (expResult) {
-                setExplorationResults(
-                    expResult.themes,
-                    expResult.recommendations,
-                    payload.summary,
-                    expResult.confidence
-                );
-            }
-            const aiAnswer = payload.summary || "";
-            
-            if (!aiAnswer.trim()) {
-              recordAI(context.traceId, {
-                aiSuccess: false,
-                aiRenderState: "AI_RENDER_FAILED",
-                aiRenderFailureReason: "EMPTY_SUMMARY"
-              });
-              throw new Error("Exploration query returned empty summary.");
-            }
-
-            const nextAnswer = { summary: aiAnswer, categories: [], spoilers: "" } satisfies MockAnswer;
-            setResponseData({ answer: nextAnswer, results: [], exploration: payload?.exploration }, payload.requestId);
-            lastSearchKeyRef.current = searchKey;
-            
-            finalizeRenderVerification(context.traceId, RENDER_CONTRACTS.selectors.aiResponse, (result) => {
-              if (context.requestId !== activeRequestIdRef.current) {
-                recordAI(context.traceId, {
-                  aiSuccess: false,
-                  aiRenderState: "AI_RENDER_FAILED",
-                  aiRenderFailureReason: "STATE_OVERWRITTEN"
-                });
-                return;
-              }
-
-              recordRenderVerification(context.traceId, result);
-
-              if (!result.success) {
-                recordAI(context.traceId, {
-                  aiSuccess: false,
-                  aiRenderState: "AI_RENDER_FAILED",
-                  aiRenderFailureReason: result.reason ?? "VISIBILITY_BLOCKED"
-                });
-                assertInvariant(false, `AI render verification failed: ${result.reason ?? "UNKNOWN"}`);
-                return;
-              }
-
-              recordAI(context.traceId, {
-                aiSuccess: true,
-                aiRenderState: "AI_SUCCESS"
-              });
-            });
-
-            activeExecutionRef.current = {
-              searchKey,
-              status: "completed",
-              startedAt: activeExecutionRef.current?.startedAt ?? Date.now()
-            };
-            return;
-        }
 
         let canonicalTitle = context.query;
         const canonicalItem = payload?.grounding?.selectedSelectionValue || context.item || "";
@@ -2106,7 +2052,7 @@ ${new Error().stack}
               </>
               }
               sidebar={
-                (contextPacket || explorationStatus === "completed") ? (
+                contextPacket ? (
                   <>
                   {contextPacket && detectQueryMode(fullQuestion) === "entity" && (
                       <VisualPanel
@@ -2126,17 +2072,6 @@ ${new Error().stack}
                         }}
                         onVisualResolutionComplete={setVisualResolutionStatus}
                       />
-                  )}
-                  {explorationStatus === "completed" && explorationRecs.length > 0 && (
-                      <div className="flex flex-col gap-4 p-4 border rounded-lg" style={{ borderColor: "var(--nerdvana-border)" }}>
-                        <h3 className="text-xs uppercase tracking-widest font-semibold font-courier">Recommendations</h3>
-                        {explorationRecs.map((rec, i) => (
-                           <div key={i} className="text-sm">
-                             <div className="font-bold font-times">{rec.title}</div>
-                             <div className="text-xs opacity-75 mt-1">{rec.reason || "Thematic Match"}</div>
-                           </div>
-                        ))}
-                      </div>
                   )}
                   </>
                 ) : null

@@ -399,23 +399,6 @@ export default async function handler(req: any, res?: any) {
       });
     }
 
-    // Pass 1: Strict grounding only. Semantic recovery is terminal fallback.
-    let grounding = groundCanonicalIntent({
-      query: rawQuery,
-      mediaLens,
-      explicitSelection,
-      temporaryEntities,
-      providerMetadata,
-      allowLooseSemantic: false // STRICT CANONICAL MATCHING ONLY
-    });
-
-    console.log("[CANONICAL_RESOLUTION_RESULT_LOG]", {
-      selectedCanonicalEntity: grounding.selectedCanonicalEntity,
-      selectedSelectionValue: grounding.selectedSelectionValue,
-      providerId: grounding.selectedSelectionValue, // Alias for clarity
-      ambiguityLevel: grounding.ambiguityLevel
-    });
-
     const env =
       (
         globalThis as {
@@ -427,8 +410,10 @@ export default async function handler(req: any, res?: any) {
     let rejectedExternalEntities = 0;
     let apiExactMatch = false;
 
-    // If strict local grounding misses, immediately invoke provider ingestion.
-    if (!grounding.selectedCanonicalEntity) {
+    // Provider-backed text search is the first resolution stage for unselected
+    // entity queries. Local topology/alias matches are useful for enrichment,
+    // but must not outrank an exact title returned by the active provider.
+    if (!explicitSelection) {
       if (mediaLens === "comics") {
         console.warn("[TYPED_AMBIGUITY_DETECTED]", {
           query: rawQuery,
@@ -437,7 +422,7 @@ export default async function handler(req: any, res?: any) {
           stage: "before_provider_ingestion",
         });
       }
-      console.log("[PROVIDER_INGESTION_TRIGGERED]", {
+      console.log("[PROVIDER_TEXT_SEARCH_TRIGGERED]", {
         query: rawQuery,
         mediaLens
       });
@@ -470,19 +455,34 @@ export default async function handler(req: any, res?: any) {
           ingestedId: newTempEntity.id
         });
 
-        // Reground with newly ingested temporary entities (still strict)
-        grounding = groundCanonicalIntent({
-          query: rawQuery,
-          mediaLens,
-          explicitSelection,
-          temporaryEntities,
-          providerMetadata,
-          allowLooseSemantic: false
-        });
       } else {
         rejectedExternalEntities = ingestion.rejectedCount;
       }
     }
+
+    // Pass 2: Strict grounding. A provider result above is now available as a
+    // temporary canonical entity and therefore takes the deterministic path.
+    let grounding = groundCanonicalIntent({
+      query: rawQuery,
+      mediaLens,
+      explicitSelection,
+      temporaryEntities,
+      providerMetadata,
+      allowLooseSemantic: false // STRICT CANONICAL MATCHING ONLY
+    });
+
+    console.log("[CANONICAL_RESOLUTION_RESULT_LOG]", {
+      selectedCanonicalEntity: grounding.selectedCanonicalEntity,
+      selectedSelectionValue: grounding.selectedSelectionValue,
+      providerId: grounding.selectedSelectionValue,
+      ambiguityLevel: grounding.ambiguityLevel,
+      providerTextSearch: newTempEntity ? {
+        provider: newTempEntity.source,
+        id: newTempEntity.id,
+        title: newTempEntity.title,
+        confidence: newTempEntity.confidence,
+      } : null,
+    });
 
     // Pass 3: terminal semantic fallback only after strict grounding and provider ingestion both fail.
     if (!grounding.selectedCanonicalEntity) {
@@ -637,13 +637,16 @@ export default async function handler(req: any, res?: any) {
       console.log(`[SEMANTIC FALLBACK BLOCKED] Confidence score ${packet.confidence} below threshold 0.5. Fallback blocked.`);
       return jsonResponse(
         {
-          answer: "No confident match found.",
+          answer: "Select a match to continue.",
           sources: [],
           followups: [],
           contextPacket: packet,
-          alternatives: [],
-          grounding: null,
-          requiresGrounding: false,
+          alternatives: grounding.suggestions,
+          grounding: {
+            ...grounding,
+            behavior: grounding.suggestions.length > 0 ? "require_selection" : grounding.behavior,
+          },
+          requiresGrounding: grounding.suggestions.length > 0,
         },
         200,
         res

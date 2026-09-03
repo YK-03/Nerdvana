@@ -11,11 +11,10 @@ import { CANONICAL_ALIASES } from "../lib/resolver/queryNormalizer.js";
 export type QueryIntentV2 =
   | "ENTITY_LOOKUP"        // "Who is Johan Liebert?"
   | "UNIVERSE_ENTRY"       // "Joker" (bare entity name)
-  | "THEMATIC_DISCOVERY"   // "villains like Johan Liebert"
   | "CANON_REASONING"      // "Is Dragon Ball GT canon?"
   | "TIMELINE_REASONING"   // "MCU watch order"
   | "COMPARATIVE_REASONING"// "Batman vs Lelouch intelligence"
-  | "EXPLORATORY_DISCOVERY";// "dark psychological anime"
+  | "UNSUPPORTED_DISCOVERY";// Recommendation/thematic discovery is not supported yet
 
 export interface IntentClassification {
   intent: QueryIntentV2;
@@ -101,7 +100,7 @@ export function classifyQueryIntent(
   if (thematicPatterns.some(pattern => pattern.test(q))) {
     signals.push("thematic_pattern");
     return {
-      intent: "THEMATIC_DISCOVERY",
+      intent: "UNSUPPORTED_DISCOVERY",
       confidence: 0.85,
       signals,
       entities: [],
@@ -129,7 +128,7 @@ export function classifyQueryIntent(
   if (exploratoryPatterns.some(pattern => pattern.test(q))) {
     signals.push("exploratory_pattern");
     return {
-      intent: "EXPLORATORY_DISCOVERY",
+      intent: "UNSUPPORTED_DISCOVERY",
       confidence: 0.85,
       signals,
       entities: [],

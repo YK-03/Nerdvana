@@ -55,9 +55,6 @@ export function selectGroundingStrategy(
     if (intent.intent === "COMPARATIVE_REASONING") {
       return decision("MULTI_GROUND", "Comparative query requires independent dual grounding (deterministic bypass)");
     }
-    if (intent.intent === "THEMATIC_DISCOVERY" || intent.intent === "EXPLORATORY_DISCOVERY") {
-      return decision("DEFERRED_GROUND", `Exploratory or thematic intent (${intent.intent}) defers canonical grounding (deterministic bypass)`);
-    }
     return decision("STRICT_GROUND", "Deterministic grounding matched; bypassing ambiguity checks");
   }
 
@@ -69,12 +66,7 @@ export function selectGroundingStrategy(
     return decision("MULTI_GROUND", "Comparative query requires independent dual grounding");
   }
 
-  // Rule 2: Thematic discovery and Exploratory discovery route to DEFERRED_GROUND
-  if (intentType === "THEMATIC_DISCOVERY" || intentType === "EXPLORATORY_DISCOVERY") {
-    return decision("DEFERRED_GROUND", `Exploratory or thematic intent (${intentType}) defers canonical grounding`);
-  }
-
-  // Rule 3: Entity lookup strategy mappings
+  // Rule 2: Entity lookup strategy mappings
   if (intentType === "ENTITY_LOOKUP") {
     if (ambLevel === "LOW") {
       return decision("STRICT_GROUND", "Low ambiguity entity lookup grounds immediately");
@@ -85,7 +77,7 @@ export function selectGroundingStrategy(
     }
   }
 
-  // Rule 4: Universe entry strategy mappings
+  // Rule 3: Universe entry strategy mappings
   if (intentType === "UNIVERSE_ENTRY") {
     if (ambLevel === "LOW") {
       return decision("STRICT_GROUND", "Low ambiguity universe entry grounds immediately");
@@ -94,7 +86,7 @@ export function selectGroundingStrategy(
     }
   }
 
-  // Rule 5: Canon/Timeline reasoning strategy mappings
+  // Rule 4: Canon/Timeline reasoning strategy mappings
   if (intentType === "CANON_REASONING" || intentType === "TIMELINE_REASONING") {
     if (ambLevel === "LOW") {
       return decision("STRICT_GROUND", `Low ambiguity ${intentType} grounds immediately`);
