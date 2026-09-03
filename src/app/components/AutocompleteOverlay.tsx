@@ -130,7 +130,7 @@ export default function AutocompleteOverlay({
                     <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                       <span
                         style={{
-                          fontFamily: '"Times New Roman", serif',
+                          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                           fontWeight: 700,
                           fontSize: "0.97rem",
                           lineHeight: 1.25,
@@ -148,7 +148,7 @@ export default function AutocompleteOverlay({
                       {s.metadataLabel && (
                         <span
                           style={{
-                            fontFamily: '"Courier New", monospace',
+                            /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                             fontSize: "0.64rem",
                             textTransform: "uppercase",
                             letterSpacing: "0.09em",
@@ -171,7 +171,7 @@ export default function AutocompleteOverlay({
                     {s.mediaLabel && (
                       <span
                         style={{
-                          fontFamily: '"Courier New", monospace',
+                          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                           fontSize: "0.55rem",
                           textTransform: "uppercase",
                           letterSpacing: "0.14em",

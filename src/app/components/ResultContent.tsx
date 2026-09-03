@@ -180,7 +180,7 @@ export default function ResultContent({
         >
           <p
             className="mb-2 uppercase tracking-[0.16em] text-[0.68rem] font-semibold"
-            style={{ fontFamily: '"Courier New", monospace' }}
+            style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif' }}
           >
             Looking for:
           </p>
@@ -189,7 +189,7 @@ export default function ResultContent({
               <li
                 key={`${suggestion.selectionValue}-${suggestion.mediaLens}`}
                 className="text-[0.92rem] leading-6"
-                style={{ fontFamily: '"Times New Roman", serif' }}
+                style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif' }}
               >
                 <span className="font-semibold">{suggestion.displayTitle}</span>
                 {suggestion.metadataLabel ? ` — ${suggestion.metadataLabel}` : ""}

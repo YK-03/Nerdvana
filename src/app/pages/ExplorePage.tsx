@@ -48,9 +48,9 @@ function ExploreCard({ item, onAskQuestion }: ExploreCardProps) {
           {item.title}
         </h2>
         <span
-          className="mt-2 inline-flex items-center text-[0.64rem] md:text-[0.7rem] uppercase tracking-[0.12em] border px-2 py-1"
+          className="font-legacy-chrome mt-2 inline-flex items-center text-[0.64rem] md:text-[0.7rem] uppercase tracking-[0.12em] border px-2 py-1"
           style={{
-            fontFamily: '"Courier New", monospace',
+            /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
             color: "var(--nerdvana-accent)",
             borderColor: "var(--nerdvana-border)",
             backgroundColor: "var(--nerdvana-message-bg)",
@@ -60,9 +60,9 @@ function ExploreCard({ item, onAskQuestion }: ExploreCardProps) {
           {item.theme ?? item.mediaLens}
         </span>
         <p
-          className="mt-3 text-[0.95rem] sm:text-[0.98rem] leading-7"
+          className="font-legacy-prose mt-3 text-[0.95rem] sm:text-[0.98rem] leading-7"
           style={{
-            fontFamily: '"Times New Roman", serif',
+            /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Times New Roman", serif',
             color: "var(--nerdvana-text)"
           }}
         >
@@ -102,9 +102,9 @@ export default function ExplorePage({
               Explore
             </h1>
             <p
-              className="mt-3 text-[0.95rem] sm:text-sm md:text-base leading-relaxed"
+              className="font-legacy-prose mt-3 text-[0.95rem] sm:text-sm md:text-base leading-relaxed"
               style={{
-                fontFamily: '"Times New Roman", serif',
+                /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Times New Roman", serif',
                 color: "var(--nerdvana-text)",
                 opacity: 0.68
               }}
@@ -122,9 +122,9 @@ export default function ExplorePage({
                 }}
               >
                 <h2
-                  className="mb-4 text-sm md:text-base uppercase tracking-[0.16em]"
+                  className="font-legacy-chrome mb-4 text-sm md:text-base uppercase tracking-[0.16em]"
                   style={{
-                    fontFamily: '"Courier New", monospace',
+                    /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                     color: "var(--nerdvana-accent)"
                   }}
                 >

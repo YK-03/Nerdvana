@@ -17,7 +17,7 @@ export default function MediaRow({ media }: MediaRowProps) {
       <h2
         className="text-[0.68rem] md:text-[0.72rem] uppercase tracking-[0.16em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.72
         }}
@@ -41,7 +41,7 @@ export default function MediaRow({ media }: MediaRowProps) {
             <span
               className="text-[0.68rem] uppercase tracking-[0.12em]"
               style={{
-                fontFamily: '"Courier New", monospace'
+                /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif'
               }}
             >
               {item.type === "video" ? "Video" : "Image"}

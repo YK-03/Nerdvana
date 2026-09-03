@@ -34,9 +34,9 @@ export default function AboutPage({ onNavigatePage }: AboutPageProps) {
               }}
             >
               <p
-                className="text-[0.98rem] sm:text-[1rem] leading-7"
+                className="font-legacy-prose text-[0.98rem] sm:text-[1rem] leading-7"
                 style={{
-                  fontFamily: '"Times New Roman", serif',
+                  /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Times New Roman", serif',
                   color: "var(--nerdvana-text)"
                 }}
               >
@@ -45,9 +45,9 @@ export default function AboutPage({ onNavigatePage }: AboutPageProps) {
                 buckets instead of collapsing everything into one vague paragraph.
               </p>
               <p
-                className="mt-4 text-[1rem] leading-7"
+                className="font-legacy-prose mt-4 text-[1rem] leading-7"
                 style={{
-                  fontFamily: '"Times New Roman", serif',
+                  /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Times New Roman", serif',
                   color: "var(--nerdvana-text)"
                 }}
               >
@@ -63,18 +63,18 @@ export default function AboutPage({ onNavigatePage }: AboutPageProps) {
                 }}
               >
                 <h2
-                  className="text-xs md:text-sm uppercase tracking-[0.18em]"
+                  className="font-legacy-chrome text-xs md:text-sm uppercase tracking-[0.18em]"
                   style={{
-                    fontFamily: '"Courier New", monospace',
+                    /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                     color: "var(--nerdvana-accent)"
                   }}
                 >
                   What Nerdvana Is Not
                 </h2>
                 <p
-                  className="mt-3 text-[1rem] leading-7"
+                  className="font-legacy-prose mt-3 text-[1rem] leading-7"
                   style={{
-                    fontFamily: '"Times New Roman", serif',
+                    /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Times New Roman", serif',
                     color: "var(--nerdvana-text)"
                   }}
                 >
@@ -91,18 +91,18 @@ export default function AboutPage({ onNavigatePage }: AboutPageProps) {
                 }}
               >
                 <h2
-                  className="text-xs md:text-sm uppercase tracking-[0.18em]"
+                  className="font-legacy-chrome text-xs md:text-sm uppercase tracking-[0.18em]"
                   style={{
-                    fontFamily: '"Courier New", monospace',
+                    /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                     color: "var(--nerdvana-accent)"
                   }}
                 >
                   What&apos;s Coming Next
                 </h2>
                 <p
-                  className="mt-3 text-[1rem] leading-7"
+                  className="font-legacy-prose mt-3 text-[1rem] leading-7"
                   style={{
-                    fontFamily: '"Times New Roman", serif',
+                    /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Times New Roman", serif',
                     color: "var(--nerdvana-text)"
                   }}
                 >

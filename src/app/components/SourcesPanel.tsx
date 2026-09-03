@@ -25,7 +25,7 @@ export default function SourcesPanel({ sources }: SourcesPanelProps) {
       <h3
         className="text-[0.62rem] uppercase tracking-[0.14em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.6
         }}
@@ -41,14 +41,14 @@ export default function SourcesPanel({ sources }: SourcesPanelProps) {
             rel="noopener noreferrer"
             className="block text-[0.86rem] hover:underline break-words min-w-0"
             style={{
-              fontFamily: '"Times New Roman", serif',
+              /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
               color: "var(--nerdvana-text)"
             }}
           >
             {source.title}
             <span
               className="ml-2 text-[0.64rem] uppercase tracking-[0.1em]"
-              style={{ fontFamily: '"Courier New", monospace', opacity: 0.58 }}
+              style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', opacity: 0.58 }}
             >
               {domainFromLink(source.link)}
             </span>

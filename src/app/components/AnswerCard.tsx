@@ -18,7 +18,7 @@ export default function AnswerCard({ answer }: AnswerCardProps) {
       <h2
         className="text-[0.68rem] md:text-[0.72rem] uppercase tracking-[0.16em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.72
         }}
@@ -28,7 +28,7 @@ export default function AnswerCard({ answer }: AnswerCardProps) {
       <p
         className="mt-1 text-[0.86rem] leading-6"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           display: "-webkit-box",
           WebkitLineClamp: 3,

@@ -29,7 +29,7 @@ export default function CaseStatus({ categories }: CaseStatusProps) {
       <p
         className="text-[0.68rem] md:text-[0.72rem] uppercase tracking-[0.16em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "#555"
         }}
       >
@@ -38,7 +38,7 @@ export default function CaseStatus({ categories }: CaseStatusProps) {
       <p
         className="mt-1 text-[0.82rem] md:text-[0.88rem] leading-6"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "#555"
         }}
       >

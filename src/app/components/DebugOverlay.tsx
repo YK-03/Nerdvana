@@ -41,7 +41,7 @@ export default function DebugOverlay({ activeTraceId, activeRequestId, searchKey
 
   return (
     <div
-      className="fixed z-50 transition-all duration-300 font-courier text-xs"
+      className="fixed z-50 transition-all duration-300 font-mono text-xs"
       style={{
         bottom: "1.5rem",
         right: "1.5rem",

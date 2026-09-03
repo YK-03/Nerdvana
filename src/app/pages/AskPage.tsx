@@ -1841,7 +1841,7 @@ ${new Error().stack}
                   }
                   className="askQueryInput w-full px-3 sm:px-4 py-3 text-[0.98rem] sm:text-[1rem] md:text-[1.08rem] focus:outline-none"
                   style={{
-                    fontFamily: '"Times New Roman", serif',
+                    /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                     backgroundColor: "var(--nerdvana-surface)",
                     color: "var(--nerdvana-text)"
                   }}
@@ -1879,7 +1879,7 @@ ${new Error().stack}
                   <span
                     className="text-[0.65rem] lg:text-[0.58rem] uppercase tracking-[0.1em]"
                     style={{
-                      fontFamily: '"Courier New", monospace',
+                      /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                       color: sw.checked ? "var(--nerdvana-accent)" : "var(--nerdvana-text)",
                       opacity: sw.checked ? 1 : 0.7,
                       transition: "color 0.2s"
@@ -1922,7 +1922,7 @@ ${new Error().stack}
                 >
                   <span
                     className="flex items-center gap-2 text-[0.7rem] sm:text-[0.75rem] uppercase tracking-[0.15em]"
-                    style={{ fontFamily: '"Courier New", monospace' }}
+                    style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif' }}
                   >
                     <span>Save To</span>
                     <span>Library</span>
@@ -1972,7 +1972,7 @@ ${new Error().stack}
                           spellCheck={false}
                           autoComplete="off"
                           style={{
-                            fontFamily: '"Times New Roman", serif',
+                            /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                             backgroundColor: "var(--nerdvana-surface)",
                             color: "var(--nerdvana-text)",
                             opacity: isGeneratingFollowUp ? 0.6 : 1
@@ -1980,7 +1980,7 @@ ${new Error().stack}
                         />
                       </div>
                       {isGeneratingFollowUp && (
-                        <div className="pt-2 text-[0.7rem] uppercase tracking-[0.16em] font-courier opacity-50">
+                        <div className="pt-2 text-[0.7rem] uppercase tracking-[0.16em] font-mono opacity-50">
                           Thinking...
                         </div>
                       )}
@@ -1993,7 +1993,7 @@ ${new Error().stack}
                     <h3
                       className="mb-4 text-[0.66rem] md:text-[0.72rem] uppercase tracking-[0.18em] sm:tracking-[3px]"
                       style={{
-                        fontFamily: '"Special Elite", monospace',
+                        /* pre-Inter-switch: fontFamily: '"Special Elite", monospace' */ fontFamily: '"Inter", sans-serif',
                         color: "var(--nerdvana-text)",
                         opacity: 0.96
                       }}
@@ -2099,7 +2099,7 @@ ${new Error().stack}
           opacity: 0.08;
         }
         .categoryLabel {
-          font-family: "Special Elite", monospace;
+          /* pre-Inter-switch: font-family: "Special Elite", monospace; */ font-family: "Inter", sans-serif;
           letter-spacing: 3px;
           border-top: 1px solid var(--nerdvana-border);
           margin-top: 40px;

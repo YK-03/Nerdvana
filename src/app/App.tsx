@@ -295,9 +295,9 @@ function LandingPage({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, ease: "easeOut" }}
-            className="text-[0.95rem] sm:text-[1.0625rem] md:text-[1.2rem] mb-5 sm:mb-6 tracking-wide transition-colors duration-300"
+            className="font-legacy-chrome text-[0.95rem] sm:text-[1.0625rem] md:text-[1.2rem] mb-5 sm:mb-6 tracking-wide transition-colors duration-300"
             style={{
-              fontFamily: '"Courier New", monospace',
+              /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
               color: "var(--nerdvana-text)"
             }}
           >
@@ -311,12 +311,12 @@ function LandingPage({
                 <button
                   key={option}
                   onClick={() => onSetUniverse(option)}
-                  className={`px-3 py-2 text-[0.68rem] sm:text-xs md:text-sm uppercase tracking-[0.12em] border-[2px] transition-all duration-300 ${active
+                  className={`font-legacy-chrome px-3 py-2 text-[0.68rem] sm:text-xs md:text-sm uppercase tracking-[0.12em] border-[2px] transition-all duration-300 ${active
                     ? "shadow-[2px_2px_0_var(--nerdvana-border)]"
                     : "hover:-translate-y-0.5 hover:shadow-[1px_1px_0_var(--nerdvana-border)]"
                     }`}
                   style={{
-                    fontFamily: '"Courier New", monospace',
+                    /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                     backgroundColor: active ? "var(--nerdvana-accent)" : "var(--nerdvana-surface)",
                     color: active ? "var(--nerdvana-surface)" : "var(--nerdvana-text)",
                     borderColor: active ? "var(--nerdvana-accent)" : "var(--nerdvana-border)",
@@ -358,7 +358,7 @@ function LandingPage({
                 className={`w-full text-[1rem] sm:text-[1.0625rem] md:text-[1.2rem] px-4 sm:px-5 md:px-6 py-3.5 sm:py-4 md:py-5 focus:outline-none tracking-wide transition-all duration-300 nerdvana-input ${isFocused ? "cursor-help" : ""
                   }`}
                 style={{
-                  fontFamily: '"Times New Roman", serif',
+                  /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                   backgroundColor: "var(--nerdvana-surface)",
                   color: "var(--nerdvana-text)",
                   caretColor: "var(--nerdvana-accent)"
@@ -379,9 +379,9 @@ function LandingPage({
             </div>
 
             <div
-              className="mt-3 text-[0.75rem] uppercase tracking-[0.2em] transition-all duration-300"
+              className="font-legacy-chrome mt-3 text-[0.75rem] uppercase tracking-[0.2em] transition-all duration-300"
               style={{
-                fontFamily: '"Courier New", monospace',
+                /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                 color: isFocused ? "var(--nerdvana-accent)" : "var(--nerdvana-text)",
                 opacity: isFocused ? 1 : 0.75
               }}
@@ -395,9 +395,9 @@ function LandingPage({
               <button
                 key={prompt}
                 onClick={() => onSubmit(prompt)}
-                className="text-[0.68rem] sm:text-[0.72rem] md:text-[0.78rem] uppercase tracking-[0.09em] px-3 py-2 border-[1.8px] transition-all duration-300 hover:-translate-y-0.5"
+                className="font-legacy-chrome text-[0.68rem] sm:text-[0.72rem] md:text-[0.78rem] uppercase tracking-[0.09em] px-3 py-2 border-[1.8px] transition-all duration-300 hover:-translate-y-0.5"
                 style={{
-                  fontFamily: '"Courier New", monospace',
+                  /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                   borderColor: "var(--nerdvana-border)",
                   backgroundColor: "var(--nerdvana-bg)",
                   color: "var(--nerdvana-text)"

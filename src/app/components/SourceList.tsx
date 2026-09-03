@@ -42,7 +42,7 @@ export default function SourceList({ sources, query }: SourceListProps) {
       <h4
         className="source-header text-[0.68rem] md:text-[0.72rem] tracking-[0.16em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.72
         }}
@@ -67,7 +67,7 @@ export default function SourceList({ sources, query }: SourceListProps) {
               <span
                 className="source-badge border px-1.5 py-0.5 text-[0.62rem] tracking-[0.14em]"
                 style={{
-                  fontFamily: '"Courier New", monospace',
+                  /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                   borderColor: "var(--nerdvana-border)",
                   backgroundColor: "var(--nerdvana-surface)"
                 }}
@@ -77,7 +77,7 @@ export default function SourceList({ sources, query }: SourceListProps) {
               <span
                 className="text-[0.92rem] leading-5"
                 style={{
-                  fontFamily: '"Times New Roman", serif'
+                  /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif'
                 }}
               >
                 {source.title}
@@ -139,7 +139,8 @@ export default function SourceList({ sources, query }: SourceListProps) {
 
         .source-snippet {
           color: #444;
-          font-family: "Times New Roman", serif;
+          /* pre-Inter-switch: font-family: "Times New Roman", serif; */
+          font-family: "Inter", sans-serif;
           font-size: 0.8rem;
           line-height: 1.4;
           max-width: 100%;

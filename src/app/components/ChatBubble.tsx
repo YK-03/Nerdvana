@@ -41,7 +41,7 @@ export default function ChatBubble({
                     backgroundColor: isUser
                         ? "var(--nerdvana-surface)"
                         : "var(--nerdvana-conversation-bg)",
-                    fontFamily: '"Times New Roman", serif',
+                    /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                     color: "var(--nerdvana-text)",
                     fontSize: "0.96rem",
                     lineHeight: "1.6",
@@ -52,7 +52,7 @@ export default function ChatBubble({
                 <div
                     className="mb-2 text-[0.65rem] lg:text-[0.62rem] uppercase tracking-[0.12em]"
                     style={{
-                        fontFamily: '"Courier New", monospace',
+                        /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                         opacity: 0.7
                     }}
                 >
@@ -66,7 +66,7 @@ export default function ChatBubble({
                         style={{
                             borderColor: "var(--nerdvana-accent)",
                             color: "var(--nerdvana-accent)",
-                            fontFamily: '"Courier New", monospace'
+                            /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif'
                         }}
                     >
                         ⚠ SPOILERS HIDDEN. Click anywhere on this message to reveal.
@@ -113,7 +113,7 @@ export default function ChatBubble({
                                         style={{
                                             backgroundColor: "var(--nerdvana-border)",
                                             color: "var(--nerdvana-conversation-bg)",
-                                            fontFamily: '"Courier New", monospace'
+                                            /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif'
                                         }}
                                     >
                                         {children}
@@ -136,7 +136,7 @@ export default function ChatBubble({
                 {sources && sources.length > 0 && !isUser && (
                     <div className="mt-4 pt-3 border-t" style={{ borderColor: "var(--nerdvana-border)" }}>
                         <div className="flex items-center justify-between mb-2">
-                            <p className="text-[0.65rem] lg:text-[0.6rem] uppercase tracking-widest opacity-60" style={{ fontFamily: '"Courier New", monospace' }}>Sources</p>
+                            <p className="text-[0.65rem] lg:text-[0.6rem] uppercase tracking-widest opacity-60" style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif' }}>Sources</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {sources.map((s, i) => (
@@ -165,7 +165,7 @@ export default function ChatBubble({
                             onClick={() => onSuggestionClick?.(suggestion)}
                             className="text-[0.68rem] sm:text-[0.7rem] px-3 py-2 rounded-full border transition-colors duration-200 hover:bg-[var(--nerdvana-border)] text-left"
                             style={{
-                                fontFamily: '"Courier New", monospace',
+                                /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                                 borderColor: "var(--nerdvana-border)",
                                 color: "var(--nerdvana-text)",
                                 backgroundColor: "transparent"

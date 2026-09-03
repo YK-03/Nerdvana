@@ -19,7 +19,7 @@ export default function EvidenceDensity({ categories }: EvidenceDensityProps) {
       <p
         className="text-[0.68rem] md:text-[0.72rem] uppercase tracking-[0.16em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "#555"
         }}
       >
@@ -33,7 +33,7 @@ export default function EvidenceDensity({ categories }: EvidenceDensityProps) {
       <p
         className="mt-1 text-[0.75rem] md:text-[0.8rem] leading-5"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "#555"
         }}
       >

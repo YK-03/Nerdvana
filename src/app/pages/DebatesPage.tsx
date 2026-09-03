@@ -34,18 +34,18 @@ export default function DebatesPage({ onNavigatePage }: DebatesPageProps) {
               }}
             >
               <p
-                className="text-[1rem] leading-7"
+                className="font-legacy-prose text-[1rem] leading-7"
                 style={{
-                  fontFamily: '"Times New Roman", serif',
+                  /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Times New Roman", serif',
                   color: "var(--nerdvana-text)"
                 }}
               >
                 Debates will allow multiple interpretations of stories to be explored side by side.
               </p>
               <p
-                className="mt-5 text-xs md:text-sm uppercase tracking-[0.16em]"
+                className="font-legacy-chrome mt-5 text-xs md:text-sm uppercase tracking-[0.16em]"
                 style={{
-                  fontFamily: '"Courier New", monospace',
+                  /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                   color: "var(--nerdvana-accent)",
                   opacity: 0.8
                 }}

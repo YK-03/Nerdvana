@@ -33,7 +33,7 @@ export default function ThinkingScreen({ isVisible }: { isVisible: boolean }) {
           <div className="relative flex flex-col items-center justify-center">
             <p
               className="mb-6 text-center text-[0.62rem] uppercase tracking-[0.2em] opacity-70"
-              style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
+              style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
             >
               NERDVANA
             </p>
@@ -48,7 +48,7 @@ export default function ThinkingScreen({ isVisible }: { isVisible: boolean }) {
             />
             <p
               className="mt-6 text-[0.72rem] uppercase tracking-[0.12em] opacity-75"
-              style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
+              style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
             >
               Hold up, nerd mode engaged...
             </p>
@@ -56,7 +56,7 @@ export default function ThinkingScreen({ isVisible }: { isVisible: boolean }) {
               <motion.p
                 key={lineIndex}
                 className="mt-2 text-[0.68rem] uppercase tracking-[0.1em] opacity-70"
-                style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-accent)" }}
+                style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-accent)" }}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 0.7, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}

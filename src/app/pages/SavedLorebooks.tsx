@@ -129,13 +129,13 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
 
             {!user ? (
               <div className="mt-5 border p-4" style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}>
-                <p style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                <p style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                   Sign in to view saved items.
                 </p>
                 <button
                   type="button"
                   className="mt-4 nerdvana-clickable border-[2px] px-4 py-2 text-[0.7rem] uppercase tracking-[0.15em]"
-                  style={{ fontFamily: '"Courier New", monospace', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                  style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
                   onClick={() => {
                     login().catch(() => undefined);
                   }}
@@ -157,19 +157,19 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
                     >
                       <p
                         className="text-[0.66rem] uppercase tracking-[0.14em] mb-2"
-                        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.72 }}
+                        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)", opacity: 0.72 }}
                       >
                         {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : "Saved Session"}
                       </p>
                       <h3
                         className="text-[1.1rem] leading-6 font-bold mb-2 break-words pr-6"
-                        style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}
+                        style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
                       >
                         {item.topic}
                       </h3>
                       <p
                         className="text-[0.85rem] leading-5 opacity-80"
-                        style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}
+                        style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
                       >
                         {item.conversation ? `Saved Topic (${item.conversation.length} items)` : "Legacy Item"}
                       </p>
@@ -188,7 +188,7 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
                 {lorebooks.length === 0 && (
                   <p
                     className="text-[0.78rem] uppercase tracking-[0.12em]"
-                    style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.8 }}
+                    style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)", opacity: 0.8 }}
                   >
                     No saved items yet.
                   </p>

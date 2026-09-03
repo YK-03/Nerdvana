@@ -325,12 +325,12 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
           .dark .nerdvana-paper-texture-conversation { opacity: 0.08; }
           .archive-main { max-width: min(56rem, 100%); margin: clamp(2rem, 8vw, 6rem) auto; font-family: inherit; text-align: left; }
           .archive-header { border: 1px solid var(--nerdvana-border); background: var(--nerdvana-surface); padding: clamp(0.75rem, 2.2vw, 0.9rem) clamp(0.85rem, 2.8vw, 1rem); }
-          .archive-label { font-size: 0.68rem; letter-spacing: 0.16em; opacity: 0.7; text-transform: uppercase; font-family: "Courier New", monospace; color: var(--nerdvana-text); }
+          .archive-label { font-size: 0.68rem; letter-spacing: 0.16em; opacity: 0.7; text-transform: uppercase; /* pre-Inter-switch: font-family: "Courier New", monospace; */ font-family: "Inter", sans-serif; color: var(--nerdvana-text); }
           .archive-label + .archive-label { margin-top: 6px; }
           .archive-modules { margin-top: 14px; display: grid; gap: 10px; }
-          .archive-module { border: 1px dashed var(--nerdvana-border); background: var(--nerdvana-surface); padding: clamp(0.7rem, 2.4vw, 0.8rem) clamp(0.8rem, 2.6vw, 0.9rem); opacity: 0.6; font-family: "Times New Roman", serif; color: var(--nerdvana-text); transition: transform 180ms ease, border-color 180ms ease, opacity 180ms ease; }
+          .archive-module { border: 1px dashed var(--nerdvana-border); background: var(--nerdvana-surface); padding: clamp(0.7rem, 2.4vw, 0.8rem) clamp(0.8rem, 2.6vw, 0.9rem); opacity: 0.6; /* pre-Inter-switch: font-family: "Times New Roman", serif; */ font-family: "Inter", sans-serif; color: var(--nerdvana-text); transition: transform 180ms ease, border-color 180ms ease, opacity 180ms ease; }
           .archive-module:hover { transform: translateX(3px); border-color: var(--nerdvana-accent); opacity: 0.86; }
-          .profileSignInBtn { margin-top: 16px; padding: 9px 14px; border: 2px solid var(--nerdvana-border); box-shadow: 2px 2px 0 var(--nerdvana-accent); font-size: 0.7rem; letter-spacing: 0.15em; font-family: "Courier New", monospace; text-transform: uppercase; }
+          .profileSignInBtn { margin-top: 16px; padding: 9px 14px; border: 2px solid var(--nerdvana-border); box-shadow: 2px 2px 0 var(--nerdvana-accent); font-size: 0.7rem; letter-spacing: 0.15em; /* pre-Inter-switch: font-family: "Courier New", monospace; */ font-family: "Inter", sans-serif; text-transform: uppercase; }
           .auth-button { background-color: var(--nerdvana-border); border-color: var(--nerdvana-border); color: var(--nerdvana-surface); transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease; }
           .auth-button:hover { background-color: var(--nerdvana-accent); border-color: var(--nerdvana-accent); transform: translateY(-1px); }
         `}</style>
@@ -412,7 +412,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                 {/* Bio */}
                 {bio && (
                   <div className="max-w-md mx-auto mb-4">
-                    <p className="text-[1rem] md:text-[1.1rem] leading-relaxed opacity-90" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                    <p className="text-[1rem] md:text-[1.1rem] leading-relaxed opacity-90" style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                       {bio}
                     </p>
                   </div>
@@ -453,7 +453,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                     <div className="absolute bottom-0 left-0 w-full h-[60%] bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-500 z-10 pointer-events-none" />
                     
                     <div className="absolute inset-0 flex flex-col justify-end items-start p-6 md:p-10 lg:p-12 z-20">
-                      <span className="text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.25em] opacity-80 mb-3" style={{ fontFamily: '"Courier New", monospace', color: "white" }}>
+                      <span className="text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.25em] opacity-80 mb-3" style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "white" }}>
                         Continue Exploring
                       </span>
                       <h3 className="text-[clamp(2rem,5vw,3.75rem)] font-bold uppercase tracking-tight leading-[1] mb-6 drop-shadow-md transition-transform duration-500 origin-bottom-left group-hover:scale-[1.01]" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', color: "white" }}>
@@ -464,7 +464,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                         <button 
                           className="nerdvana-clickable text-[0.7rem] uppercase tracking-[0.15em] px-5 py-2 border-[2px] auth-button flex items-center gap-3 transition-all duration-300" 
                           style={{ 
-                            fontFamily: '"Courier New", monospace',
+                            /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                             boxShadow: "2px 2px 0 var(--nerdvana-accent)",
                             color: "var(--nerdvana-surface)"
                           }}
@@ -477,7 +477,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                 );
               })() : (
                 <div className="w-full aspect-[4/3] md:aspect-[21/9] rounded-xl border border-dashed flex flex-col items-center justify-center p-8 opacity-40 transition-opacity hover:opacity-60" style={{ borderColor: "var(--nerdvana-border)" }}>
-                  <p className="text-[1rem] md:text-[1.1rem] italic mb-6 text-center" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                  <p className="text-[1rem] md:text-[1.1rem] italic mb-6 text-center" style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                     Pick up where your next story begins.
                   </p>
                   <button 
@@ -494,7 +494,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
 
             {/* Your Library (Media Cards) */}
             <section className="w-full flex flex-col items-center">
-              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-6 opacity-40 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+              <h2 className="text-[0.7rem] uppercase tracking-[0.25em] mb-6 opacity-40 text-center" style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                 Your Library
               </h2>
               
@@ -523,7 +523,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                         ) : (
                           <span 
                             className="text-sm md:text-base font-medium opacity-80 leading-snug line-clamp-4 group-hover:opacity-100 transition-opacity duration-300"
-                            style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}
+                            style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
                           >
                             {item.topic}
                           </span>
@@ -534,7 +534,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                 </div>
               ) : (
                 <div className="max-w-md w-full mx-auto p-12 border rounded-lg border-dashed text-center opacity-30" style={{ borderColor: "var(--nerdvana-border)" }}>
-                  <p className="text-sm uppercase tracking-[0.1em]" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                  <p className="text-sm uppercase tracking-[0.1em]" style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                     Your library is empty.
                   </p>
                 </div>
@@ -545,13 +545,13 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
 
             {/* Settings Section (Minimal) */}
             <section className="w-full flex flex-col items-center">
-              <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-6 opacity-30 text-center" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+              <h2 className="text-[0.75rem] uppercase tracking-[0.2em] mb-6 opacity-30 text-center" style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                 Preferences
               </h2>
               <div className="w-full max-w-sm flex flex-col gap-6">
                 
                 <div className="group text-left">
-                  <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                  <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                     Username
                   </label>
                   <div className="flex items-center gap-3">
@@ -565,7 +565,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       }`}
                       style={{ 
                         color: "var(--nerdvana-text)", 
-                        fontFamily: '"Times New Roman", serif',
+                        /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                       }}
                     />
                     <button 
@@ -584,7 +584,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                 </div>
 
                 <div className="group text-left">
-                  <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                  <label className="block text-[0.65rem] uppercase tracking-[0.15em] mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity" style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                     Bio
                   </label>
                   <div className="flex items-start gap-3">
@@ -601,7 +601,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       placeholder="Tell people a little about your taste..."
                       style={{ 
                         color: "var(--nerdvana-text)", 
-                        fontFamily: '"Times New Roman", serif',
+                        /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                       }}
                     />
                     <button 
@@ -617,7 +617,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                       {savingBio ? "Saving" : "Save"}
                     </button>
                   </div>
-                  <div className="text-right text-[0.6rem] mt-2 opacity-40" style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}>
+                  <div className="text-right text-[0.6rem] mt-2 opacity-40" style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                      {bioDraft.length}/160
                   </div>
                 </div>

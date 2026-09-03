@@ -85,7 +85,7 @@ export default function RefineCase({ query, categories, item }: RefineCaseProps)
       <p
         className="text-[0.82rem] md:text-[0.88rem]"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.82
         }}
@@ -95,7 +95,7 @@ export default function RefineCase({ query, categories, item }: RefineCaseProps)
       <ul
         className="mt-2 list-disc pl-5 space-y-1"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)"
         }}
       >
@@ -105,7 +105,7 @@ export default function RefineCase({ query, categories, item }: RefineCaseProps)
               type="button"
               className="nerdvana-clickable text-left transition-all duration-150 hover:underline"
               style={{
-                fontFamily: '"Times New Roman", serif',
+                /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                 color: "var(--nerdvana-text)"
               }}
               onClick={() => onRefine(suggestion)}

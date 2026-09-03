@@ -125,7 +125,7 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
                 <button
                   type="button"
                   className="nerdvana-clickable border-[2px] px-3 py-2 text-[0.66rem] sm:text-[0.68rem] uppercase tracking-[0.12em]"
-                  style={{ fontFamily: '"Courier New", monospace', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                  style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
                   onClick={() => {
                     clearAllHistory().catch(() => undefined);
                   }}
@@ -137,13 +137,13 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
 
             {!user ? (
               <div className="mt-5 border p-4" style={{ borderColor: "var(--nerdvana-border)", backgroundColor: "var(--nerdvana-surface)" }}>
-                <p style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}>
+                <p style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}>
                   Sign in to view and manage your search history.
                 </p>
                 <button
                   type="button"
                   className="mt-4 nerdvana-clickable border-[2px] px-4 py-2 text-[0.7rem] uppercase tracking-[0.15em]"
-                  style={{ fontFamily: '"Courier New", monospace', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                  style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
                   onClick={() => {
                     login().catch(() => undefined);
                   }}
@@ -163,13 +163,13 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
                     <div className="min-w-0">
                       <p
                         className="text-[0.66rem] uppercase tracking-[0.14em]"
-                        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.72 }}
+                        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)", opacity: 0.72 }}
                       >
                         {item.createdAtText}
                       </p>
                       <p
                         className="mt-1 text-[0.95rem] leading-6"
-                        style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}
+                        style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
                       >
                         {item.query}
                       </p>
@@ -177,7 +177,7 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
                     <button
                       type="button"
                       className="nerdvana-clickable shrink-0 border px-2 py-1.5 text-[0.62rem] uppercase tracking-[0.12em] z-10 hover:bg-red-900/20"
-                      style={{ fontFamily: '"Courier New", monospace', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
+                      style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', borderColor: "var(--nerdvana-border)", color: "var(--nerdvana-text)" }}
                       onClick={(e) => {
                         deleteHistoryItem(e, item.id).catch(() => undefined);
                       }}
@@ -189,7 +189,7 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
                 {items.length === 0 && (
                   <p
                     className="text-[0.78rem] uppercase tracking-[0.12em]"
-                    style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.8 }}
+                    style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)", opacity: 0.8 }}
                   >
                     No history yet.
                   </p>

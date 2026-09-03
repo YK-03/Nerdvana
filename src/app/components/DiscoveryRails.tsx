@@ -23,11 +23,11 @@ export function DiscoveryRails({ rails, onSelect }: DiscoveryRailsProps) {
         >
           {/* Header */}
           <div className="flex flex-col gap-1">
-            <h3 className="font-sora text-nerdvana-text text-lg font-medium tracking-tight">
+            <h3 className="font-sans text-nerdvana-text text-lg font-medium tracking-tight">
               {rail.label}
             </h3>
             {rail.editorial && (
-              <p className="font-times text-nerdvana-text/70 italic text-base">
+              <p className="font-serif text-nerdvana-text/70 italic text-base">
                 {rail.editorial}
               </p>
             )}
@@ -44,12 +44,12 @@ export function DiscoveryRails({ rails, onSelect }: DiscoveryRailsProps) {
                 {/* Subtle hover accent line */}
                 <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-nerdvana-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
-                <span className="font-sora font-medium text-nerdvana-text text-[15px] leading-snug group-hover:text-nerdvana-accent transition-colors duration-200">
+                <span className="font-sans font-medium text-nerdvana-text text-[15px] leading-snug group-hover:text-nerdvana-accent transition-colors duration-200">
                   {item.title}
                 </span>
                 
                 {item.subtitle && (
-                  <span className="font-courier text-xs tracking-wider text-nerdvana-text/50 uppercase mt-2">
+                  <span className="font-mono text-xs tracking-wider text-nerdvana-text/50 uppercase mt-2">
                     {item.subtitle}
                   </span>
                 )}

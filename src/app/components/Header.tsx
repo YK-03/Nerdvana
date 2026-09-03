@@ -150,9 +150,9 @@ function Header({ onNavigate }: HeaderProps) {
             NERDVANA
           </motion.button>
           <span
-            className="hidden sm:inline-block px-2.5 py-1 text-[0.62rem] uppercase tracking-[0.18em] border-[2px] transition-colors duration-300"
+            className="font-legacy-chrome hidden sm:inline-block px-2.5 py-1 text-[0.62rem] uppercase tracking-[0.18em] border-[2px] transition-colors duration-300"
             style={{
-              fontFamily: '"Courier New", monospace',
+              /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
               borderColor: "var(--nerdvana-border)",
               backgroundColor: "var(--nerdvana-surface)",
               color: "var(--nerdvana-text)"
@@ -173,9 +173,9 @@ function Header({ onNavigate }: HeaderProps) {
             <button
               key={item}
               onClick={() => onNavigate?.(item.toLowerCase())}
-              className="px-3 py-1.5 text-[0.75rem] uppercase tracking-[0.14em] border-[1.5px] border-transparent transition-all duration-300"
+              className="font-legacy-chrome px-3 py-1.5 text-[0.75rem] uppercase tracking-[0.14em] border-[1.5px] border-transparent transition-all duration-300"
               style={{
-                fontFamily: '"Courier New", monospace',
+                /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                 color: "var(--nerdvana-text)"
               }}
               onMouseEnter={(e) => {
@@ -200,7 +200,7 @@ function Header({ onNavigate }: HeaderProps) {
             onClick={() => setMobileNavOpen((prev) => !prev)}
             className="lg:hidden text-[0.68rem] uppercase tracking-[0.14em] transition-all duration-300 px-3 py-2 border-[2px] min-h-10"
             style={{
-              fontFamily: '"Courier New", monospace',
+              /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
               color: "var(--nerdvana-text)",
               borderColor: "var(--nerdvana-border)",
               backgroundColor: "var(--nerdvana-surface)"
@@ -212,9 +212,9 @@ function Header({ onNavigate }: HeaderProps) {
           </button>
           <button
             onClick={toggleTheme}
-            className="text-[0.66rem] sm:text-[0.7rem] uppercase tracking-[0.15em] transition-all duration-300 px-3 py-2 border-[2px] hover:-translate-y-0.5 min-h-10"
+            className="font-legacy-chrome text-[0.66rem] sm:text-[0.7rem] uppercase tracking-[0.15em] transition-all duration-300 px-3 py-2 border-[2px] hover:-translate-y-0.5 min-h-10"
             style={{
-              fontFamily: '"Courier New", monospace',
+              /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
               color: "var(--nerdvana-text)",
               borderColor: "var(--nerdvana-border)",
               backgroundColor: "var(--nerdvana-surface)"
@@ -284,7 +284,7 @@ function Header({ onNavigate }: HeaderProps) {
               }}
               className="text-[0.66rem] sm:text-[0.7rem] uppercase tracking-[0.15em] transition-all duration-300 px-3 sm:px-4 py-2 border-[2px] auth-button min-h-10"
               style={{
-                fontFamily: '"Courier New", monospace',
+                /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                 color: "var(--nerdvana-surface)",
                 boxShadow: "2px 2px 0 var(--nerdvana-accent)"
               }}
@@ -310,9 +310,9 @@ function Header({ onNavigate }: HeaderProps) {
                 setMobileNavOpen(false);
                 onNavigate?.(item.toLowerCase());
               }}
-              className="w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.14em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
+              className="font-legacy-chrome w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.14em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
               style={{
-                fontFamily: '"Courier New", monospace',
+                /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
                 color: "var(--nerdvana-text)"
               }}
             >

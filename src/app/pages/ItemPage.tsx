@@ -49,7 +49,7 @@ export default function ItemPage({
                 <p
                   className="mt-4 text-[0.98rem] sm:text-[1rem] leading-7"
                   style={{
-                    fontFamily: '"Times New Roman", serif',
+                    /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                     color: "var(--nerdvana-text)"
                   }}
                 >
@@ -58,7 +58,7 @@ export default function ItemPage({
                 <button
                   className="nerdvana-clickable mt-5 text-xs md:text-sm uppercase tracking-[0.14em] border-[2px] px-4 py-2.5"
                   style={{
-                    fontFamily: '"Courier New", monospace',
+                    /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                     borderColor: "var(--nerdvana-border)",
                     color: "var(--nerdvana-text)",
                     backgroundColor: "var(--nerdvana-surface)"
@@ -82,7 +82,7 @@ export default function ItemPage({
                 <p
                   className="mt-3 text-[0.68rem] sm:text-xs md:text-sm uppercase tracking-[0.16em]"
                   style={{
-                    fontFamily: '"Courier New", monospace',
+                    /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                     color: "var(--nerdvana-accent)"
                   }}
                 >
@@ -99,7 +99,7 @@ export default function ItemPage({
                   <p
                     className="text-[0.98rem] sm:text-[1rem] leading-7"
                     style={{
-                      fontFamily: '"Times New Roman", serif',
+                      /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                       color: "var(--nerdvana-text)"
                     }}
                   >

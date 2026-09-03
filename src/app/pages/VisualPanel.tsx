@@ -307,7 +307,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
             {searchPhase !== "idle" && searchPhase !== "done" && (
               <div
                 className="h-2 text-[0.65rem] lg:text-[0.5rem] uppercase tracking-[0.18em] opacity-30 mt-2"
-                style={{ fontFamily: '"Courier New", monospace' }}
+                style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif' }}
               >
                 {PHASE_LABELS[searchPhase]}
               </div>
@@ -342,7 +342,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                   <span
                     className="px-2 py-[3px] text-[0.65rem] lg:text-[0.5rem] border"
                     style={{
-                      fontFamily: '"Courier New", monospace',
+                      /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                       borderColor: "var(--nerdvana-border)",
                       backgroundColor: "var(--nerdvana-surface)",
                       opacity: 0.7,
@@ -359,7 +359,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
             <div className="px-4 pt-0 pb-4 space-y-2">
               <h3
                 className="text-[0.9rem] leading-snug font-semibold"
-                style={{ fontFamily: '"Special Elite", monospace' }}
+                style={{ /* pre-Inter-switch: fontFamily: '"Special Elite", monospace' */ fontFamily: '"Inter", sans-serif' }}
               >
                 {visual.title}
               </h3>
@@ -367,7 +367,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
               {visual.year && (
                 <div
                   className="flex flex-wrap gap-x-3 text-[0.65rem] lg:text-[0.6rem] uppercase tracking-[0.1em]"
-                  style={{ fontFamily: '"Courier New", monospace', opacity: 0.55 }}
+                  style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', opacity: 0.55 }}
                 >
                   <span>{visual.year}</span>
                 </div>
@@ -381,7 +381,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                       className="text-[0.65rem] lg:text-[0.52rem] uppercase tracking-[0.08em] px-2 py-0.5 border"
                       style={{
                         borderColor: "var(--nerdvana-border)",
-                        fontFamily: '"Courier New", monospace',
+                        /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                         opacity: 0.65,
                       }}
                     >
@@ -403,7 +403,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                   <p
                     ref={overviewTextRef}
                     className={`text-[0.67rem] leading-relaxed ${isOverviewExpanded ? "" : "line-clamp-4"}`}
-                    style={{ fontFamily: '"Times New Roman", serif', opacity: 0.55 }}
+                    style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', opacity: 0.55 }}
                   >
                     {visual.overview}
                   </p>
@@ -413,7 +413,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                       onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
                       className="text-[0.62rem] lg:text-[0.54rem] uppercase tracking-[0.12em] font-semibold transition-colors hover:text-[var(--nerdvana-accent)] cursor-pointer block"
                       style={{
-                        fontFamily: '"Courier New", monospace',
+                        /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                         color: isOverviewExpanded ? "var(--nerdvana-text)" : "var(--nerdvana-accent)",
                         opacity: isOverviewExpanded ? 0.6 : 0.9,
                       }}
@@ -436,14 +436,14 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                     <div className="flex items-center justify-between">
                       <span
                         className="text-[0.65rem] lg:text-[0.55rem] uppercase tracking-[0.14em] font-semibold flex items-center gap-1.5"
-                        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-accent)" }}
+                        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-accent)" }}
                       >
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--nerdvana-accent)]" />
                         Official Trailer
                       </span>
                       <span
                         className="text-[0.6rem] lg:text-[0.5rem] uppercase tracking-[0.1em] opacity-40"
-                        style={{ fontFamily: '"Courier New", monospace' }}
+                        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif' }}
                       >
                         YouTube
                       </span>
@@ -490,7 +490,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                       <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between pointer-events-none">
                         <span
                           className="text-[0.62rem] lg:text-[0.52rem] uppercase tracking-[0.12em] font-mono text-white/90 drop-shadow"
-                          style={{ fontFamily: '"Courier New", monospace' }}
+                          style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif' }}
                         >
                           ▶ Watch Trailer
                         </span>
@@ -507,7 +507,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
         {!loading && !visual && (
           <div
             className="p-5 text-[0.65rem] lg:text-[0.6rem] uppercase tracking-[0.14em]"
-            style={{ fontFamily: '"Courier New", monospace', opacity: 0.3 }}
+            style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', opacity: 0.3 }}
           >
             {errorState || VISUAL_PHASE_LABELS.NO_IMAGE}
           </div>
@@ -558,7 +558,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                   />
                   <h4
                     className="text-[0.8rem] sm:text-[0.88rem] font-bold truncate uppercase tracking-wider"
-                    style={{ fontFamily: '"Special Elite", monospace' }}
+                    style={{ /* pre-Inter-switch: fontFamily: '"Special Elite", monospace' */ fontFamily: '"Inter", sans-serif' }}
                   >
                     {visual.title} — Official Trailer
                   </h4>
@@ -568,7 +568,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                   onClick={() => setIsTrailerOpen(false)}
                   className="px-2.5 py-1 text-[0.7rem] uppercase tracking-[0.14em] font-semibold border-[1px] transition-colors hover:bg-[var(--nerdvana-accent)] hover:text-white"
                   style={{
-                    fontFamily: '"Courier New", monospace',
+                    /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                     borderColor: "var(--nerdvana-border)",
                     color: "var(--nerdvana-text)"
                   }}
@@ -595,7 +595,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
                 className="px-4 py-1.5 flex items-center justify-between text-[0.62rem] uppercase tracking-[0.1em] border-t"
                 style={{
                   borderColor: "var(--nerdvana-border)",
-                  fontFamily: '"Courier New", monospace',
+                  /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                   opacity: 0.6
                 }}
               >

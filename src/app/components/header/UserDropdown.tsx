@@ -20,30 +20,30 @@ function UserDropdown({ onNavigate, onLogout }: UserDropdownProps) {
       onMouseDown={(event) => event.stopPropagation()}
     >
       <button
-        className="nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
-        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
+        className="font-legacy-chrome nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
+        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
         onClick={() => onNavigate("/profile")}
       >
           Profile
       </button>
       <button
-        className="nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
-        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
+        className="font-legacy-chrome nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
+        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
         onClick={() => onNavigate("/saved")}
       >
         Library
       </button>
       <button
-        className="nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
-        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
+        className="font-legacy-chrome nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
+        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
         onClick={() => onNavigate("/history")}
       >
         History
       </button>
       <button
         onClick={onLogout}
-        className="nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
-        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
+        className="font-legacy-chrome nerdvana-clickable block w-full text-left px-3 py-2 text-[0.72rem] uppercase tracking-[0.12em] border-[1px] border-transparent hover:border-[var(--nerdvana-border)]"
+        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
       >
         Logout
       </button>

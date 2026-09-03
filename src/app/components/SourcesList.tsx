@@ -19,7 +19,7 @@ export default function SourcesList({ links }: SourcesListProps) {
       <h2
         className="text-[0.68rem] md:text-[0.72rem] uppercase tracking-[0.16em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.72
         }}
@@ -43,7 +43,7 @@ export default function SourcesList({ links }: SourcesListProps) {
             <p
               className="text-[0.92rem] leading-5"
               style={{
-                fontFamily: '"Times New Roman", serif'
+                /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif'
               }}
             >
               {link.title}
@@ -51,7 +51,7 @@ export default function SourcesList({ links }: SourcesListProps) {
             <p
               className="mt-1 text-[0.66rem] uppercase tracking-[0.12em]"
               style={{
-                fontFamily: '"Courier New", monospace',
+                /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                 opacity: 0.65
               }}
             >

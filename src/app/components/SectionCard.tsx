@@ -20,7 +20,7 @@ export default function SectionCard({ title, content, hidden }: SectionCardProps
       <h2
         className="text-[0.72rem] uppercase tracking-[0.16em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-accent)"
         }}
       >
@@ -29,7 +29,7 @@ export default function SectionCard({ title, content, hidden }: SectionCardProps
       <p
         className="mt-2 text-[0.96rem] leading-7"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)"
         }}
       >

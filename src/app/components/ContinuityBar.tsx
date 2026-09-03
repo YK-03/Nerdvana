@@ -22,7 +22,7 @@ export default function ContinuityBar({ dominantItem, intentPhrase, source }: Co
       <p
         className="text-[0.75rem] uppercase tracking-[0.14em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "#444"
         }}
       >
@@ -31,7 +31,7 @@ export default function ContinuityBar({ dominantItem, intentPhrase, source }: Co
       <p
         className="mt-1 text-[0.86rem]"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "#444"
         }}
       >

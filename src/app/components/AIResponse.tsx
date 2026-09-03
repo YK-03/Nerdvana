@@ -16,7 +16,7 @@ export default function AIResponse({
   text,
   isLoading,
   onFirstTokenRendered,
-  disableProgressiveReveal = false
+  disableProgressiveReveal = false,
 }: AIResponseProps) {
   const [visibleText, setVisibleText] = useState(() => disableProgressiveReveal ? text : "");
   const firstTokenEmittedRef = useRef(false);
@@ -75,7 +75,7 @@ export default function AIResponse({
       <h2
         className="text-[0.68rem] md:text-[0.72rem] uppercase tracking-[0.16em]"
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.72
         }}
@@ -85,7 +85,7 @@ export default function AIResponse({
       <div
         className={`${RENDER_CONTRACTS.classes.markdownBody} ${RENDER_CONTRACTS.classes.prose} mt-2 whitespace-pre-wrap text-[0.92rem] leading-7`}
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.96
         }}

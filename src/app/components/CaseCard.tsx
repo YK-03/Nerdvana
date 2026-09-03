@@ -60,7 +60,7 @@ export default function CaseCard({ caseFile }: CaseCardProps) {
       <p
         className="mt-1 text-[0.82rem] leading-5"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)"
         }}
       >

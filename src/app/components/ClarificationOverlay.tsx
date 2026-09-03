@@ -32,7 +32,7 @@ export default function ClarificationOverlay({
           <h3
             className="text-[0.7rem] sm:text-[0.75rem] uppercase tracking-[0.16em] font-semibold mb-4"
             style={{
-              fontFamily: '"Courier New", monospace',
+              /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
               color: "var(--nerdvana-accent)"
             }}
           >
@@ -40,7 +40,7 @@ export default function ClarificationOverlay({
           </h3>
           <p
             className="text-[0.98rem] leading-6 mb-4"
-            style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}
+            style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
           >
             We found multiple matches for <span className="font-bold">"{query}"</span>. Select one to ground your discussion:
           </p>
@@ -62,14 +62,14 @@ export default function ClarificationOverlay({
                   <div className="flex flex-col min-w-0">
                     <span
                       className="font-bold text-[0.95rem] group-hover:text-[var(--nerdvana-accent)] transition-colors duration-150"
-                      style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)" }}
+                      style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
                     >
                       {s.displayTitle}
                     </span>
                     {s.metadataLabel && (
                       <span
                         className="text-[0.62rem] uppercase tracking-[0.08em] mt-1"
-                        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.6 }}
+                        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)", opacity: 0.6 }}
                       >
                         {s.metadataLabel}
                       </span>
@@ -79,7 +79,7 @@ export default function ClarificationOverlay({
                     <span
                       className="text-[0.52rem] uppercase tracking-[0.12em] px-2 py-0.5 border border-solid border-opacity-30 rounded-sm"
                       style={{
-                        fontFamily: '"Courier New", monospace',
+                        /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
                         borderColor: "var(--nerdvana-border)",
                         color: "var(--nerdvana-text)",
                         opacity: 0.7

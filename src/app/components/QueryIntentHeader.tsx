@@ -1,4 +1,4 @@
-﻿interface QueryIntentHeaderProps {
+interface QueryIntentHeaderProps {
   query: string;
   context?: {
     item: string | null;
@@ -86,7 +86,7 @@ export default function QueryIntentHeader({ query, context }: QueryIntentHeaderP
       <p
         className="text-[0.82rem] md:text-[0.9rem] uppercase tracking-[0.12em]"
         style={{
-          fontFamily: '"Times New Roman", serif',
+          /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
           color: "var(--nerdvana-text)",
           opacity: 0.86,
           fontVariant: "small-caps"

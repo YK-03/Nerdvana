@@ -13,9 +13,9 @@ export default function Footer({ variant = "default" }: FooterProps) {
       }}
     >
       <p
-        className={`uppercase ${isSignature ? "text-center text-[0.62rem] sm:text-[0.64rem] md:text-[0.68rem] tracking-[0.16em]" : "text-center text-[0.68rem] sm:text-[0.72rem] md:text-xs tracking-[0.12em]"}`}
+        className={`font-legacy-chrome uppercase ${isSignature ? "text-center text-[0.62rem] sm:text-[0.64rem] md:text-[0.68rem] tracking-[0.16em]" : "text-center text-[0.68rem] sm:text-[0.72rem] md:text-xs tracking-[0.12em]"}`}
         style={{
-          fontFamily: '"Courier New", monospace',
+          /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
           color: "var(--nerdvana-text)",
           opacity: isSignature ? 0.44 : 0.62
         }}

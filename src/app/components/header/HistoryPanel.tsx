@@ -48,13 +48,13 @@ function HistoryPanel({ uid, onSelectQuery }: HistoryPanelProps) {
     >
       <p
         className="mb-2 text-[0.64rem] uppercase tracking-[0.14em]"
-        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)", opacity: 0.7 }}
+        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)", opacity: 0.7 }}
       >
         Recent Search History
       </p>
       <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
         {items.length === 0 ? (
-          <p className="text-[0.82rem]" style={{ fontFamily: '"Times New Roman", serif', color: "var(--nerdvana-text)", opacity: 0.8 }}>
+          <p className="text-[0.82rem]" style={{ /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)", opacity: 0.8 }}>
             No history yet.
           </p>
         ) : (
@@ -63,7 +63,7 @@ function HistoryPanel({ uid, onSelectQuery }: HistoryPanelProps) {
               key={item.id}
               className="nerdvana-clickable block w-full text-left border px-2 py-1.5 text-[0.8rem] hover:-translate-y-[1px] transition-transform duration-150"
               style={{
-                fontFamily: '"Times New Roman", serif',
+                /* pre-Inter-switch: fontFamily: '"Times New Roman", serif' */ fontFamily: '"Inter", sans-serif',
                 color: "var(--nerdvana-text)",
                 borderColor: "var(--nerdvana-border)"
               }}

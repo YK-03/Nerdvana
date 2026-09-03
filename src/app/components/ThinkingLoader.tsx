@@ -19,7 +19,7 @@ export default function ThinkingLoader() {
       </motion.div>
       <p
         className="mt-4 text-[0.68rem] uppercase tracking-[0.12em] opacity-70"
-        style={{ fontFamily: '"Courier New", monospace', color: "var(--nerdvana-text)" }}
+        style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', color: "var(--nerdvana-text)" }}
       >
         Decoding narrative context...
       </p>
