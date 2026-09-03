@@ -1,101 +1,60 @@
 # Nerdvana
 
-Nerdvana is an AI powered platform for exploring fictional universes through intelligent search and contextual conversations. It combines real time web search with large language models to help users discover and understand movies, television, anime, games, comics, and books.
+A conversational search tool for movies, TV, anime, games, and comics. Ask about a title, then keep asking. Spoiler control and saved conversations built in for going deep on one universe, not just looking something up.
 
-Application: https://nerdvana-murex.vercel.app
+**Live app:** [nerdvana-murex.vercel.app](https://nerdvana-murex.vercel.app)
 
----
+## What it does
 
-## About
-
-Nerdvana is designed around a conversational search experience. Users can search for a topic, continue asking follow up questions, and explore related information without losing context.
-
-The application integrates multiple media data providers with AI generated responses, providing a unified interface for discovering characters, stories, lore, timelines, and recommendations across different fictional universes.
-
----
+Search for a title, read the answer, then keep asking. Follow-up questions stay in context, so you can go from "who is this character" to "how does this connect to the sequel" without starting over.
 
 ## Features
 
-- AI powered conversational search
-- Context aware follow up conversations
-- Dynamic search autocomplete
-- Explore mode for discovering related content
-- Spoiler aware responses
-- Search history with cloud synchronization
-- Saved Lorebooks for preserving conversations
-- Visual metadata panels with posters and media information
-- Firebase authentication
-- Responsive interface
+**Search**
+- Follow-up questions that keep context
+- Autocomplete while typing
+- Explore mode for related titles
+- Spoiler toggle
 
----
+**Media**
+- Poster and metadata for each title
+- Trailer playback
+
+**Account**
+- Sign in with Firebase
+- Search history synced across devices
+- Saved Library to keep conversations for later
 
 ## Screenshots
 
 ### Home
-
 <img src="./public/assets/home.jpg" width="100%" />
 
 ### Search
-
 <img src="./public/assets/search.jpg" width="100%" />
 
 ### Conversation
-
 <img src="./public/assets/chat.jpg" width="100%" />
 
----
+### Trailer
+<img src="./public/assets/trailer.jpg" width="100%" />
 
-## Tech Stack
+## Tech stack
 
-### Frontend
+| Layer | Tools |
+|---|---|
+| Frontend | React, TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion, React Markdown |
+| Backend | Vercel Serverless Functions, Firebase Authentication, Cloud Firestore |
+| Language models | Google Gemini, Groq |
+| Search | Serper API |
+| Data providers | TMDB, RAWG, IGDB, ComicVine, Jikan, AniList, Google Books |
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- Zustand
-- Framer Motion
-- React Markdown
+## How it's built
 
-### Backend
-
-- Vercel Serverless Functions
-- Firebase Authentication
-- Cloud Firestore
-
-### AI
-
-- Google Gemini
-- Groq
-
-### Search
-
-- Serper API
-
-### External Data Providers
-
-- TMDB
-- RAWG
-- IGDB
-- ComicVine
-- Jikan
-- AniList
-- Google Books
-
----
-
-## Architecture
-
-Nerdvana is a client focused single page application backed by serverless APIs.
-
-The frontend communicates with Vercel Serverless Functions, which coordinate AI inference, search, and external media providers. Authentication and user data are managed through Firebase Authentication and Cloud Firestore.
-
----
+A single-page app talking to Vercel Serverless Functions, which handle the language model calls, search, and requests to the media data providers. Firebase handles login and stores user data in Firestore.
 
 ## License
 
-Copyright © 2026 Yash Kaushik.
+Copyright © 2026 Yash Kaushik. All rights reserved.
 
-All Rights Reserved.
-
-This repository is publicly available for viewing and evaluation purposes only. No permission is granted to copy, modify, distribute, sublicense, or use any part of this source code without prior written permission from the copyright holder.
+Public for viewing and evaluation only. Copying, modifying, distributing, or using any part of this code requires written permission from the copyright holder.
