@@ -242,7 +242,7 @@ export type ResolverContextPacket = {
   entityAliases: string[];
   franchiseAliases: string[];
   conversationMode: conversationMode;
-  queryMode: "entity" | "exploration";
+  queryMode: "entity";
   canonContext?: {
     universe?: string;
     continuity?: string;
@@ -360,20 +360,6 @@ export function analyzeQueryIntent(
 
   // Default: treat as title
   return "title";
-}
-
-export function detectQueryMode(query: string): "entity" | "exploration" {
-  const q = query.toLowerCase();
-  const explorationSignals = [
-    "best", "top", "like", "similar to", "about",
-    "games with", "movies with", "shows with", "anime with",
-    "games about", "movies about", "shows about", "anime about",
-    "darkest", "funniest", "scariest", "greatest"
-  ];
-  if (explorationSignals.some(sig => q.includes(sig))) {
-    return "exploration";
-  }
-  return "entity";
 }
 
 // ─── Visual Validation ──────────────────────────────────────────────
@@ -1336,7 +1322,10 @@ export async function buildContextPacket(
     const franchiseHint = previousIdentity?.parentFranchise;
     const previousNodeId = previousIdentity?.topology?.id ?? previousEntity;
 
-    const resolutionSeed = grounding?.selectedSelectionValue ?? grounding?.selectedCanonicalEntity ?? canonicalQuery.canonical ?? query;
+    // A providerless contextual follow-up still has an established displayed
+    // entity. Resolve that entity for grounding instead of treating the
+    // referential follow-up wording as a brand-new title.
+    const resolutionSeed = previousEntity ?? grounding?.selectedSelectionValue ?? grounding?.selectedCanonicalEntity ?? canonicalQuery.canonical ?? query;
 
     const res = await resolveContextualIdentity(
       resolutionSeed,
@@ -1605,7 +1594,7 @@ export async function buildContextPacket(
     entityAliases,
     franchiseAliases,
     conversationMode,
-    queryMode: detectQueryMode(query),
+    queryMode: "entity",
     canonContext,
     telemetry: {
       groundingType: finalTopology ? "topology" : context ? "registry" : finalParentFranchise ? "heuristic" : "fallback",

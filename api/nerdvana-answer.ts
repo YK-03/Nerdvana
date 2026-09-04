@@ -74,9 +74,7 @@ function buildPrompt(
   packet: ResolverContextPacket,
   conversation: ConversationMessage[],
 ) {
-  const activeContext = packet.queryMode === "exploration"
-    ? `- Mode: Exploration\n- Lens: ${packet.mediaLens}`
-    : `- Entity: ${packet.canonicalEntity ?? "Unknown"}\n- Franchise: ${packet.parentFranchise ?? "Unknown"}\n- Lens: ${packet.mediaLens}\n- Spoilers: ${packet.spoilerPolicy}\n- Mode: ${packet.conversationMode}\n- Confidence: ${packet.confidence}`;
+  const activeContext = `- Entity: ${packet.canonicalEntity ?? "Unknown"}\n- Franchise: ${packet.parentFranchise ?? "Unknown"}\n- Lens: ${packet.mediaLens}\n- Spoilers: ${packet.spoilerPolicy}\n- Mode: ${packet.conversationMode}\n- Confidence: ${packet.confidence}`;
 
   const systemRole = `You are Nerdvana, a universal media intelligence engine.
 
@@ -362,6 +360,15 @@ export default async function handler(req: any, res?: any) {
     const mediaLens = normalizeMediaLens(body?.mediaLens ?? DEFAULT_MEDIA_LENS);
     const explicitSelection =
       String(body?.item ?? body?.canonicalSelection ?? "").trim() || undefined;
+    const canonicalContextEntity =
+      String(body?.canonicalEntity ?? body?.previousEntity ?? "").trim() || undefined;
+    const normalizeEntityLabel = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const hasCarriedCanonicalContext = Boolean(
+      canonicalContextEntity &&
+      previousEntity &&
+      normalizeEntityLabel(canonicalContextEntity) === normalizeEntityLabel(previousEntity) &&
+      !explicitSelection
+    );
     const providerMetadata = body?.providerMetadata || undefined;
     const requestId = body?.requestId || undefined;
     
@@ -413,7 +420,7 @@ export default async function handler(req: any, res?: any) {
     // Provider-backed text search is the first resolution stage for unselected
     // entity queries. Local topology/alias matches are useful for enrichment,
     // but must not outrank an exact title returned by the active provider.
-    if (!explicitSelection) {
+    if (!explicitSelection && !hasCarriedCanonicalContext) {
       if (mediaLens === "comics") {
         console.warn("[TYPED_AMBIGUITY_DETECTED]", {
           query: rawQuery,
@@ -462,8 +469,9 @@ export default async function handler(req: any, res?: any) {
 
     // Pass 2: Strict grounding. A provider result above is now available as a
     // temporary canonical entity and therefore takes the deterministic path.
+    const groundingQuery = hasCarriedCanonicalContext ? canonicalContextEntity! : rawQuery;
     let grounding = groundCanonicalIntent({
-      query: rawQuery,
+      query: groundingQuery,
       mediaLens,
       explicitSelection,
       temporaryEntities,
@@ -499,7 +507,7 @@ export default async function handler(req: any, res?: any) {
         mediaLens
       });
       grounding = groundCanonicalIntent({
-        query: rawQuery,
+        query: groundingQuery,
         mediaLens,
         explicitSelection,
         temporaryEntities,
@@ -552,7 +560,7 @@ export default async function handler(req: any, res?: any) {
         entityAliases: [],
         franchiseAliases: [],
         conversationMode: "canon-lookup",
-        queryMode: "exploration",
+        queryMode: "entity",
         telemetry: {
           groundingType: "fallback",
           expansionUsed: false,
@@ -633,7 +641,7 @@ export default async function handler(req: any, res?: any) {
     }
 
     // Strict Confidence Boundary (Phase 9C) - bypass if deferred or multi-ground
-    if (strategy !== "DEFERRED_GROUND" && !isMultiGround && packet.queryMode === "entity" && packet.confidence < 0.5) {
+    if (strategy !== "DEFERRED_GROUND" && !isMultiGround && !hasCarriedCanonicalContext && packet.queryMode === "entity" && packet.confidence < 0.5) {
       console.log(`[SEMANTIC FALLBACK BLOCKED] Confidence score ${packet.confidence} below threshold 0.5. Fallback blocked.`);
       return jsonResponse(
         {

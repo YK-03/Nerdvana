@@ -22,7 +22,6 @@ import { shouldMaintainFranchiseLock, type ResolverContextPacket, type ActiveVis
 import { auth, db } from "../lib/firebase";
 import { doc, updateDoc, setDoc } from "firebase/firestore";
 import { startNewSession, useQuerySessionStore, useAutocompleteStore, useIntentStore } from "../store/resolverSession";
-import { detectQueryMode } from "../canonicalResolver";
 import type { CanonicalGroundingResult } from "../../lib/resolver/canonicalGrounding.js";
 import AutocompleteOverlay from "../components/AutocompleteOverlay";
 import ClarificationOverlay from "../components/ClarificationOverlay";
@@ -129,6 +128,29 @@ function readAskQueryParams() {
     mediaLens: normalizeMediaLens(urlLens || stateLens || DEFAULT_MEDIA_LENS),
     providerMetadata
   };
+}
+
+function shouldCarryDisplayedEntity(displayedTitle: string | null, query: string) {
+  if (!displayedTitle) return false;
+
+  const normalizedQuery = query.toLowerCase();
+  const normalizedTitleTokens = displayedTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  const mentionsDisplayedTitle = normalizedTitleTokens.length > 0 &&
+    normalizedTitleTokens.every((token) => normalizedQuery.includes(token));
+
+  if (!shouldMaintainFranchiseLock(displayedTitle, query) && mentionsDisplayedTitle) {
+    return false;
+  }
+
+  // Preserve the displayed entity for referential questions such as
+  // "tell me about the ending", while allowing explicit title pivots through.
+  const refersToDisplayedEntity = /\b(this|it|that|the (show|movie|series|anime|game|comic|story|ending|plot|premise))\b/i.test(query);
+  return shouldMaintainFranchiseLock(displayedTitle, query) || (refersToDisplayedEntity && !mentionsDisplayedTitle);
 }
 
 function recordRenderVerification(traceId: string, result: RenderVerificationResult) {
@@ -1443,6 +1465,12 @@ ${new Error().stack}
     const trimmedQuery = overrideQuery ? overrideQuery.trim() : followUpQuery.trim();
     if (!trimmedQuery || isGeneratingFollowUp) return;
 
+    const displayedCanonicalEntity =
+      renderEntityPacket?.title || contextPacket?.canonicalEntity || null;
+    const carryDisplayedEntity = shouldCarryDisplayedEntity(displayedCanonicalEntity, trimmedQuery);
+    const displayedProviderId =
+      renderEntityPacket?.providerId || contextPacket?.providerId || null;
+
     const userMessage: ConversationMessage = {
       role: "user",
       content: trimmedQuery
@@ -1501,7 +1529,8 @@ ${new Error().stack}
         sessionId,
         query: trimmedQuery,
         mediaLens,
-        item: renderEntityPacket?.providerId || contextPacket?.providerId || resolvedItem || undefined,
+        item: displayedProviderId || undefined,
+        canonicalEntity: displayedCanonicalEntity || undefined,
         providerMetadata: renderEntityPacket?.providerMetadata || contextPacket?.providerMetadata || urlParams.providerMetadata || undefined,
         spoilerMode: spoilerPolicy,
         conversation: [
@@ -1509,7 +1538,7 @@ ${new Error().stack}
           { role: "assistant", content: responseData?.answer?.summary || "No answer available" },
           ...conversation
         ],
-        previousEntity: franchiseLocked ? resolvedItem : null,
+        previousEntity: carryDisplayedEntity ? displayedCanonicalEntity : (franchiseLocked ? resolvedItem : null),
         temporaryEntities: useQuerySessionStore.getState().temporaryEntities,
         executionMode: mode === "DETERMINISTIC" ? "DETERMINISTIC_PROVIDER" : "SEMANTIC",
         requestId: followUpContext.requestId
@@ -1579,8 +1608,18 @@ ${new Error().stack}
           const currentId = activeVisualOwner.providerId || null;
           const incomingFranchise = payload.contextPacket.parentFranchise || null;
           const currentFranchise = activeVisualOwner.franchiseRoot || null;
+          const incomingTitle = payload.contextPacket.canonicalEntity || null;
+          const currentTitle = activeVisualOwner.canonicalTitle || activeVisualOwner.title || null;
+          const normalizeTitle = (value: string | null) => (value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const sameDisplayedEntity = Boolean(
+            normalizeTitle(incomingTitle) &&
+            normalizeTitle(currentTitle) &&
+            (normalizeTitle(incomingTitle) === normalizeTitle(currentTitle) ||
+              normalizeTitle(incomingTitle).includes(normalizeTitle(currentTitle)) ||
+              normalizeTitle(currentTitle).includes(normalizeTitle(incomingTitle)))
+          );
 
-          if (incomingId !== currentId || incomingFranchise !== currentFranchise) {
+          if (!sameDisplayedEntity && (incomingId !== currentId || incomingFranchise !== currentFranchise)) {
             setActiveVisualOwner(null);
             setActiveVisualOwnerMetadata(null);
           }
@@ -2054,7 +2093,7 @@ ${new Error().stack}
               sidebar={
                 contextPacket ? (
                   <>
-                  {contextPacket && detectQueryMode(fullQuestion) === "entity" && (
+                  {contextPacket && (
                       <VisualPanel
                         contextPacket={(contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && renderEntityPacket) ? renderEntityPacket.contextPacket : contextPacket}
                         activeTraceId={activeTraceId}

@@ -137,7 +137,14 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
     let cancelled = false;
     setLoading(true);
     setErrorState(null);
-    setVisual(null);
+    const normalizedReusableTitle = (reusableVisual?.title || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const normalizedCanonicalTitle = (contextPacket.canonicalEntity || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const reusableMatchesEntity = Boolean(
+      normalizedReusableTitle &&
+      normalizedCanonicalTitle &&
+      (normalizedReusableTitle.includes(normalizedCanonicalTitle) || normalizedCanonicalTitle.includes(normalizedReusableTitle))
+    );
+    if (!reusableMatchesEntity) setVisual(null);
     setConfidence(null);
     setIsTrailerOpen(false);
     setIsOverviewExpanded(false);
