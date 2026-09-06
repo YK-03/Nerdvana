@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { getAdditionalUserInfo, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
 import { ensureUserProfile } from "../utils/getOrCreateAvatarSeed";
 
@@ -15,9 +15,6 @@ export function useAuth() {
       setUser(u);
       setLoading(false);
 
-      if (!u) return;
-
-      ensureUserProfile(u).catch(() => undefined);
     });
 
     return () => unsub();
@@ -29,7 +26,10 @@ export function useAuth() {
     }
 
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      if (getAdditionalUserInfo(result)?.isNewUser) {
+        await ensureUserProfile(result.user);
+      }
     } catch (error) {
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem("nerdvana-auth-intent");

@@ -3,7 +3,8 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
 export const DEFAULT_AVATAR_SEED = "no-dp";
-export const DEFAULT_AVATAR = "/avatars/no-dp.png";
+// Reuse the existing Deadpool placeholder already shown in the header.
+export const DEFAULT_AVATAR = "/deadpool_dp.jpg";
 
 interface UserProfileDoc {
   avatar?: unknown;
@@ -54,13 +55,6 @@ export async function ensureUserProfile(user: User): Promise<{ avatar: string; u
   if (!data?.username || typeof data.username !== "string" || !data.username.trim()) {
     updates.username = username;
   }
-  if (!data?.avatar || typeof data.avatar !== "string" || !data.avatar.trim()) {
-    updates.avatar = DEFAULT_AVATAR;
-  }
-  if (!data?.avatarSeed || typeof data.avatarSeed !== "string" || !data.avatarSeed.trim()) {
-    updates.avatarSeed = DEFAULT_AVATAR_SEED;
-  }
-
   if (Object.keys(updates).length > 0) {
     await setDoc(userRef, updates, { merge: true });
     return {

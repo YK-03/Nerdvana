@@ -8,7 +8,6 @@ import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
 import { auth, db } from "@/firebase";
 import { buildAskUrl, normalizeMediaLens, type MediaLens } from "../mediaLens";
-import { DEFAULT_AVATAR } from "../utils/getOrCreateAvatarSeed";
 
 interface ProfilePageProps {
   onNavigatePage: (page: string) => void;
@@ -140,8 +139,8 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
           ? data.username.trim()
           : user.displayName || "Explorer";
           
-        const hasCustomAvatar = typeof data?.avatar === "string" && data.avatar.trim() !== "" && data.avatar !== DEFAULT_AVATAR;
-        const resolvedAvatar = hasCustomAvatar
+        const hasAvatar = typeof data?.avatar === "string" && data.avatar.trim() !== "";
+        const resolvedAvatar = hasAvatar
           ? data.avatar.trim()
           : (user.photoURL || "");
 
