@@ -7,7 +7,6 @@ import {
   isCompatibleComicVineType,
   normalizeComicVineResourceType,
 } from "../src/lib/resolver/providerMetadata.js";
-import { buildContinuityFollowups } from "../src/lib/resolver/continuityGraph.js";
 import { buildReadingOrder, buildContinuationSuggestions } from "../src/lib/resolver/readingOrder.js";
 
 type ConversationMessage = {
@@ -320,14 +319,6 @@ async function fetchWhoogleSources(
     .slice(0, 8);
 }
 
-function buildFollowups(query: string): string[] {
-  return [
-    `Can you explain the key events behind "${query}"?`,
-    "What are the strongest fan theories related to this?",
-    "Which sources are most reliable for canon details?",
-  ];
-}
-
 export default async function handler(req: any, res?: any) {
   const method = String(req?.method ?? "POST").toUpperCase();
 
@@ -632,7 +623,6 @@ export default async function handler(req: any, res?: any) {
       return jsonResponse({
         answer: "Unable to establish deterministic ownership.",
         sources: [],
-        followups: [],
         contextPacket: packet,
         alternatives: [],
         grounding: null,
@@ -647,7 +637,6 @@ export default async function handler(req: any, res?: any) {
         {
           answer: "Select a match to continue.",
           sources: [],
-          followups: [],
           contextPacket: packet,
           alternatives: grounding.suggestions,
           grounding: {
@@ -696,7 +685,6 @@ export default async function handler(req: any, res?: any) {
          return jsonResponse({
            answer: "No confident deterministic retrieval found.",
            sources: [],
-           followups: [],
            contextPacket: packet,
            alternatives: [],
            grounding: null,
@@ -782,10 +770,6 @@ IMPORTANT GUIDELINES:
       .replace(/<\/visual_context>/g, "")
       .trim();
 
-    const followups = packet.providerId && packet.executionMode === "DETERMINISTIC_PROVIDER"
-      ? buildContinuityFollowups(packet.providerId, packet.canonicalEntity || query)
-      : buildFollowups(query);
-
     const isComicsDeterministic = packet.providerId && packet.executionMode === "DETERMINISTIC_PROVIDER" && packet.providerId.startsWith("comicvine::");
     const readingOrder = isComicsDeterministic
       ? buildReadingOrder(packet.providerId!, packet.canonicalEntity || query)
@@ -806,7 +790,6 @@ IMPORTANT GUIDELINES:
           title: source.title,
           link: source.link,
         })),
-        followups,
         readingOrder,
         continuationSuggestions,
         contextPacket: packet, // Universal source of truth exported to frontend

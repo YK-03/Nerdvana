@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { generateFollowUps } from "../utils/suggestionGenerator";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ChatBubble from "../components/ChatBubble";
@@ -2043,17 +2042,6 @@ ${new Error().stack}
 
                     <div className="space-y-2">
                       {conversation.map((msg, index) => {
-                        const suggestions =
-                          msg.role === "assistant" && index === conversation.length - 1
-                            ? generateFollowUps(
-                                msg.content,
-                                (contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && renderEntityPacket) ? renderEntityPacket.title : (contextPacket?.canonicalEntity ?? null),
-                                (contextPacket?.executionMode === "DETERMINISTIC_PROVIDER" && renderEntityPacket) ? renderEntityPacket.franchiseRoot : (contextPacket?.parentFranchise ?? null),
-                                mediaLens,
-                                null
-                              )
-                            : undefined;
-
                         const prevMsg = index > 0 ? conversation[index - 1] : null;
                         const userQueryContext = prevMsg?.role === "user" ? prevMsg.content : "";
 
@@ -2069,11 +2057,6 @@ ${new Error().stack}
                             key={index}
                             role={msg.role}
                             content={msg.content}
-                            suggestions={suggestions}
-                            onSuggestionClick={(s) => {
-                              setFollowUpQuery(s);
-                              handleFollowUpSubmit(undefined, s);
-                            }}
                             warning={showWarning}
                             isLoading={isBubbleLoading}
                             onWarningClick={() => {

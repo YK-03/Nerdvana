@@ -5,8 +5,6 @@ import { RENDER_CONTRACTS } from "../../lib/resolver/renderContracts.js";
 interface ChatBubbleProps {
     role: "user" | "assistant";
     content: string;
-    suggestions?: string[];
-    onSuggestionClick?: (suggestion: string) => void;
     isLoading?: boolean;
     warning?: boolean;
     sources?: { title: string; url: string; }[];
@@ -16,16 +14,12 @@ interface ChatBubbleProps {
 export default function ChatBubble({
     role,
     content,
-    suggestions,
-    onSuggestionClick,
     isLoading,
     warning,
     sources,
     onWarningClick
 }: ChatBubbleProps) {
     const isUser = role === "user";
-    const safeSuggestions = suggestions ?? [];
-
     return (
         <div
             className={`${RENDER_CONTRACTS.classes.chatBubble} mb-4 flex flex-col ${isUser ? "items-end" : "items-start"}`}
@@ -156,26 +150,6 @@ export default function ChatBubble({
                 )}
             </div>
 
-            {/* Follow-up Suggestions */}
-            {!isUser && safeSuggestions.length > 0 && (
-                <div className="mt-2 ml-1 flex flex-wrap gap-2 w-full max-w-[96%] sm:max-w-[90%] md:max-w-[78%]">
-                    {safeSuggestions.map((suggestion, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => onSuggestionClick?.(suggestion)}
-                            className="text-[0.68rem] sm:text-[0.7rem] px-3 py-2 rounded-full border transition-colors duration-200 hover:bg-[var(--nerdvana-border)] text-left"
-                            style={{
-                                /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
-                                borderColor: "var(--nerdvana-border)",
-                                color: "var(--nerdvana-text)",
-                                backgroundColor: "transparent"
-                            }}
-                        >
-                            {suggestion} ➜
-                        </button>
-                    ))}
-                </div>
-            )}
         </div>
     );
 }

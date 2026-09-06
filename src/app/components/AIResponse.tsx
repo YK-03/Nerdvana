@@ -100,7 +100,7 @@ export default function AIResponse({
         >
           {visibleText}
         </ReactMarkdown>
-        {isLoading && (
+        {isLoading && visibleText.length < text.length && (
           <span className="ml-1 inline-block h-[1em] w-[0.45ch] animate-pulse align-[-0.1em]" style={{ backgroundColor: "var(--nerdvana-text)" }} />
         )}
       </div>
