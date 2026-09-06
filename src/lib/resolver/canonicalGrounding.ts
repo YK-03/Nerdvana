@@ -9,6 +9,7 @@ import {
   inferProviderTypeFromId,
   type ProviderMetadata,
 } from "./providerMetadata.js";
+import { isExternalProviderId } from "./providerIdUtility.js";
 
 function debugLog(...args: any[]) {
   const isDebug = (typeof process !== 'undefined' && process.env?.DEBUG_AUTOCOMPLETE === "true") ||
@@ -1032,16 +1033,7 @@ export function groundCanonicalIntent(input: {
   const normalizedQuery = normalize(originalQuery);
   const explicitSelection = input.explicitSelection?.trim() ?? "";
 
-  const isDeterministicId = Boolean(explicitSelection && (
-    explicitSelection.includes("::") ||
-    explicitSelection.startsWith("tmdb::") ||
-    explicitSelection.startsWith("anilist::") ||
-    explicitSelection.startsWith("rawg::") ||
-    explicitSelection.startsWith("igdb::") ||
-    explicitSelection.startsWith("comicvine::") ||
-    explicitSelection.startsWith("googlebooks::") ||
-    explicitSelection.startsWith("jikan::")
-  ));
+  const isDeterministicId = isExternalProviderId(explicitSelection);
 
   if (isDeterministicId) {
     const tempMatch = input.temporaryEntities?.find(t => t.id === explicitSelection);

@@ -5,6 +5,28 @@ export interface ParsedProviderId {
   original: string;
 }
 
+export const VALID_PROVIDER_PREFIXES = [
+  "comicvine",
+  "tmdb",
+  "rawg",
+  "igdb",
+  "jikan",
+  "anilist",
+  "googlebooks",
+] as const;
+
+export type ValidProviderPrefix = typeof VALID_PROVIDER_PREFIXES[number];
+
+/**
+ * Validates whether an identifier is an external upstream provider ID
+ * (e.g. "igdb::game::1234", "tmdb::movie::496243") versus an internal
+ * topology ID (e.g. "Gaming::...", "Marvel::...", "DC::...").
+ */
+export function isExternalProviderId(identifier: string | null | undefined): boolean {
+  if (!identifier || typeof identifier !== "string") return false;
+  return /^(comicvine|tmdb|rawg|igdb|jikan|anilist|googlebooks)::/.test(identifier);
+}
+
 /**
  * Parses a unified provider ID string (e.g. "tmdb::movie::496243") into its constituent parts.
  * If the string does not match the expected format, it gracefully falls back.

@@ -47,7 +47,8 @@ import {
 import {
   parseProviderId,
   extractRawId as extractProviderId,
-  extractNamespace
+  extractNamespace,
+  isExternalProviderId
 } from "../lib/resolver/providerIdUtility.js";
 
 import {
@@ -1069,7 +1070,7 @@ export async function buildContextPacket(
   grounding?: CanonicalGroundingResult | null
 ): Promise<{ packet: ResolverContextPacket; exploration: ExplorationDTO }> {
   const selectionVal = grounding?.selectedSelectionValue;
-  const isProviderId = Boolean(selectionVal && (selectionVal.includes("::") || selectionVal.startsWith("tmdb::") || selectionVal.startsWith("anilist::") || selectionVal.startsWith("rawg::") || selectionVal.startsWith("igdb::") || selectionVal.startsWith("comicvine::") || selectionVal.startsWith("jikan::") || selectionVal.startsWith("googlebooks::")));
+  const isProviderId = isExternalProviderId(selectionVal);
 
   const hasValidProviderOwnership = isProviderId && 
     selectionVal && 

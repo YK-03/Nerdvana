@@ -1100,6 +1100,43 @@ async function adaptiveRetrieve(
     };
   }
 
+  const resolution: CanonicalResolution = {
+    canonicalEntity: packet.canonicalEntity,
+    parentFranchise: packet.parentFranchise ?? undefined,
+    contextualSearchQuery: packet.contextualSearchQuery,
+    intent: packet.entityKind as any,
+    mediaType: packet.mediaLens as any,
+    confidence: packet.confidence,
+    source: "visual_lookup",
+    selectedVisualType: packet.entityKind === "character" ? "character" : "poster",
+    score: 0,
+    debug: [],
+    alternatives: [],
+  };
+
+  const baseValidationContext = {
+    query: {
+      original: packet.canonicalEntity,
+      normalized: packet.contextualSearchQuery,
+      canonical: packet.expandedEntity || packet.canonicalEntity,
+      wasAlias: !!packet.expandedEntity,
+    },
+    contextualEntity: packet.canonicalEntity,
+    parentFranchise: packet.parentFranchise ?? null,
+    contextualSearchQuery: packet.contextualSearchQuery,
+    visualAnchors: packet.visualAnchors,
+  };
+
+  const baseScoringCtx: ScoringContext = {
+    normalizedQuery: packet.contextualSearchQuery,
+    canonicalEntity: packet.canonicalEntity,
+    intent: packet.entityKind as any,
+    mediaLens: packet.mediaLens as any,
+    franchiseRoot: packet.providerMetadata?.franchiseRoot,
+    retrievalDescriptor: packet.retrievalDescriptor,
+    visualAnchors: packet.visualAnchors,
+  };
+
   // ─── Direct Provider Native ID Bypass (Deterministic Lookup System A) ────
   if (packet.providerId) {
     const isDeterministicMode = packet.executionMode === "DETERMINISTIC_PROVIDER";
@@ -1262,43 +1299,6 @@ async function adaptiveRetrieve(
 
   const tiers = buildDescriptorTiers(packet);
   const { mediaLens } = packet;
-
-  const resolution: CanonicalResolution = {
-    canonicalEntity: packet.canonicalEntity,
-    parentFranchise: packet.parentFranchise ?? undefined,
-    contextualSearchQuery: packet.contextualSearchQuery,
-    intent: packet.entityKind as any,
-    mediaType: packet.mediaLens as any,
-    confidence: packet.confidence,
-    source: "visual_lookup",
-    selectedVisualType: packet.entityKind === "character" ? "character" : "poster",
-    score: 0,
-    debug: [],
-    alternatives: [],
-  };
-
-  const baseValidationContext = {
-    query: {
-      original: packet.canonicalEntity,
-      normalized: packet.contextualSearchQuery,
-      canonical: packet.expandedEntity || packet.canonicalEntity,
-      wasAlias: !!packet.expandedEntity,
-    },
-    contextualEntity: packet.canonicalEntity,
-    parentFranchise: packet.parentFranchise ?? null,
-    contextualSearchQuery: packet.contextualSearchQuery,
-    visualAnchors: packet.visualAnchors,
-  };
-
-  const baseScoringCtx: ScoringContext = {
-    normalizedQuery: packet.contextualSearchQuery,
-    canonicalEntity: packet.canonicalEntity,
-    intent: packet.entityKind as any,
-    mediaLens: packet.mediaLens as any,
-    franchiseRoot: packet.providerMetadata?.franchiseRoot,
-    retrievalDescriptor: packet.retrievalDescriptor,
-    visualAnchors: packet.visualAnchors,
-  };
 
   // ── TIER 1: STRICT ──────────────────────────────────────────────────
   {

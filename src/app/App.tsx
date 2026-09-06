@@ -281,7 +281,7 @@ function LandingPage({
             transition={{ duration: 0.3 }}
             className="nerdvana-clickable text-[clamp(2.4rem,14vw,6.8rem)] font-black tracking-[-0.04em] leading-[0.85] uppercase mb-2 cursor-pointer transition-colors duration-300"
             style={{
-              fontFamily: 'Impact, "Arial Black", sans-serif',
+              fontFamily: '"Anton", Impact, "Arial Black", sans-serif',
               color: "var(--nerdvana-text)"
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--nerdvana-accent)")}

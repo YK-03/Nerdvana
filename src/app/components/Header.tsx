@@ -141,7 +141,7 @@ function Header({ onNavigate }: HeaderProps) {
             whileTap={{ scale: 0.98 }}
             className="text-[clamp(1.4rem,6.3vw,2rem)] tracking-[-0.04em] uppercase transition-all duration-300 leading-none min-h-10"
             style={{
-              fontFamily: 'Impact, "Arial Black", sans-serif',
+              fontFamily: '"Anton", Impact, "Arial Black", sans-serif',
               color: "var(--nerdvana-text)"
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--nerdvana-accent)")}

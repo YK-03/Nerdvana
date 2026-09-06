@@ -168,7 +168,7 @@ getTopologyEngine().register({
   continuityType: "prime",
   traits: {
     mediaDomains: ["games"],
-    aliases: ["Grand Theft Auto V", "GTA V", "GTA 5", "Grand Theft Auto 5"],
+    aliases: ["Grand Theft Auto V", "GTA V", "GTA 5", "GTA5", "Grand Theft Auto 5"],
   }
 });
 

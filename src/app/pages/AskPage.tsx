@@ -22,6 +22,7 @@ import { shouldMaintainFranchiseLock, type ResolverContextPacket, type ActiveVis
 import { auth, db } from "../lib/firebase";
 import { doc, updateDoc, setDoc } from "firebase/firestore";
 import { startNewSession, useQuerySessionStore, useAutocompleteStore, useIntentStore } from "../store/resolverSession";
+import { isExternalProviderId } from "../../lib/resolver/providerIdUtility.js";
 import type { CanonicalGroundingResult } from "../../lib/resolver/canonicalGrounding.js";
 import AutocompleteOverlay from "../components/AutocompleteOverlay";
 import ClarificationOverlay from "../components/ClarificationOverlay";
@@ -850,7 +851,7 @@ ${new Error().stack}
 
         const finalItem = context.item || null;
         const finalMetadata = context.providerMetadata || null;
-        const finalExecutionMode = (finalItem && String(finalItem).includes("::")) ? "DETERMINISTIC_PROVIDER" : "SEMANTIC";
+        const finalExecutionMode = isExternalProviderId(finalItem) ? "DETERMINISTIC_PROVIDER" : "SEMANTIC";
 
         let endpoint = "/api/nerdvana-answer";
         let bodyPayload: any = {
