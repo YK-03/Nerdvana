@@ -33,7 +33,7 @@ export default function MarketingPage({
         <div className="relative z-10 w-full max-w-3xl pl-4 sm:pl-8 lg:pl-16 pr-4 sm:pr-6 animate-[fade-up_700ms_ease-out_forwards] opacity-0 translate-y-5">
           <h1
             className="text-[clamp(2.5rem,16vw,6rem)] font-black tracking-tight uppercase text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
-            style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
+            style={{ fontFamily: '"Anton", Impact, "Arial Black", sans-serif' }}
           >
             NERDVANA
           </h1>
