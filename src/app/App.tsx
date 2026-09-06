@@ -19,11 +19,13 @@ import {
   persistMediaLens,
   readMediaLensFromSearch,
   readStoredMediaLens,
+  type MediaLens,
   type Universe,
   universeToMediaLens,
 } from "./mediaLens";
 import { useAutocompleteStore } from "./store/resolverSession";
 import AutocompleteOverlay from "./components/AutocompleteOverlay";
+import type { ProviderMetadata } from "../lib/resolver/providerMetadata.js";
 
 const UNIVERSE_TAGLINES = [
   "The Story Ended. The Questions Didn't.",
@@ -66,35 +68,41 @@ const UNIVERSE_PLACEHOLDERS: Record<Universe, string[]> = {
   ]
 };
 
-const TRENDING_MYSTERIES: Record<Universe, string[]> = {
+type CuratedTile = {
+  title: string;
+  item: string;
+  lens: MediaLens;
+};
+
+const TRENDING_MYSTERIES: Record<Universe, CuratedTile[]> = {
   Movies: [
-    "Inception",
-    "Blade Runner 2049",
-    "Dune"
+    { title: "Inception", item: "tmdb::movie::27205", lens: "movies" },
+    { title: "Blade Runner 2049", item: "tmdb::movie::335984", lens: "movies" },
+    { title: "Dune", item: "tmdb::movie::438631", lens: "movies" }
   ],
 
   TV: [
-    "Severance",
-    "Dark",
-    "Mr. Robot"
+    { title: "Severance", item: "tmdb::tv::95396", lens: "tv" },
+    { title: "Dark", item: "tmdb::tv::70523", lens: "tv" },
+    { title: "Mr. Robot", item: "tmdb::tv::62560", lens: "tv" }
   ],
 
   Anime: [
-    "One Piece",
-    "Jujutsu Kaisen",
-    "Monster"
+    { title: "One Piece", item: "jikan::anime::21", lens: "anime" },
+    { title: "Jujutsu Kaisen", item: "jikan::anime::40748", lens: "anime" },
+    { title: "Monster", item: "jikan::anime::19", lens: "anime" }
   ],
 
   Games: [
-    "Bloodborne",
-    "Cyberpunk 2077",
-    "Metal Gear Solid"
+    { title: "Bloodborne", item: "igdb::game::7334", lens: "games" },
+    { title: "Cyberpunk 2077", item: "igdb::game::1877", lens: "games" },
+    { title: "Metal Gear Solid", item: "igdb::game::393642", lens: "games" }
   ],
 
   Comics: [
-    "Secret Wars",
-    "Flashpoint",
-    "House of M"
+    { title: "Secret Wars", item: "comicvine::volume::51453", lens: "comics" },
+    { title: "Flashpoint", item: "comicvine::volume::78561", lens: "comics" },
+    { title: "House of M", item: "comicvine::volume::42413", lens: "comics" }
   ]
 };
 
@@ -130,7 +138,7 @@ function LandingPage({
   onSetEntry: (value: string) => void;
   onSetFocused: (value: boolean) => void;
   onSetUniverse: (value: Universe) => void;
-  onSubmit: (value: string) => void;
+  onSubmit: (value: string, context?: { item?: string; mediaLens?: MediaLens; providerMetadata?: ProviderMetadata | null }) => void;
   onNavigateHome: () => void;
   onNavigatePage: (page: string) => void;
 }) {
@@ -238,7 +246,7 @@ function LandingPage({
           e.preventDefault();
           const selected = suggestions[activeIndex];
           clearAutocompleteState();
-          onSubmit(selected.displayTitle);
+          handleSelectSuggestion(selected);
         } else if (entry.trim()) {
           onSubmit(entry);
         }
@@ -252,7 +260,28 @@ function LandingPage({
 
   const handleSelectSuggestion = (suggestion: any) => {
     clearAutocompleteState();
-    onSubmit(suggestion.displayTitle);
+    onSubmit(suggestion.displayTitle, {
+      item: suggestion.selectionValue,
+      mediaLens: suggestion.mediaLens ?? universeToMediaLens(selectedUniverse),
+      providerMetadata: suggestion.providerMetadata ?? null,
+    });
+  };
+
+  const handleSelectCuratedTile = (tile: CuratedTile) => {
+    const [provider, providerType, id] = tile.item.split("::");
+    handleSelectSuggestion({
+      displayTitle: tile.title,
+      selectionValue: tile.item,
+      mediaLens: tile.lens,
+      providerMetadata: {
+        provider: provider as ProviderMetadata["provider"],
+        id,
+        confidence: 1,
+        canonicalTitle: tile.title,
+        providerType: providerType as ProviderMetadata["providerType"],
+        providerResourceType: providerType,
+      } satisfies ProviderMetadata,
+    });
   };
 
   return (
@@ -391,10 +420,10 @@ function LandingPage({
           </motion.div>
 
           <div className="mt-4 sm:mt-5 flex flex-wrap justify-center gap-2">
-            {TRENDING_MYSTERIES[selectedUniverse].map((prompt) => (
+            {TRENDING_MYSTERIES[selectedUniverse].map((tile) => (
               <button
-                key={prompt}
-                onClick={() => onSubmit(prompt)}
+                key={tile.item}
+                onClick={() => handleSelectCuratedTile(tile)}
                 className="font-legacy-chrome text-[0.68rem] sm:text-[0.72rem] md:text-[0.78rem] uppercase tracking-[0.09em] px-3 py-2 border-[1.8px] transition-all duration-300 hover:-translate-y-0.5"
                 style={{
                   /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Courier New", monospace',
@@ -403,7 +432,7 @@ function LandingPage({
                   color: "var(--nerdvana-text)"
                 }}
               >
-                {prompt}
+                {tile.title}
               </button>
             ))}
           </div>
@@ -587,11 +616,11 @@ export default function App() {
     setPlaceholderIndex(0);
   }, [selectedUniverse]);
 
-  const navigateToAsk = (value: string, context?: { item?: string; mediaLens?: MediaLens }) => {
+  const navigateToAsk = (value: string, context?: { item?: string; mediaLens?: MediaLens; providerMetadata?: ProviderMetadata | null }) => {
     const trimmed = value.trim();
     if (!trimmed) return;
     const mediaLens = context?.mediaLens ?? universeToMediaLens(selectedUniverse);
-    window.history.pushState({ mediaLens, item: context?.item }, "", buildAskUrl(trimmed, { lens: mediaLens, item: context?.item }));
+    window.history.pushState({ mediaLens, item: context?.item, providerMetadata: context?.providerMetadata ?? null }, "", buildAskUrl(trimmed, { lens: mediaLens, item: context?.item }));
     setPathname("/ask");
     setQuestion(trimmed);
     setEntry("");
