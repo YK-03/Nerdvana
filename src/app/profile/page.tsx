@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
 import { auth, db } from "@/firebase";
 import { buildAskUrl, normalizeMediaLens, type MediaLens } from "../mediaLens";
+import { DEFAULT_AVATAR } from "../utils/getOrCreateAvatarSeed";
 
 interface ProfilePageProps {
   onNavigatePage: (page: string) => void;
@@ -142,7 +143,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
         const hasAvatar = typeof data?.avatar === "string" && data.avatar.trim() !== "";
         const resolvedAvatar = hasAvatar
           ? data.avatar.trim()
-          : (user.photoURL || "");
+          : (user.photoURL || DEFAULT_AVATAR);
 
         const resolvedBio = typeof data?.bio === "string" ? data.bio : "";
 
@@ -156,7 +157,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
         const fallbackName = user.displayName || "Explorer";
         setUsername(fallbackName);
         setUsernameDraft(fallbackName);
-        setAvatarUrl(user.photoURL || "");
+        setAvatarUrl(user.photoURL || DEFAULT_AVATAR);
         setImgError(false);
         setBio("");
         setBioDraft("");
@@ -362,7 +363,7 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
           >
             {/* Hero Section */}
             <section className="flex flex-col items-center text-center gap-4 sm:gap-6 w-full mt-2 md:mt-4">
-              <div className="relative group shrink-0">
+              <div className="relative group shrink-0 w-32 h-32 md:w-40 md:h-40 aspect-square rounded-full overflow-hidden">
                 <input 
                   type="file" 
                   ref={fileInputRef} 
@@ -389,11 +390,12 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
                     alt={username} 
                     onError={() => setImgError(true)}
                     referrerPolicy="no-referrer"
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-sm transition-transform duration-500 group-hover:scale-[1.02]" 
+                    className="absolute inset-0 w-full h-full rounded-full object-cover shadow-sm transition-transform duration-500 group-hover:scale-[1.02]"
+                    style={{ objectFit: "cover", objectPosition: "center center", width: "100%", height: "100%" }}
                   />
                 ) : (
                   <div 
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full shadow-sm flex items-center justify-center transition-transform duration-500 group-hover:scale-[1.02]"
+                    className="absolute inset-0 w-full h-full rounded-full shadow-sm flex items-center justify-center transition-transform duration-500 group-hover:scale-[1.02]"
                     style={{ backgroundColor: "var(--nerdvana-border)", color: "var(--nerdvana-surface)" }}
                   >
                     <span className="text-4xl md:text-5xl font-black uppercase" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>

@@ -6,6 +6,8 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../hooks/useAuth";
 import { db } from "../lib/firebase";
 import UserDropdown from "./header/UserDropdown";
+import AuthModal from "./AuthModal";
+import { DEFAULT_AVATAR } from "../utils/getOrCreateAvatarSeed";
 
 interface HeaderProps {
   onNavigate?: (page: string) => void;
@@ -18,7 +20,8 @@ function Header({ onNavigate }: HeaderProps) {
   const [username, setUsername] = useState<string>("Explorer");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [imgError, setImgError] = useState(false);
-  const { user, login, logout } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const { user, logout } = useAuth();
   const navItems = ["Explore", "Debates", "Community", "About"];
   const userMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -70,7 +73,7 @@ function Header({ onNavigate }: HeaderProps) {
         const hasCustomAvatar = typeof data?.avatar === "string" && data.avatar.trim() !== "";
         const nextAvatar = hasCustomAvatar
           ? (data.avatar as string).trim()
-          : (user.photoURL || "");
+          : (user.photoURL || DEFAULT_AVATAR);
         setAvatarUrl(nextAvatar);
         setImgError(false);
       },
@@ -256,6 +259,7 @@ function Header({ onNavigate }: HeaderProps) {
                       onError={() => setImgError(true)}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover" 
+                      style={{ objectFit: "cover", objectPosition: "center center", width: "100%", height: "100%" }}
                     />
                   ) : (
                     <span 
@@ -274,14 +278,7 @@ function Header({ onNavigate }: HeaderProps) {
             </>
           ) : (
             <button
-              onClick={() => {
-                login()
-                  .then(() => {
-                    setMobileNavOpen(false);
-                    onNavigate?.("home");
-                  })
-                  .catch(() => undefined);
-              }}
+              onClick={() => setAuthModalOpen(true)}
               className="text-[0.66rem] sm:text-[0.7rem] uppercase tracking-[0.15em] transition-all duration-300 px-3 sm:px-4 py-2 border-[2px] auth-button min-h-10"
               style={{
                 /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif',
@@ -321,6 +318,8 @@ function Header({ onNavigate }: HeaderProps) {
           ))}
         </div>
       )}
+
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
 
       <style>{`
         .paper-texture {

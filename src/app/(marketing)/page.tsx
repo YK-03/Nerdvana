@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useAuth } from "../hooks/useAuth";
+import { useState } from "react";
+import AuthModal from "../components/AuthModal";
 
 interface MarketingPageProps {
   onNavigatePage: (page: string) => void;
@@ -11,13 +12,7 @@ export default function MarketingPage({
   onNavigatePage: _onNavigatePage,
   onStartInsights
 }: MarketingPageProps) {
-  const { login } = useAuth();
-
-  const onSignIn = () => {
-    login().catch((error) => {
-      console.warn("Login failed", error);
-    });
-  };
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   return (
     <div className="w-full min-h-screen bg-black transition-colors duration-300 flex flex-col">
@@ -52,7 +47,7 @@ export default function MarketingPage({
             </button>
             <button
               type="button"
-              onClick={onSignIn}
+              onClick={() => setAuthModalOpen(true)}
               className="nerdvana-clickable border border-white/60 bg-transparent text-white px-5 sm:px-6 py-3 uppercase tracking-[0.14em] transition-colors duration-150 hover:bg-white/10 min-h-11"
             >
               SIGN IN
@@ -60,6 +55,8 @@ export default function MarketingPage({
           </div>
         </div>
       </section>
+
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
 
       <style>{`
         @keyframes drift {
