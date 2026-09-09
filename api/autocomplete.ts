@@ -1,5 +1,6 @@
 
 import { getIGDBToken } from "./igdbAuth.js";
+import { checkRateLimit, extractClientIp } from "./lib/rateLimiter.js";
 import {
   classifyComicsQueryType,
   comicProviderTypeLabel,
@@ -543,6 +544,34 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
 }
 
 export default async function handler(req: any, res?: any) {
+  const clientIp = extractClientIp(req);
+  if (clientIp !== "unknown") {
+    const rateResult = checkRateLimit(clientIp, 60, 60_000);
+    if (!rateResult.allowed) {
+      if (res && typeof res.setHeader === "function") {
+        res.setHeader("Retry-After", String(rateResult.retryAfter));
+        return res.status(429).json({
+          error: "Too many requests",
+          retryAfter: rateResult.retryAfter,
+        });
+      }
+
+      return new Response(
+        JSON.stringify({
+          error: "Too many requests",
+          retryAfter: rateResult.retryAfter,
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": String(rateResult.retryAfter),
+          },
+        },
+      );
+    }
+  }
+
   try {
     let q = "";
     let lens = "movies";

@@ -8,6 +8,8 @@ import {
   normalizeComicVineResourceType,
 } from "../src/lib/resolver/providerMetadata.js";
 import { buildReadingOrder, buildContinuationSuggestions } from "../src/lib/resolver/readingOrder.js";
+import { checkRateLimit, extractClientIp } from "./lib/rateLimiter.js";
+import { buildCacheKey, getCachedAnswer, setCachedAnswer, getCacheIdentity } from "./lib/answerCache.js";
 
 type ConversationMessage = {
   role: "user" | "assistant";
@@ -19,14 +21,24 @@ type SourceLink = {
   link: string;
 };
 
-function jsonResponse(payload: unknown, status: number, res?: any) {
+function jsonResponse(
+  payload: unknown,
+  status: number,
+  res?: any,
+  headers: Record<string, string> = {},
+) {
   if (res && typeof res.status === "function") {
+    if (typeof res.setHeader === "function") {
+      for (const [name, value] of Object.entries(headers)) {
+        res.setHeader(name, value);
+      }
+    }
     return res.status(status).json(payload);
   }
 
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
   });
 }
 
@@ -324,6 +336,28 @@ export default async function handler(req: any, res?: any) {
 
   if (method !== "POST") {
     return jsonResponse({ error: "Method Not Allowed" }, 405, res);
+  }
+
+  // ── Rate limiting (per-instance sliding window) ──────────────────────────
+  // Check before any body parsing or expensive processing.
+  // Falls back to "unknown" when IP cannot be determined; unknown IPs are
+  // never blocked to avoid false positives in local dev.
+  const clientIp = extractClientIp(req);
+  if (clientIp !== "unknown") {
+    const rateResult = checkRateLimit(clientIp, 20, 60_000); // 20 req/min
+    if (!rateResult.allowed) {
+      console.log("[RATE_LIMITED]", { ip: clientIp, retryAfter: rateResult.retryAfter });
+      return jsonResponse(
+        {
+          error: "Too many requests",
+          message: `You're sending requests too quickly. Please wait ${rateResult.retryAfter} second${rateResult.retryAfter === 1 ? "" : "s"} before trying again.`,
+          retryAfter: rateResult.retryAfter,
+        },
+        429,
+        res,
+        { "Retry-After": String(rateResult.retryAfter) },
+      );
+    }
   }
 
   try {
@@ -708,15 +742,7 @@ export default async function handler(req: any, res?: any) {
     let prompt = "";
     if (isMultiGround && packet2) {
       const activeContext = `- Entity 1: ${packet.canonicalEntity ?? "Unknown"}\n- Franchise 1: ${packet.parentFranchise ?? "Unknown"}\n- Entity 2: ${packet2.canonicalEntity ?? "Unknown"}\n- Franchise 2: ${packet2.parentFranchise ?? "Unknown"}\n- Lens: ${mediaLens}\n- Mode: COMPARATIVE_REASONING`;
-      const systemRole = `You are Nerdvana, a universal media intelligence engine.
-
-ACTIVE_CONTEXT:
-${activeContext}
-
-IMPORTANT GUIDELINES:
-- Provide concise answers in EXACTLY 2 paragraphs. Each paragraph 3-4 sentences max.
-- Do not greet the user. Start immediately with the answer content.
-- Compare the two entities objectively using the provided canonical information.`;
+      const systemRole = `You are Nerdvana, a universal media intelligence engine.\n\nACTIVE_CONTEXT:\n${activeContext}\n\nIMPORTANT GUIDELINES:\n- Provide concise answers in EXACTLY 2 paragraphs. Each paragraph 3-4 sentences max.\n- Do not greet the user. Start immediately with the answer content.\n- Compare the two entities objectively using the provided canonical information.`;
 
       const isAmbiguousFollowUp = packet.executionMode === "SEMANTIC";
       const recentConversation = isAmbiguousFollowUp ? conversation.slice(-4) : [];
@@ -731,7 +757,83 @@ IMPORTANT GUIDELINES:
         conversation,
       );
     }
-    
+
+    // ── Answer cache ─────────────────────────────────────────────────────────
+    // Only cache single-entity initial answers (not multi-ground comparative
+    // answers, not follow-up conversational answers).
+    const cacheIdentity = !isMultiGround
+      ? getCacheIdentity({
+          conversationLength: conversation.length,
+          providerId: packet.providerId,
+          canonicalEntity: packet.canonicalEntity,
+          executionMode: packet.executionMode,
+          strategy,
+          confidence: packet.confidence,
+        })
+      : null;
+
+    let cacheKey: { compositeKey: string; documentId: string } | null = null;
+
+    if (cacheIdentity) {
+      cacheKey = await buildCacheKey(
+        cacheIdentity,
+        packet.mediaLens,
+        packet.spoilerPolicy
+      );
+
+      const cachedAnswer = await getCachedAnswer(cacheKey.documentId);
+
+      if (cachedAnswer) {
+        console.log("[CACHE_HIT]", cacheKey.compositeKey);
+
+        // Build sources and reading order as normal so the response shape is identical
+        const retrievalSeedCached = packet.contextualSearchQuery || grounding.selectedSelectionValue || grounding.selectedCanonicalEntity || query;
+        const lensSearchQueryCached = (() => {
+          if (mediaLens === "movies") return `${retrievalSeedCached} movie live action canon`;
+          if (mediaLens === "tv") return `${retrievalSeedCached} tv series canon`;
+          if (mediaLens === "anime") return `${retrievalSeedCached} anime canon main series`;
+          if (mediaLens === "games") return `${retrievalSeedCached} video game canon franchise`;
+          return `${retrievalSeedCached} comics canon continuity`;
+        })();
+
+        const cachedSources = await (async () => {
+          if (env.SERPER_API_KEY) {
+            try { return await fetchSerperSources(lensSearchQueryCached, env.SERPER_API_KEY); } catch {}
+          }
+          if (env.WHOOGLE_BASE_URL) {
+            try { return await fetchWhoogleSources(lensSearchQueryCached, env.WHOOGLE_BASE_URL); } catch {}
+          }
+          return [];
+        })();
+
+        const cachedIsComicsDeterministic = packet.providerId && packet.executionMode === "DETERMINISTIC_PROVIDER" && packet.providerId.startsWith("comicvine::");
+        const cachedReadingOrder = cachedIsComicsDeterministic ? buildReadingOrder(packet.providerId!, packet.canonicalEntity || query) : null;
+        const cachedContinuationSuggestions = cachedIsComicsDeterministic ? buildContinuationSuggestions(packet.providerId!, packet.canonicalEntity || query) : null;
+
+        return jsonResponse(
+          {
+            answer: cachedAnswer,
+            sources: cachedSources.slice(0, grounding.policy.retrievalBreadth).map((s) => ({ title: s.title, link: s.link })),
+            readingOrder: cachedReadingOrder,
+            continuationSuggestions: cachedContinuationSuggestions,
+            contextPacket: packet,
+            exploration,
+            alternatives: grounding.suggestions,
+            grounding,
+            requiresGrounding: false,
+            temporaryEntityCreated: newTempEntity,
+            requestId,
+            ambiguityWarning: strategy === "SOFT_GROUND" ? "Ambiguous query resolved to most likely candidate" : undefined,
+            cached: true,
+          },
+          200,
+          res
+        );
+      }
+
+      console.log("[CACHE_MISS]", cacheKey.compositeKey);
+    }
+
     const answerPromise = generateAnswer(prompt, apiKey, groqKey, packet.conversationMode);
     
     // 3. Fetch sources based on canonical constraints
@@ -769,6 +871,18 @@ IMPORTANT GUIDELINES:
       .replace(/<visual_context>[\s\S]*/g, "")
       .replace(/<\/visual_context>/g, "")
       .trim();
+
+    if (cacheKey && answer) {
+      setCachedAnswer(
+        cacheKey.documentId,
+        cacheKey.compositeKey,
+        answer,
+        packet.mediaLens,
+        packet.spoilerPolicy,
+      ).catch((error) => {
+        console.error("[CACHE_WRITE_ERROR]", error);
+      });
+    }
 
     const isComicsDeterministic = packet.providerId && packet.executionMode === "DETERMINISTIC_PROVIDER" && packet.providerId.startsWith("comicvine::");
     const readingOrder = isComicsDeterministic

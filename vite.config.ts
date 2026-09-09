@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
   const mergedEnv = { ...rootEnv, ...frontendEnv }
 
   const BACKEND_KEYS = [
+    'FIREBASE_SERVICE_ACCOUNT_JSON',
     'GEMINI_API_KEY',
     'GROQ_API_KEY',
     'SERPER_API_KEY',
