@@ -1,0 +1,539 @@
+{
+  "generatedAt": "2026-09-10T12:24:30.005Z",
+  "phase": "6C",
+  "mode": "deterministic_controlled_hypotheses",
+  "decision": "NEEDS_REAL_PROVIDER_DATA",
+  "promptFinding": "prompt-v3 says descriptions should be grounded in the overview even when NARRATIVE_EVIDENCE is Wikipedia text; this is a plausible overview-bias contributor, but it is not isolated by the available provider-free run.",
+  "providerDataAvailable": false,
+  "method": {
+    "evidence": "Phase 6A live evidence metrics",
+    "generation": "Existing Phase 6A deterministic fixture counts mapped to controlled rich/sparse scenarios",
+    "semanticJudgments": "NEEDS_HUMAN_REVIEW",
+    "fixedEventTarget": false
+  },
+  "comparison": {
+    "richMovieCases": [
+      "movie-dark-knight",
+      "movie-inception",
+      "movie-godfather",
+      "movie-fight-club",
+      "movie-vast-of-night",
+      "tv-sopranos",
+      "tv-greys-anatomy"
+    ],
+    "richTvCases": [
+      "tv-sopranos",
+      "tv-greys-anatomy"
+    ],
+    "sparseOrFallbackCases": [
+      "movie-coherence",
+      "movie-primer",
+      "movie-battery",
+      "tv-breaking-bad",
+      "tv-walking-dead"
+    ],
+    "richCaseHypothesis": "Rich evidence plus short controlled output is consistent with under-compression, but not proof of model behavior.",
+    "sparseCaseHypothesis": "Short output is consistent with correct abstention when evidence is sparse."
+  },
+  "results": [
+    {
+      "id": "movie-dark-knight",
+      "title": "The Dark Knight",
+      "mediaType": "movie",
+      "evidenceSource": "wikipedia_plot",
+      "evidenceCharacters": 3915,
+      "evidenceRichness": "rich",
+      "controlledGeneration": {
+        "fixtureKind": "rich_movie_undercompressed",
+        "eventCount": 3,
+        "events": [
+          {
+            "title": "The Dark Knight controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          },
+          {
+            "title": "The Dark Knight controlled beat 2",
+            "description": "A controlled escalation event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "escalation"
+          },
+          {
+            "title": "The Dark Knight controlled beat 3",
+            "description": "A controlled reversal event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "reversal"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "POSSIBLE_OVER_COMPRESSION"
+      },
+      "likelyFailureModes": [
+        "POOR_COMPRESSION",
+        "EXCESSIVE_CONSERVATISM",
+        "PROMPT_OVERVIEW_BIAS"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "movie-inception",
+      "title": "Inception",
+      "mediaType": "movie",
+      "evidenceSource": "wikipedia_plot",
+      "evidenceCharacters": 4130,
+      "evidenceRichness": "rich",
+      "controlledGeneration": {
+        "fixtureKind": "rich_movie_undercompressed",
+        "eventCount": 3,
+        "events": [
+          {
+            "title": "Inception controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          },
+          {
+            "title": "Inception controlled beat 2",
+            "description": "A controlled escalation event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "escalation"
+          },
+          {
+            "title": "Inception controlled beat 3",
+            "description": "A controlled reversal event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "reversal"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "POSSIBLE_OVER_COMPRESSION"
+      },
+      "likelyFailureModes": [
+        "POOR_COMPRESSION",
+        "EXCESSIVE_CONSERVATISM",
+        "PROMPT_OVERVIEW_BIAS"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "movie-godfather",
+      "title": "The Godfather",
+      "mediaType": "movie",
+      "evidenceSource": "wikipedia_plot",
+      "evidenceCharacters": 5405,
+      "evidenceRichness": "rich",
+      "controlledGeneration": {
+        "fixtureKind": "rich_movie_undercompressed",
+        "eventCount": 3,
+        "events": [
+          {
+            "title": "The Godfather controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          },
+          {
+            "title": "The Godfather controlled beat 2",
+            "description": "A controlled escalation event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "escalation"
+          },
+          {
+            "title": "The Godfather controlled beat 3",
+            "description": "A controlled reversal event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "reversal"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "POSSIBLE_OVER_COMPRESSION"
+      },
+      "likelyFailureModes": [
+        "POOR_COMPRESSION",
+        "EXCESSIVE_CONSERVATISM",
+        "PROMPT_OVERVIEW_BIAS"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "movie-fight-club",
+      "title": "Fight Club",
+      "mediaType": "movie",
+      "evidenceSource": "wikipedia_plot",
+      "evidenceCharacters": 3353,
+      "evidenceRichness": "rich",
+      "controlledGeneration": {
+        "fixtureKind": "rich_movie_undercompressed",
+        "eventCount": 3,
+        "events": [
+          {
+            "title": "Fight Club controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          },
+          {
+            "title": "Fight Club controlled beat 2",
+            "description": "A controlled escalation event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "escalation"
+          },
+          {
+            "title": "Fight Club controlled beat 3",
+            "description": "A controlled reversal event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "reversal"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "POSSIBLE_OVER_COMPRESSION"
+      },
+      "likelyFailureModes": [
+        "POOR_COMPRESSION",
+        "EXCESSIVE_CONSERVATISM",
+        "PROMPT_OVERVIEW_BIAS"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "movie-vast-of-night",
+      "title": "The Vast of Night",
+      "mediaType": "movie",
+      "evidenceSource": "wikipedia_plot",
+      "evidenceCharacters": 3279,
+      "evidenceRichness": "rich",
+      "controlledGeneration": {
+        "fixtureKind": "rich_movie_undercompressed",
+        "eventCount": 3,
+        "events": [
+          {
+            "title": "The Vast of Night controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          },
+          {
+            "title": "The Vast of Night controlled beat 2",
+            "description": "A controlled escalation event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "escalation"
+          },
+          {
+            "title": "The Vast of Night controlled beat 3",
+            "description": "A controlled reversal event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "reversal"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "POSSIBLE_OVER_COMPRESSION"
+      },
+      "likelyFailureModes": [
+        "POOR_COMPRESSION",
+        "EXCESSIVE_CONSERVATISM",
+        "PROMPT_OVERVIEW_BIAS"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "movie-coherence",
+      "title": "Coherence",
+      "mediaType": "movie",
+      "evidenceSource": "tmdb_overview",
+      "evidenceCharacters": 69,
+      "evidenceRichness": "sparse",
+      "controlledGeneration": {
+        "fixtureKind": "fallback_appropriate",
+        "eventCount": 1,
+        "events": [
+          {
+            "title": "Coherence controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "APPROPRIATE_HYPOTHESIS"
+      },
+      "likelyFailureModes": [
+        "CORRECT_ABSTENTION"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "movie-primer",
+      "title": "Primer",
+      "mediaType": "movie",
+      "evidenceSource": "tmdb_overview",
+      "evidenceCharacters": 109,
+      "evidenceRichness": "sparse",
+      "controlledGeneration": {
+        "fixtureKind": "fallback_appropriate",
+        "eventCount": 1,
+        "events": [
+          {
+            "title": "Primer controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "APPROPRIATE_HYPOTHESIS"
+      },
+      "likelyFailureModes": [
+        "CORRECT_ABSTENTION"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "movie-battery",
+      "title": "The Battery",
+      "mediaType": "movie",
+      "evidenceSource": "tmdb_overview",
+      "evidenceCharacters": 90,
+      "evidenceRichness": "sparse",
+      "controlledGeneration": {
+        "fixtureKind": "fallback_appropriate",
+        "eventCount": 1,
+        "events": [
+          {
+            "title": "The Battery controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "APPROPRIATE_HYPOTHESIS"
+      },
+      "likelyFailureModes": [
+        "CORRECT_ABSTENTION"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "tv-breaking-bad",
+      "title": "Breaking Bad",
+      "mediaType": "tv",
+      "evidenceSource": "tmdb_overview",
+      "evidenceCharacters": 88,
+      "evidenceRichness": "sparse",
+      "controlledGeneration": {
+        "fixtureKind": "fallback_appropriate",
+        "eventCount": 1,
+        "events": [
+          {
+            "title": "Breaking Bad controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "APPROPRIATE_HYPOTHESIS"
+      },
+      "likelyFailureModes": [
+        "CORRECT_ABSTENTION"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "tv-walking-dead",
+      "title": "The Walking Dead",
+      "mediaType": "tv",
+      "evidenceSource": "tmdb_overview",
+      "evidenceCharacters": 103,
+      "evidenceRichness": "sparse",
+      "controlledGeneration": {
+        "fixtureKind": "fallback_appropriate",
+        "eventCount": 1,
+        "events": [
+          {
+            "title": "The Walking Dead controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "APPROPRIATE_HYPOTHESIS"
+      },
+      "likelyFailureModes": [
+        "CORRECT_ABSTENTION"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "tv-sopranos",
+      "title": "The Sopranos",
+      "mediaType": "tv",
+      "evidenceSource": "wikipedia_plot",
+      "evidenceCharacters": 2865,
+      "evidenceRichness": "rich",
+      "controlledGeneration": {
+        "fixtureKind": "rich_tv_undercompressed",
+        "eventCount": 2,
+        "events": [
+          {
+            "title": "The Sopranos controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          },
+          {
+            "title": "The Sopranos controlled beat 2",
+            "description": "A controlled escalation event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "escalation"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "POSSIBLE_OVER_COMPRESSION"
+      },
+      "likelyFailureModes": [
+        "POOR_COMPRESSION",
+        "EXCESSIVE_CONSERVATISM",
+        "PROMPT_OVERVIEW_BIAS"
+      ],
+      "confidence": "controlled_hypothesis"
+    },
+    {
+      "id": "tv-greys-anatomy",
+      "title": "Grey's Anatomy",
+      "mediaType": "tv",
+      "evidenceSource": "wikipedia_plot",
+      "evidenceCharacters": 5406,
+      "evidenceRichness": "rich",
+      "controlledGeneration": {
+        "fixtureKind": "rich_tv_undercompressed",
+        "eventCount": 2,
+        "events": [
+          {
+            "title": "Grey's Anatomy controlled beat 1",
+            "description": "A controlled setup event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "setup"
+          },
+          {
+            "title": "Grey's Anatomy controlled beat 2",
+            "description": "A controlled escalation event used to test evidence-to-event coverage.",
+            "support": "supported",
+            "phase": "escalation"
+          }
+        ]
+      },
+      "assessment": {
+        "distinctness": "NEEDS_HUMAN_REVIEW",
+        "chronology": "NEEDS_HUMAN_REVIEW",
+        "progression": "NEEDS_HUMAN_REVIEW",
+        "majorReversals": "NEEDS_HUMAN_REVIEW",
+        "climax": "NEEDS_HUMAN_REVIEW",
+        "ending": "NEEDS_HUMAN_REVIEW",
+        "unsupportedClaims": "PASS",
+        "conservativeCount": "POSSIBLE_OVER_COMPRESSION"
+      },
+      "likelyFailureModes": [
+        "POOR_COMPRESSION",
+        "EXCESSIVE_CONSERVATISM",
+        "PROMPT_OVERVIEW_BIAS"
+      ],
+      "confidence": "controlled_hypothesis"
+    }
+  ],
+  "limitations": [
+    "No real provider generation was available in Phase 6A, so this run cannot prove prompt/model behavior.",
+    "Phase 6A stored no raw narrative sections, so multi-section evidence gains remain unverified.",
+    "Climax, ending, chronology, progression, and unsupported-claim judgments require human evidence-span review."
+  ]
+}

@@ -56,6 +56,8 @@ import {
   recordLifecyclePhase
 } from "../../lib/resolver/pipelineTracker.js";
 import DebugOverlay from "../components/DebugOverlay";
+import TimelineSection, { type TimelineStatus } from "../components/TimelineSection";
+import type { StoryTimeline } from "../../lib/timelineTypes.js";
 import { RENDER_CONTRACTS, type RenderVerificationResult, verifyRenderNode } from "../../lib/resolver/renderContracts.js";
 import { ENABLE_NERDVANA_TELEMETRY, ENABLE_CONTINUITY_TIMELINE } from "../../config/debug";
 import type { ProviderMetadata } from "../../lib/resolver/providerMetadata.js";
@@ -295,6 +297,10 @@ export default function AskPage({
   const [followUpQuery, setFollowUpQuery] = useState("");
   const [isGeneratingFollowUp, setIsGeneratingFollowUp] = useState(false);
   const [spoilerPolicy, setSpoilerPolicy] = useState(false);
+  const [timelineStatus, setTimelineStatus] = useState<TimelineStatus>("idle");
+  const [timeline, setTimeline] = useState<StoryTimeline | null>(null);
+  const [timelineSeasonNumber, setTimelineSeasonNumber] = useState<number | null>(null);
+  const [timelineRetry, setTimelineRetry] = useState(0);
   const [isRegeneratingAnswer, setIsRegeneratingAnswer] = useState(false);
   const [revealedMessageIndices, setRevealedMessageIndices] = useState<Set<number>>(new Set());
   const [readingOrder, setReadingOrder] = useState<any[] | null>(null);
@@ -306,6 +312,10 @@ export default function AskPage({
   const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
   const activeRequestIdRef = useRef<string | null>(null);
   const activeTraceIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setTimelineSeasonNumber(null);
+  }, [contextPacket?.providerId, contextPacket?.mediaLens]);
 
 
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -1259,7 +1269,11 @@ ${new Error().stack}
 
   const handleSpoilerToggle = async (newValue: boolean) => {
     setSpoilerPolicy(newValue);
-    if (!newValue) return;
+    if (!newValue) {
+      setTimeline(null);
+      setTimelineStatus("idle");
+      return;
+    }
 
     const requestId = Math.random().toString(36).substring(2, 15);
     const traceId = `trace-${requestId}`;
@@ -1386,6 +1400,62 @@ ${new Error().stack}
       }
     }
   };
+
+  useEffect(() => {
+    const providerId = contextPacket?.providerId;
+    const timelineMediaLens = contextPacket?.mediaLens;
+    const isSupported = providerId?.startsWith("tmdb::movie::") || providerId?.startsWith("tmdb::tv::");
+
+    if (!spoilerPolicy || !isSupported || (timelineMediaLens !== "movies" && timelineMediaLens !== "tv") || !responseData?.answer?.summary?.trim()) {
+      setTimeline(null);
+      setTimelineStatus("idle");
+      setTimelineSeasonNumber(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    let cancelled = false;
+    setTimelineStatus("loading");
+    setTimeline(null);
+
+    const requestBody: Record<string, unknown> = {
+      providerId,
+      mediaLens: timelineMediaLens,
+      spoilerMode: true,
+    };
+    if (timelineMediaLens === "tv" && timelineSeasonNumber !== null) {
+      requestBody.seasonNumber = timelineSeasonNumber;
+    }
+
+    fetch("/api/timeline", {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || "Timeline request failed.");
+        return payload;
+      })
+      .then((payload) => {
+        if (cancelled) return;
+        const nextTimeline = payload?.timeline as StoryTimeline | undefined;
+        if (!nextTimeline || !Array.isArray(nextTimeline.events)) throw new Error("Invalid timeline response.");
+        setTimeline(nextTimeline);
+        setTimelineStatus(nextTimeline.events.length > 0 ? "success" : "empty");
+      })
+      .catch((error: any) => {
+        if (cancelled || error?.name === "AbortError") return;
+        console.error("[Nerdvana] Timeline request failed:", error);
+        setTimelineStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [contextPacket?.providerId, contextPacket?.mediaLens, responseData?.answer?.summary, spoilerPolicy, timelineRetry, timelineSeasonNumber]);
 
   useEffect(() => {
     if (!contextIsValid || isAmbiguous || !resolvedItem) {
@@ -1989,6 +2059,11 @@ ${new Error().stack}
                     grounding={grounding}
                     results={results}
                     continuationSuggestions={continuationSuggestions}
+                    spoilerMode={spoilerPolicy}
+                    timelineStatus={timelineStatus}
+                    timeline={timeline}
+                    onTimelineRetry={() => setTimelineRetry((value) => value + 1)}
+                    onTimelineSeasonChange={(seasonNumber) => setTimelineSeasonNumber(seasonNumber)}
                   />
                 )}
 

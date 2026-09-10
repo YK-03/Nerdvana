@@ -6,6 +6,7 @@ import nerdvanaAnswerHandler from './api/nerdvana-answer'
 import searchHandler from './api/search'
 import visualLookupHandler from './api/visual-lookup'
 import autocompleteHandler from './api/autocomplete'
+import timelineHandler from './api/timeline'
 
 export default defineConfig(({ mode }) => {
   const frontendEnv = loadEnv(mode, process.cwd(), '')
@@ -46,7 +47,8 @@ export default defineConfig(({ mode }) => {
               !req.url.startsWith('/api/nerdvana-answer') &&
               !req.url.startsWith('/api/search') &&
               !req.url.startsWith('/api/visual-lookup') &&
-              !req.url.startsWith('/api/autocomplete')
+              !req.url.startsWith('/api/autocomplete') &&
+              !req.url.startsWith('/api/timeline')
             ) {
               next()
               return
@@ -93,6 +95,8 @@ export default defineConfig(({ mode }) => {
                 response = await visualLookupHandler(request)
               } else if (req.url.startsWith('/api/autocomplete')) {
                 response = await autocompleteHandler(request)
+              } else if (req.url.startsWith('/api/timeline')) {
+                response = await timelineHandler(request)
               } else {
                 response = await nerdvanaAnswerHandler(request)
               }

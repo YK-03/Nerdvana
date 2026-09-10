@@ -3,6 +3,8 @@ import { motion } from "motion/react";
 import AIResponse from "./AIResponse";
 import SourcesPanel from "./SourcesPanel";
 import { CharacterSection } from "./exploration/CharacterSection";
+import TimelineSection, { type TimelineStatus } from "./TimelineSection";
+import type { StoryTimeline } from "../../lib/timelineTypes";
 import ExploreSection from "./ExploreSection";
 import { ENABLE_CONTINUITY_TIMELINE } from "../../config/debug";
 
@@ -17,6 +19,11 @@ interface ResultContentProps {
   grounding: any;
   results: any[];
   continuationSuggestions: any[] | null;
+  spoilerMode: boolean;
+  timelineStatus: TimelineStatus;
+  timeline: StoryTimeline | null;
+  onTimelineRetry: () => void;
+  onTimelineSeasonChange: (seasonNumber: number) => void;
 }
 
 export default function ResultContent({
@@ -29,7 +36,12 @@ export default function ResultContent({
   contextPacket,
   grounding,
   results,
-  continuationSuggestions
+  continuationSuggestions,
+  spoilerMode,
+  timelineStatus,
+  timeline,
+  onTimelineRetry,
+  onTimelineSeasonChange,
 }: ResultContentProps) {
   console.log("[ENTITY_IDENTITY] Answer", {
     entity: contextPacket?.providerId || contextPacket?.canonicalEntity,
@@ -59,6 +71,14 @@ export default function ResultContent({
         text={answerSummary}
         isLoading={isRegeneratingAnswer}
         disableProgressiveReveal
+      />
+
+      <TimelineSection
+        spoilerMode={spoilerMode}
+        status={timelineStatus}
+        timeline={timeline}
+        onRetry={onTimelineRetry}
+        onSeasonChange={onTimelineSeasonChange}
       />
 
       {/* Exploration Sections */}

@@ -1,0 +1,851 @@
+{
+  "generatedAt": "2026-09-10T12:09:02.950Z",
+  "phase": "6A",
+  "mode": "live",
+  "liveGenerationConfigurationAvailable": false,
+  "cachePolicy": "bypassed_fresh",
+  "corpusCorrections": [
+    {
+      "staleProviderId": "tmdb::movie::565028",
+      "actualTitle": "Candyman",
+      "correctedProviderId": "tmdb::movie::565743",
+      "title": "The Vast of Night"
+    }
+  ],
+  "semanticFields": "NEEDS_HUMAN_REVIEW",
+  "results": [
+    {
+      "id": "movie-dark-knight",
+      "title": "The Dark Knight",
+      "providerId": "tmdb::movie::155",
+      "mediaType": "movie",
+      "year": 2008,
+      "category": "strong_movie",
+      "evidence": {
+        "source": "wikipedia_plot",
+        "reason": "selected_plot",
+        "pageTitle": "The Dark Knight",
+        "pageUrl": "https://en.wikipedia.org/wiki/The_Dark_Knight",
+        "characterCount": 3915,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 4,
+      "approximateLatencyMs": 2573,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "movie-inception",
+      "title": "Inception",
+      "providerId": "tmdb::movie::27205",
+      "mediaType": "movie",
+      "year": 2010,
+      "category": "strong_movie",
+      "evidence": {
+        "source": "wikipedia_plot",
+        "reason": "selected_plot",
+        "pageTitle": "Inception",
+        "pageUrl": "https://en.wikipedia.org/wiki/Inception",
+        "characterCount": 4130,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 4,
+      "approximateLatencyMs": 1726,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "movie-godfather",
+      "title": "The Godfather",
+      "providerId": "tmdb::movie::238",
+      "mediaType": "movie",
+      "year": 1972,
+      "category": "strong_movie",
+      "evidence": {
+        "source": "wikipedia_plot",
+        "reason": "selected_plot",
+        "pageTitle": "The Godfather",
+        "pageUrl": "https://en.wikipedia.org/wiki/The_Godfather",
+        "characterCount": 5405,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 4,
+      "approximateLatencyMs": 2117,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "movie-fight-club",
+      "title": "Fight Club",
+      "providerId": "tmdb::movie::550",
+      "mediaType": "movie",
+      "year": 1999,
+      "category": "strong_movie",
+      "evidence": {
+        "source": "wikipedia_plot",
+        "reason": "selected_plot",
+        "pageTitle": "Fight Club",
+        "pageUrl": "https://en.wikipedia.org/wiki/Fight_Club",
+        "characterCount": 3353,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 4,
+      "approximateLatencyMs": 1771,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "movie-vast-of-night",
+      "title": "The Vast of Night",
+      "providerId": "tmdb::movie::565743",
+      "mediaType": "movie",
+      "year": 2019,
+      "category": "sparse_movie",
+      "evidence": {
+        "source": "wikipedia_plot",
+        "reason": "selected_plot",
+        "pageTitle": "The Vast of Night",
+        "pageUrl": "https://en.wikipedia.org/wiki/The_Vast_of_Night",
+        "characterCount": 3279,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 4,
+      "approximateLatencyMs": 1375,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "movie-coherence",
+      "title": "Coherence",
+      "providerId": "tmdb::movie::220289",
+      "mediaType": "movie",
+      "year": 2014,
+      "category": "sparse_movie",
+      "evidence": {
+        "source": "tmdb_overview",
+        "reason": "tmdb_fallback_wikipedia_request_failed_Error__mediawiki_http_429",
+        "pageTitle": null,
+        "pageUrl": null,
+        "characterCount": 69,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 6,
+      "approximateLatencyMs": 4946,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "movie-primer",
+      "title": "Primer",
+      "providerId": "tmdb::movie::14337",
+      "mediaType": "movie",
+      "year": 2004,
+      "category": "sparse_movie",
+      "evidence": {
+        "source": "tmdb_overview",
+        "reason": "tmdb_fallback_wikipedia_request_failed_Error__mediawiki_http_429",
+        "pageTitle": null,
+        "pageUrl": null,
+        "characterCount": 109,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 6,
+      "approximateLatencyMs": 5065,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "movie-battery",
+      "title": "The Battery",
+      "providerId": "tmdb::movie::177221",
+      "mediaType": "movie",
+      "year": 2012,
+      "category": "coverage_challenge",
+      "evidence": {
+        "source": "tmdb_overview",
+        "reason": "tmdb_fallback_wikipedia_request_failed_Error__mediawiki_http_429",
+        "pageTitle": null,
+        "pageUrl": null,
+        "characterCount": 90,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 6,
+      "approximateLatencyMs": 5091,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "tv-breaking-bad",
+      "title": "Breaking Bad",
+      "providerId": "tmdb::tv::1396",
+      "mediaType": "tv",
+      "year": 2008,
+      "category": "tv_structure",
+      "evidence": {
+        "source": "tmdb_overview",
+        "reason": "tmdb_fallback_wikipedia_request_failed_Error__mediawiki_http_429",
+        "pageTitle": null,
+        "pageUrl": null,
+        "characterCount": 88,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 6,
+      "approximateLatencyMs": 5430,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "tv-walking-dead",
+      "title": "The Walking Dead",
+      "providerId": "tmdb::tv::1402",
+      "mediaType": "tv",
+      "year": 2010,
+      "category": "tv_long_running",
+      "evidence": {
+        "source": "tmdb_overview",
+        "reason": "tmdb_fallback_wikipedia_request_failed_Error__mediawiki_http_429",
+        "pageTitle": null,
+        "pageUrl": null,
+        "characterCount": 103,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 6,
+      "approximateLatencyMs": 5077,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "tv-sopranos",
+      "title": "The Sopranos",
+      "providerId": "tmdb::tv::1398",
+      "mediaType": "tv",
+      "year": 1999,
+      "category": "tv_structure",
+      "evidence": {
+        "source": "wikipedia_plot",
+        "reason": "selected_synopsis",
+        "pageTitle": "College (The Sopranos)",
+        "pageUrl": "https://en.wikipedia.org/wiki/College_(The_Sopranos)",
+        "characterCount": 2865,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 8,
+      "approximateLatencyMs": 4762,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    },
+    {
+      "id": "tv-greys-anatomy",
+      "title": "Grey's Anatomy",
+      "providerId": "tmdb::tv::1416",
+      "mediaType": "tv",
+      "year": 2005,
+      "category": "tv_long_running",
+      "evidence": {
+        "source": "wikipedia_plot",
+        "reason": "selected_plot",
+        "pageTitle": "Grey's Anatomy",
+        "pageUrl": "https://en.wikipedia.org/wiki/Grey's_Anatomy",
+        "characterCount": 5406,
+        "paragraphCount": null,
+        "paragraphCountStatus": "not_exposed_by_current_adapter"
+      },
+      "generation": {
+        "provider": null,
+        "model": null,
+        "status": "not_run_missing_configuration",
+        "eventCount": 0
+      },
+      "quality": {
+        "chronology": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Chronological order cannot be established reliably from event text without human comparison to the evidence."
+        },
+        "duplicateEvents": "NO_DUPLICATE_TITLES_DETECTED",
+        "meaningfulProgression": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "setupCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "escalationCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "majorReversalCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "climaxCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "resolutionCoverage": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "No generated events available for semantic review."
+        },
+        "unsupportedClaims": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Unsupported motivations, scenes, causal links, and outcomes require evidence-span review."
+        },
+        "finalEventReachesEnding": {
+          "status": "NEEDS_HUMAN_REVIEW",
+          "reason": "Ending coverage requires spoiler-on comparison with the final narrative evidence."
+        }
+      },
+      "diagnosis": [
+        "G_UNCLEAR"
+      ],
+      "requestCount": 4,
+      "approximateLatencyMs": 2032,
+      "cacheState": "BYPASSED_FRESH",
+      "humanReviewRequired": true
+    }
+  ],
+  "limitations": [
+    "The current TimelineEvidence contract exposes normalized text but not paragraph boundaries.",
+    "The current Timeline response does not expose provider/model metadata, so live runs cannot record those values without production changes.",
+    "Semantic chronology, progression, unsupported claims, and ending coverage are intentionally not auto-scored."
+  ]
+}

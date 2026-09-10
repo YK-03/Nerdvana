@@ -1,0 +1,301 @@
+{
+  "generatedAt": "2026-09-10T12:19:22.294Z",
+  "phase": "6B",
+  "mode": "stored_metadata_only",
+  "maxTotalCharacters": 16000,
+  "allowedHeadings": [
+    "premise",
+    "plot",
+    "synopsis",
+    "story",
+    "background",
+    "summary"
+  ],
+  "excludedHeadings": "^(cast|characters|production|reception|awards|music|filming|trivia|references|external links|critical analysis|release|home media|legacy|franchise|adaptations?|in popular culture|background and development)$",
+  "results": [
+    {
+      "id": "movie-dark-knight",
+      "title": "The Dark Knight",
+      "providerId": "tmdb::movie::155",
+      "mediaType": "movie",
+      "mode": "stored_metadata_only",
+      "pageTitle": "The Dark Knight",
+      "current": {
+        "selectedSections": [
+          "plot"
+        ],
+        "characterCount": 3915,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "movie-inception",
+      "title": "Inception",
+      "providerId": "tmdb::movie::27205",
+      "mediaType": "movie",
+      "mode": "stored_metadata_only",
+      "pageTitle": "Inception",
+      "current": {
+        "selectedSections": [
+          "plot"
+        ],
+        "characterCount": 4130,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "movie-godfather",
+      "title": "The Godfather",
+      "providerId": "tmdb::movie::238",
+      "mediaType": "movie",
+      "mode": "stored_metadata_only",
+      "pageTitle": "The Godfather",
+      "current": {
+        "selectedSections": [
+          "plot"
+        ],
+        "characterCount": 5405,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "movie-fight-club",
+      "title": "Fight Club",
+      "providerId": "tmdb::movie::550",
+      "mediaType": "movie",
+      "mode": "stored_metadata_only",
+      "pageTitle": "Fight Club",
+      "current": {
+        "selectedSections": [
+          "plot"
+        ],
+        "characterCount": 3353,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "movie-vast-of-night",
+      "title": "The Vast of Night",
+      "providerId": "tmdb::movie::565743",
+      "mediaType": "movie",
+      "mode": "stored_metadata_only",
+      "pageTitle": "The Vast of Night",
+      "current": {
+        "selectedSections": [
+          "plot"
+        ],
+        "characterCount": 3279,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "movie-coherence",
+      "title": "Coherence",
+      "providerId": "tmdb::movie::220289",
+      "mediaType": "movie",
+      "mode": "stored_metadata_only",
+      "pageTitle": null,
+      "current": {
+        "selectedSections": [],
+        "characterCount": 69,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "movie-primer",
+      "title": "Primer",
+      "providerId": "tmdb::movie::14337",
+      "mediaType": "movie",
+      "mode": "stored_metadata_only",
+      "pageTitle": null,
+      "current": {
+        "selectedSections": [],
+        "characterCount": 109,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "movie-battery",
+      "title": "The Battery",
+      "providerId": "tmdb::movie::177221",
+      "mediaType": "movie",
+      "mode": "stored_metadata_only",
+      "pageTitle": null,
+      "current": {
+        "selectedSections": [],
+        "characterCount": 90,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "tv-breaking-bad",
+      "title": "Breaking Bad",
+      "providerId": "tmdb::tv::1396",
+      "mediaType": "tv",
+      "mode": "stored_metadata_only",
+      "pageTitle": null,
+      "current": {
+        "selectedSections": [],
+        "characterCount": 88,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "tv-walking-dead",
+      "title": "The Walking Dead",
+      "providerId": "tmdb::tv::1402",
+      "mediaType": "tv",
+      "mode": "stored_metadata_only",
+      "pageTitle": null,
+      "current": {
+        "selectedSections": [],
+        "characterCount": 103,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "tv-sopranos",
+      "title": "The Sopranos",
+      "providerId": "tmdb::tv::1398",
+      "mediaType": "tv",
+      "mode": "stored_metadata_only",
+      "pageTitle": "College (The Sopranos)",
+      "current": {
+        "selectedSections": [
+          "synopsis"
+        ],
+        "characterCount": 2865,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    },
+    {
+      "id": "tv-greys-anatomy",
+      "title": "Grey's Anatomy",
+      "providerId": "tmdb::tv::1416",
+      "mediaType": "tv",
+      "mode": "stored_metadata_only",
+      "pageTitle": "Grey's Anatomy",
+      "current": {
+        "selectedSections": [
+          "plot"
+        ],
+        "characterCount": 5406,
+        "paragraphCount": null
+      },
+      "multiSection": {
+        "selectedSections": [],
+        "characterCount": null,
+        "paragraphCount": null,
+        "additionalNarrativeMaterial": "unknown",
+        "likelyMoreStoryBeats": "unknown",
+        "ambiguityOrRejection": "Error__raw_section_fixture_unavailable"
+      },
+      "comparison": "NEEDS_MORE_DATA"
+    }
+  ],
+  "summary": {
+    "gained": 0,
+    "noGain": 0,
+    "needsData": 12,
+    "recommendation": "NEEDS MORE DATA"
+  }
+}
