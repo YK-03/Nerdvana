@@ -7,6 +7,7 @@ import type {
 export const TIMELINE_SCHEMA_VERSION = "v1";
 export const TIMELINE_PROMPT_VERSION = "prompt-v5";
 export const TIMELINE_EVIDENCE_VERSION = "evidence-v2";
+export const TIMELINE_PROVIDER_VERSION = "groq-v1";
 
 const COLLECTION = "timeline_cache";
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -20,6 +21,7 @@ type TimelineCacheDocument = {
   schemaVersion: string;
   promptVersion: string;
   evidenceVersion: string;
+  providerVersion: string;
   seasonNumber: number | null;
 };
 
@@ -52,6 +54,7 @@ export async function buildTimelineCacheKey(
     normalizedMediaType,
     normalizedPromptVersion,
     normalizedEvidenceVersion,
+    TIMELINE_PROVIDER_VERSION,
     normalizedSeason,
   ].join("|");
 
@@ -110,6 +113,7 @@ export async function getCachedTimeline(documentId: string): Promise<StoryTimeli
       data.schemaVersion !== TIMELINE_SCHEMA_VERSION
       || data.promptVersion !== TIMELINE_PROMPT_VERSION
       || data.evidenceVersion !== TIMELINE_EVIDENCE_VERSION
+      || data.providerVersion !== TIMELINE_PROVIDER_VERSION
     ) {
       return null;
     }
@@ -135,6 +139,7 @@ export async function setCachedTimeline(
     schemaVersion: TIMELINE_SCHEMA_VERSION,
     promptVersion: TIMELINE_PROMPT_VERSION,
     evidenceVersion: TIMELINE_EVIDENCE_VERSION,
+    providerVersion: TIMELINE_PROVIDER_VERSION,
     seasonNumber: timeline.seasonNumber ?? null,
   };
 

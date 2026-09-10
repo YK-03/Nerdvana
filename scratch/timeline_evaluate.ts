@@ -16,7 +16,7 @@ import {
 } from "./timeline_phase6a_fixtures.js";
 
 const OUTPUT_PATH = "scratch/timeline_phase6a_results.json";
-const hasProviderConfiguration = Boolean(process.env.TMDB_API_KEY || process.env.VITE_TMDB_API_KEY) && Boolean(process.env.GEMINI_API_KEY);
+const hasProviderConfiguration = Boolean(process.env.TMDB_API_KEY || process.env.VITE_TMDB_API_KEY) && Boolean(process.env.GROQ_API_KEY);
 const liveRequested = process.argv.includes("--live");
 
 type GenerationRecord = {
@@ -168,12 +168,12 @@ async function runOne(
   let generation: GenerationRecord;
   const originalFetch = globalThis.fetch;
   const originalTmdbKey = process.env.TMDB_API_KEY;
-  const originalGeminiKey = process.env.GEMINI_API_KEY;
+  const originalGroqKey = process.env.GROQ_API_KEY;
 
   try {
     if (mode === "fixture") {
       process.env.TMDB_API_KEY = "phase6a-fixture-tmdb";
-      process.env.GEMINI_API_KEY = "phase6a-fixture-gemini";
+      process.env.GROQ_API_KEY = "phase6a-fixture-groq";
       globalThis.fetch = async () => {
         requestCount += 1;
         return new Response(JSON.stringify(tmdbFixture(item)), { status: 200 });
@@ -190,7 +190,7 @@ async function runOne(
         resolveTimelineEvidence: async () => evidenceResult,
         generateTimelineModelResponse: async () => ({
           status: fixtureGeneration.status,
-          provider: "Gemini" as const,
+          provider: "Groq" as const,
           model: fixtureGeneration.model,
           response: fixtureGeneration.status === "success" ? { events: fixtureGeneration.events } : null,
         }),
@@ -285,8 +285,8 @@ async function runOne(
     globalThis.fetch = originalFetch;
     if (originalTmdbKey === undefined) delete process.env.TMDB_API_KEY;
     else process.env.TMDB_API_KEY = originalTmdbKey;
-    if (originalGeminiKey === undefined) delete process.env.GEMINI_API_KEY;
-    else process.env.GEMINI_API_KEY = originalGeminiKey;
+    if (originalGroqKey === undefined) delete process.env.GROQ_API_KEY;
+    else process.env.GROQ_API_KEY = originalGroqKey;
   }
 }
 

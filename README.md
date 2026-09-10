@@ -45,7 +45,7 @@ Search for a title, read the answer, then keep asking. Follow-up questions stay 
 |---|---|
 | Frontend | React, TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion, React Markdown |
 | Backend | Vercel Serverless Functions, Firebase Authentication, Cloud Firestore |
-| Language models | Google Gemini, Groq |
+| Language model | Groq (`openai/gpt-oss-120b`) |
 | Search | Serper API |
 | Data providers | TMDB, RAWG, IGDB, ComicVine, Jikan, AniList, Google Books |
 

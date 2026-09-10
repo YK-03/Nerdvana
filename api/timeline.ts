@@ -23,6 +23,7 @@ import {
   getCachedTimeline,
   setCachedTimeline,
 } from "./lib/timelineCache.js";
+import { generateGroqText, getGroqApiKey } from "./lib/groqProvider.js";
 
 const MAX_EVENTS = 8;
 const MAX_TITLE_LENGTH = 140;
@@ -49,18 +50,10 @@ type TimelineGrounding = {
   narrativeEvidence: TimelineEvidence | null;
 };
 
-type TimelineProviderAttempt = {
-  provider: "Gemini" | "Groq";
-  model: string;
-  text: string | null;
-  failureReason?: string;
-  status?: number;
-};
-
 type TimelineGenerationResult = {
   status: "success" | "provider_failure" | "invalid_response";
   response: TimelineModelResponse | null;
-  provider: "Gemini" | "Groq" | null;
+  provider: "Groq" | null;
   model: string | null;
 };
 
@@ -297,123 +290,31 @@ function emptyTimeline(providerId: string, mediaType: TimelineMediaType, groundi
   };
 }
 
-function classifyProviderHttpError(status: number): string {
-  if (status === 401 || status === 403) return "authentication/configuration failure";
-  if (status === 404) return "unavailable/invalid model";
-  if (status === 429) return "quota/rate limit";
-  return "transient provider failure";
-}
-
-async function tryGemini(prompt: string, apiKey: string, model: string): Promise<TimelineProviderAttempt> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 1800, temperature: 0.2 },
-        }),
-        signal: controller.signal,
-      },
-    );
-
-    const rawText = await response.text();
-    if (!response.ok) {
-      const failureReason = classifyProviderHttpError(response.status);
-      console.warn("[TIMELINE_PROVIDER_FAILURE]", { provider: "Gemini", model, status: response.status, failureReason });
-      return { provider: "Gemini", model, text: null, status: response.status, failureReason };
-    }
-
-    const data = JSON.parse(rawText);
-    const text = data?.candidates?.[0]?.content?.parts
-      ?.map((part: any) => part?.text || "")
-      .join("") || null;
-    if (!text) {
-      console.warn("[TIMELINE_PROVIDER_FAILURE]", { provider: "Gemini", model, status: response.status, failureReason: "empty_provider_response" });
-    }
-    return { provider: "Gemini", model, text, status: response.status, failureReason: text ? undefined : "empty_provider_response" };
-  } catch (error) {
-    const failureReason = error instanceof DOMException && error.name === "AbortError" ? "timeout" : "provider_request_error";
-    console.warn("[TIMELINE_PROVIDER_FAILURE]", { provider: "Gemini", model, failureReason });
-    return { provider: "Gemini", model, text: null, failureReason };
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-async function tryGroq(prompt: string, apiKey: string): Promise<TimelineProviderAttempt> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-
-  try {
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 1800,
-        temperature: 0.2,
-      }),
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      const failureReason = classifyProviderHttpError(response.status);
-      console.warn("[TIMELINE_PROVIDER_FAILURE]", { provider: "Groq", model: "openai/gpt-oss-120b", status: response.status, failureReason });
-      return { provider: "Groq", model: "openai/gpt-oss-120b", text: null, status: response.status, failureReason };
-    }
-
-    const data = await response.json();
-    const text = data?.choices?.[0]?.message?.content || null;
-    if (!text) {
-      console.warn("[TIMELINE_PROVIDER_FAILURE]", { provider: "Groq", model: "openai/gpt-oss-120b", status: response.status, failureReason: "empty_provider_response" });
-    }
-    return { provider: "Groq", model: "openai/gpt-oss-120b", text, status: response.status, failureReason: text ? undefined : "empty_provider_response" };
-  } catch (error) {
-    const failureReason = error instanceof DOMException && error.name === "AbortError" ? "timeout" : "provider_request_error";
-    console.warn("[TIMELINE_PROVIDER_FAILURE]", { provider: "Groq", model: "openai/gpt-oss-120b", failureReason });
-    return { provider: "Groq", model: "openai/gpt-oss-120b", text: null, failureReason };
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function generateTimelineModelResponse(
   prompt: string,
-  geminiKey: string,
-  groqKey?: string,
 ): Promise<TimelineGenerationResult> {
-  let sawProviderText = false;
-  let sawInvalidResponse = false;
-  const attempts: Array<Promise<TimelineProviderAttempt>> = [tryGemini(prompt, geminiKey, "gemini-3.6-flash")];
-  if (groqKey) attempts.push(tryGroq(prompt, groqKey));
-  attempts.push(tryGemini(prompt, geminiKey, "gemini-3.5-flash"));
-
-  for (const attemptPromise of attempts) {
-    const attempt = await attemptPromise;
-    if (!attempt.text) continue;
-    sawProviderText = true;
-    const parsed = normalizeModelResponse(attempt.text);
-    if (parsed) {
-      console.log("[TIMELINE_AI_SUCCESS]", { provider: attempt.provider, model: attempt.model, eventCount: parsed.events.length });
-      return { status: "success", response: parsed, provider: attempt.provider, model: attempt.model };
-    }
-    sawInvalidResponse = true;
-    console.warn("[TIMELINE_AI_INVALID_RESPONSE]", { provider: attempt.provider, model: attempt.model });
+  const generation = await generateGroqText({
+    prompt,
+    workload: "timeline",
+    accept: (text) => Boolean(normalizeModelResponse(text)),
+  });
+  const response = generation.text ? normalizeModelResponse(generation.text) : null;
+  if (generation.status === "success" && response) {
+    console.log("[TIMELINE_AI_SUCCESS]", {
+      provider: "Groq",
+      model: generation.model,
+      eventCount: response.events.length,
+      fallbackUsed: generation.fallbackUsed,
+    });
+  } else {
+    console.warn("[TIMELINE_AI_FAILURE]", { status: generation.status, provider: "Groq", model: generation.model });
   }
-
-  const status = sawProviderText && sawInvalidResponse ? "invalid_response" : "provider_failure";
-  console.warn("[TIMELINE_AI_FAILURE]", { status });
-  return { status, response: null, provider: null, model: null };
+  return {
+    status: generation.status,
+    response,
+    provider: generation.status === "success" ? "Groq" : null,
+    model: generation.model,
+  };
 }
 
 type TimelineHandlerDependencies = {
@@ -493,9 +394,7 @@ export async function handler(
 
     const env = (globalThis as any).process?.env ?? {};
     const tmdbKey = (env.TMDB_API_KEY || env.VITE_TMDB_API_KEY)?.trim();
-    const geminiKey = env.GEMINI_API_KEY?.trim();
-    const groqKey = env.GROQ_API_KEY?.trim();
-    if (!tmdbKey || !geminiKey) {
+    if (!tmdbKey || !getGroqApiKey()) {
       return jsonResponse({ error: "Timeline providers are not configured." }, 503, res);
     }
 
@@ -549,7 +448,7 @@ export async function handler(
       ...grounding,
       narrativeEvidence: evidenceResult.evidence,
     };
-    const generation = await dependencies.generateTimelineModelResponse(buildPrompt(generationGrounding), geminiKey, groqKey);
+    const generation = await dependencies.generateTimelineModelResponse(buildPrompt(generationGrounding));
     if (generation.status !== "success" || !generation.response) {
       return jsonResponse({
         error: generation.status === "invalid_response"

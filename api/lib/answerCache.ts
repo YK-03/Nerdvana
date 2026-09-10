@@ -12,6 +12,7 @@
  *  - Fire-and-forget writes: cache failures never affect user responses
  *
  * Cache key dimensions:
+ *  - Provider migration version (currently Groq-only)
  *  - Provider identity: packet.providerId ?? packet.canonicalEntity (normalized)
  *  - Media lens: packet.mediaLens
  *  - Spoiler policy: packet.spoilerPolicy ("safe" | "strict")
@@ -27,6 +28,7 @@ import { getAdminDb } from "./firebaseAdmin.js";
 
 const COLLECTION = "answer_cache";
 const TTL_MS = 36 * 60 * 60 * 1000; // 36 hours
+export const ANSWER_PROVIDER_VERSION = "groq-v1";
 
 type CacheDocument = {
   answer: string;
@@ -64,7 +66,7 @@ export async function buildCacheKey(
   const normalizedLens = mediaLens.toLowerCase().trim();
   const normalizedSpoiler = spoilerPolicy.toLowerCase().trim();
 
-  const compositeKey = `${normalizedEntity}|${normalizedLens}|${normalizedSpoiler}`;
+  const compositeKey = `${ANSWER_PROVIDER_VERSION}|${normalizedEntity}|${normalizedLens}|${normalizedSpoiler}`;
   const documentId = await sha256Hex(compositeKey);
   return { compositeKey, documentId };
 }

@@ -141,9 +141,9 @@ async function responseBody(response: Response): Promise<any> {
 async function runHandlerChecks() {
   const originalFetch = globalThis.fetch;
   const originalTmdbKey = process.env.TMDB_API_KEY;
-  const originalGeminiKey = process.env.GEMINI_API_KEY;
+  const originalGroqKey = process.env.GROQ_API_KEY;
   process.env.TMDB_API_KEY = "test-tmdb-key";
-  process.env.GEMINI_API_KEY = "test-gemini-key";
+  process.env.GROQ_API_KEY = "test-groq-key";
 
   let aiCalls = 0;
   let prompt = "";
@@ -161,7 +161,7 @@ async function runHandlerChecks() {
       prompt = value;
       return {
         status: "success" as const,
-        provider: "Gemini" as const,
+        provider: "Groq" as const,
         model: "test-model",
         response: { events: [{ title: "Supported beat", description: "Supported by the selected evidence." }] },
       };
@@ -200,8 +200,8 @@ async function runHandlerChecks() {
   globalThis.fetch = originalFetch;
   if (originalTmdbKey === undefined) delete process.env.TMDB_API_KEY;
   else process.env.TMDB_API_KEY = originalTmdbKey;
-  if (originalGeminiKey === undefined) delete process.env.GEMINI_API_KEY;
-  else process.env.GEMINI_API_KEY = originalGeminiKey;
+  if (originalGroqKey === undefined) delete process.env.GROQ_API_KEY;
+  else process.env.GROQ_API_KEY = originalGroqKey;
 }
 
 async function runCacheChecks() {

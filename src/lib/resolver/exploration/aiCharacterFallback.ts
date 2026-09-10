@@ -2,7 +2,7 @@ import { type Character } from "../../explorationTypes.js";
 
 /**
  * Fallback engine for extracting characters when structured provider data fails.
- * In a production environment, this would call an LLM (e.g. Gemini 1.5 Flash).
+ * In a production environment, this would call an LLM provider.
  */
 export async function generateFictionalCharacters(
   entityName: string,

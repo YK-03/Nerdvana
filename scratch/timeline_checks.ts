@@ -24,9 +24,9 @@ async function responseBody(response: Response): Promise<any> {
 
 async function runContractChecks() {
   const originalTmdbKey = process.env.TMDB_API_KEY;
-  const originalGeminiKey = process.env.GEMINI_API_KEY;
+  const originalGroqKey = process.env.GROQ_API_KEY;
   process.env.TMDB_API_KEY = "test-tmdb-key";
-  process.env.GEMINI_API_KEY = "test-gemini-key";
+  process.env.GROQ_API_KEY = "test-groq-key";
 
   let fetchCalls = 0;
   let aiCalls = 0;
@@ -84,8 +84,8 @@ async function runContractChecks() {
       aiCalls += 1;
       return {
         status: "success" as const,
-        provider: "Gemini" as const,
-        model: "gemini-test",
+        provider: "Groq" as const,
+        model: "groq-test",
         response: {
           events: [
             { title: "The team assembles", description: "Cobb recruits specialists for the extraction." },
@@ -190,15 +190,15 @@ async function runContractChecks() {
 
   if (originalTmdbKey === undefined) delete process.env.TMDB_API_KEY;
   else process.env.TMDB_API_KEY = originalTmdbKey;
-  if (originalGeminiKey === undefined) delete process.env.GEMINI_API_KEY;
-  else process.env.GEMINI_API_KEY = originalGeminiKey;
+  if (originalGroqKey === undefined) delete process.env.GROQ_API_KEY;
+  else process.env.GROQ_API_KEY = originalGroqKey;
 }
 
 async function runLiveProbe() {
   const hasTmdb = Boolean(process.env.TMDB_API_KEY || process.env.VITE_TMDB_API_KEY);
-  const hasGemini = Boolean(process.env.GEMINI_API_KEY);
-  if (!hasTmdb || !hasGemini) {
-    console.log("Live Timeline probe skipped: TMDB_API_KEY and GEMINI_API_KEY are required.");
+  const hasGroq = Boolean(process.env.GROQ_API_KEY);
+  if (!hasTmdb || !hasGroq) {
+    console.log("Live Timeline probe skipped: TMDB_API_KEY and GROQ_API_KEY are required.");
     return;
   }
 

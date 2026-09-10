@@ -10,6 +10,7 @@ import {
 import { buildReadingOrder, buildContinuationSuggestions } from "../src/lib/resolver/readingOrder.js";
 import { checkRateLimit, extractClientIp } from "./lib/rateLimiter.js";
 import { buildCacheKey, getCachedAnswer, setCachedAnswer, getCacheIdentity } from "./lib/answerCache.js";
+import { generateGroqText, getGroqApiKey, type GroqGenerationResult } from "./lib/groqProvider.js";
 
 type ConversationMessage = {
   role: "user" | "assistant";
@@ -120,156 +121,15 @@ IMPORTANT GUIDELINES:
   return `${systemRole}${conversationContext}\n\nUSER QUERY:\n${query}\n\nANSWER:`;
 }
 
-async function tryGemini(
-  prompt: string,
-  apiKey: string,
-  models: string[]
-): Promise<string | null> {
-
-  for (const model of models) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
-
-    try {
-      console.log("[Nerdvana] Trying Gemini model:", model);
-
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 1500, temperature: 0.7 },
-          }),
-          signal: controller.signal,
-        },
-      );
-
-      const rawText = await response.text();
-      console.log(`[Nerdvana] ${model} status:`, response.status);
-
-      if (!response.ok) {
-        const category = classifyProviderHttpError(response.status);
-        console.warn(
-          `[Nerdvana] Gemini ${model} failed (${category}, HTTP ${response.status}) → trying next`,
-        );
-        continue;
-      }
-
-      const data = JSON.parse(rawText);
-      const text =
-        data?.candidates?.[0]?.content?.parts
-          ?.map((p: any) => p?.text || "")
-          .join("") || "";
-
-      if (!text) continue;
-
-      console.log("[Nerdvana] Success using Gemini:", model);
-      return text;
-    } catch (err) {
-      console.warn(`[Nerdvana] Gemini ${model} crashed (transient provider failure) → trying next`, err);
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  return null;
-}
-
-type ProviderErrorCategory =
-  | "authentication/configuration failure"
-  | "unavailable/invalid model"
-  | "quota/rate limit"
-  | "transient provider failure";
-
-function classifyProviderHttpError(status: number): ProviderErrorCategory {
-  if (status === 401 || status === 403) return "authentication/configuration failure";
-  if (status === 404) return "unavailable/invalid model";
-  if (status === 429) return "quota/rate limit";
-  if (status >= 500 && status <= 599) return "transient provider failure";
-  return "transient provider failure";
-}
-
-async function tryGroq(prompt: string, apiKey: string): Promise<string | null> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-
-  try {
-    console.log("[Nerdvana] Falling back to Groq");
-
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "openai/gpt-oss-120b",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 1500,
-          temperature: 0.7,
-        }),
-        signal: controller.signal,
-      },
-    );
-
-    const rawText = await response.text();
-    console.log("[Nerdvana] Groq status:", response.status);
-
-    if (!response.ok) {
-      const category = classifyProviderHttpError(response.status);
-      console.warn(
-        `[Nerdvana] Groq failed (${category}, HTTP ${response.status}):`,
-        rawText,
-      );
-      return null;
-    }
-
-    const data = JSON.parse(rawText);
-    const text = data?.choices?.[0]?.message?.content ?? "";
-
-    if (!text) return null;
-
-    console.log("[Nerdvana] Success using Groq");
-    return text;
-  } catch (err) {
-    console.warn("[Nerdvana] Groq crashed:", err);
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function generateAnswer(
   prompt: string,
-  geminiKey: string,
-  groqKey: string | undefined,
-  mode: "canon-lookup" | "simple-comparison" | "spoiler-analysis" | "deep-theory" | "cross-universe-analysis" | "philosophical-analysis",
-): Promise<string> {
-  const models = ["gemini-3.6-flash"];
-  
-  // Try Gemini first
-  const geminiResult = await tryGemini(prompt, geminiKey, models);
-  if (geminiResult) return geminiResult;
-
-  // Fall back to Groq if key is available
-  if (groqKey) {
-    const groqResult = await tryGroq(prompt, groqKey);
-    if (groqResult) return groqResult;
+  workload: "answer" | "chat",
+): Promise<GroqGenerationResult> {
+  const generation = await generateGroqText({ prompt, workload });
+  if (generation.status !== "success" || !generation.text) {
+    throw new Error(`Groq ${workload} generation failed: ${generation.status}`);
   }
-
-  // Final fallback to the remaining supported Gemini model.
-  const fallbackResult = await tryGemini(prompt, geminiKey, ["gemini-3.5-flash"]);
-  if (fallbackResult) return fallbackResult;
-
-  throw new Error(
-    "All configured providers failed (see categorized provider errors above)",
-  );
+  return generation;
 }
 
 async function fetchSerperSources(
@@ -541,17 +401,15 @@ export default async function handler(req: any, res?: any) {
       });
     }
 
-    const apiKey = env.GEMINI_API_KEY;
+    const groqKey = getGroqApiKey();
 
-    if (!apiKey) {
+    if (!groqKey) {
       return jsonResponse(
-        { error: "Missing GEMINI_API_KEY in Vercel env variables" },
+        { error: "Missing GROQ_API_KEY in Vercel env variables" },
         500,
         res,
       );
     }
-
-    const groqKey = env.GROQ_API_KEY;
     
     // 1. Generate Context Packet(s) based on Strategy
     let packet: ResolverContextPacket;
@@ -834,7 +692,7 @@ export default async function handler(req: any, res?: any) {
       console.log("[CACHE_MISS]", cacheKey.compositeKey);
     }
 
-    const answerPromise = generateAnswer(prompt, apiKey, groqKey, packet.conversationMode);
+    const answerPromise = generateAnswer(prompt, conversation.length > 0 ? "chat" : "answer");
     
     // 3. Fetch sources based on canonical constraints
     const retrievalSeed = packet.contextualSearchQuery || grounding.selectedSelectionValue || grounding.selectedCanonicalEntity || query;
@@ -859,11 +717,12 @@ export default async function handler(req: any, res?: any) {
       return [];
     })();
 
-    const [rawAnswer, sourceRows] = await Promise.all([
+    const [generation, sourceRows] = await Promise.all([
       answerPromise,
       sourcesPromise,
     ]);
     const sources = sourceRows.slice(0, grounding.policy.retrievalBreadth);
+    const rawAnswer = generation.text ?? "";
 
     // Ensure no residual tags (just in case LLM hallucinations include them)
     const answer = rawAnswer

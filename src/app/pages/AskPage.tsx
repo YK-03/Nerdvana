@@ -919,7 +919,7 @@ ${new Error().stack}
         }
 
         recordRetrieval(context.traceId, { success: true });
-        recordAI(context.traceId, { started: true, provider: "Gemini" });
+        recordAI(context.traceId, { started: true });
 
         const payload = await response.json();
         console.log(`[RAW_BACKEND_RESPONSE] [${context.requestId}]`, JSON.stringify(payload, null, 2));
@@ -1640,7 +1640,7 @@ ${new Error().stack}
       }
 
       recordRetrieval(traceId, { success: true });
-      recordAI(traceId, { started: true, provider: "Gemini" });
+      recordAI(traceId, { started: true });
 
       const payload = await response.json();
       if (followUpContext.requestId !== activeRequestIdRef.current) {

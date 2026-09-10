@@ -5,7 +5,7 @@ import type { StoryTimeline } from "../src/lib/timelineTypes.js";
 
 const originalFetch = globalThis.fetch;
 const originalTmdbKey = process.env.TMDB_API_KEY;
-const originalGeminiKey = process.env.GEMINI_API_KEY;
+const originalGroqKey = process.env.GROQ_API_KEY;
 
 function request(body: Record<string, unknown>) {
   return new Request("http://localhost/api/timeline", {
@@ -38,7 +38,7 @@ function tmdbSeries(title: string) {
 
 async function run() {
   process.env.TMDB_API_KEY = "test-tmdb";
-  process.env.GEMINI_API_KEY = "test-gemini";
+  process.env.GROQ_API_KEY = "test-groq";
 
   const capturedPrompts: string[] = [];
   const evidenceInputs: Array<Record<string, unknown>> = [];
@@ -73,8 +73,8 @@ async function run() {
       capturedPrompts.push(prompt);
       return {
         status: "success" as const,
-        provider: "Gemini" as const,
-        model: "gemini-test",
+          provider: "Groq" as const,
+          model: "groq-test",
         response: {
           events: [
             { title: "The setup", description: "The season establishes its central conflict." },
@@ -148,8 +148,8 @@ run()
     globalThis.fetch = originalFetch;
     if (originalTmdbKey === undefined) delete process.env.TMDB_API_KEY;
     else process.env.TMDB_API_KEY = originalTmdbKey;
-    if (originalGeminiKey === undefined) delete process.env.GEMINI_API_KEY;
-    else process.env.GEMINI_API_KEY = originalGeminiKey;
+    if (originalGroqKey === undefined) delete process.env.GROQ_API_KEY;
+    else process.env.GROQ_API_KEY = originalGroqKey;
   })
   .catch((error) => {
     console.error(error);
