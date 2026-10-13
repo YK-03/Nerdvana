@@ -5,7 +5,7 @@ import {
   createMediaWikiEvidenceClient,
   type TimelineEvidenceInput,
   type TimelineEvidenceResult,
-} from "../api/lib/timelineEvidence.js";
+} from "../src/server/api/timelineEvidence.js";
 import type { StoryTimeline, TimelineMediaType } from "../src/lib/timelineTypes.js";
 import {
   DETERMINISTIC_FIXTURE_EVIDENCE,

@@ -16,7 +16,7 @@ import { getNeighborhoodEngine } from "../lib/resolver/embeddings/semanticNeighb
 import { CandidateHistoryEntry } from "../lib/resolver/provenanceTypes.js";
 import { ExplorationBuilder } from "../lib/resolver/explorationBuilder.js";
 import { type ExplorationDTO, type ServerCanonicalEvidence } from "../lib/explorationTypes.js";
-import { getIGDBToken } from "../../api/igdbAuth.js";
+import { getIGDBToken } from "../server/igdbAuth.js";
 import type { CanonicalGroundingResult } from "../lib/resolver/canonicalGrounding.js";
 import { 
   type CanonRelationship,

@@ -1,4 +1,4 @@
-import { resolveTimelineEvidence } from "../api/lib/timelineEvidence.js";
+import { resolveTimelineEvidence } from "../src/server/api/timelineEvidence.js";
 
 const cases = [
   { title: "The Dark Knight", tmdbId: "155", mediaType: "movie" as const, year: 2008, tmdbOverview: "Batman faces a criminal mastermind who plunges Gotham into anarchy." },

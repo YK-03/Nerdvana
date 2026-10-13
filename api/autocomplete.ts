@@ -1,6 +1,6 @@
 
-import { getIGDBToken } from "./igdbAuth.js";
-import { checkRateLimit, extractClientIp } from "./lib/rateLimiter.js";
+import { getIGDBToken } from "../src/server/igdbAuth.js";
+import { checkRateLimit, extractClientIp } from "../src/server/api/rateLimiter.js";
 import {
   classifyComicsQueryType,
   comicProviderTypeLabel,

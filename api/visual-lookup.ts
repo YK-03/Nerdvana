@@ -1,4 +1,4 @@
-import { getIGDBToken } from "./igdbAuth.js";
+import { getIGDBToken } from "../src/server/igdbAuth.js";
 import {
   isCompatibleComicVineType,
   normalizeComicVineResourceType,

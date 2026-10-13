@@ -1,5 +1,5 @@
 import type { TimelineMediaType } from "../src/lib/timelineTypes.js";
-import type { TimelineEvidenceResult } from "../api/lib/timelineEvidence.js";
+import type { TimelineEvidenceResult } from "../src/server/api/timelineEvidence.js";
 
 export type TimelineEvaluationCase = {
   id: string;

@@ -4,13 +4,13 @@ import {
   createMediaWikiEvidenceClient,
   normalizeTimelineEvidenceText,
   type TimelineEvidenceResult,
-} from "../api/lib/timelineEvidence.js";
+} from "../src/server/api/timelineEvidence.js";
 import {
   buildTimelineCacheKey,
   TIMELINE_EVIDENCE_VERSION,
   TIMELINE_PROMPT_VERSION,
   TIMELINE_SCHEMA_VERSION,
-} from "../api/lib/timelineCache.js";
+} from "../src/server/api/timelineCache.js";
 import type { StoryTimeline } from "../src/lib/timelineTypes.js";
 
 function mediaWikiResponse(payload: unknown, status = 200, headers?: HeadersInit): Response {

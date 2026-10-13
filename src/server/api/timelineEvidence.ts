@@ -1,4 +1,4 @@
-import type { TimelineMediaType } from "../../src/lib/timelineTypes.js";
+import type { TimelineMediaType } from "../../lib/timelineTypes.js";
 
 export type TimelineNarrativeSource = "wikipedia_plot" | "tmdb_overview" | "tmdb_season_overview" | "none";
 

@@ -5,7 +5,7 @@ import {
   TIMELINE_EVIDENCE_VERSION,
   TIMELINE_PROMPT_VERSION,
   TIMELINE_SCHEMA_VERSION,
-} from "../api/lib/timelineCache.js";
+} from "../src/server/api/timelineCache.js";
 import type { StoryTimeline } from "../src/lib/timelineTypes.js";
 
 const originalFetch = globalThis.fetch;

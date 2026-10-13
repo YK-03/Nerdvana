@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { generateGroqText } from "../api/lib/groqProvider.js";
-import { buildCacheKey, ANSWER_PROVIDER_VERSION } from "../api/lib/answerCache.js";
-import { buildTimelineCacheKey, TIMELINE_PROVIDER_VERSION } from "../api/lib/timelineCache.js";
+import { generateGroqText } from "../src/server/api/groqProvider.js";
+import { buildCacheKey, ANSWER_PROVIDER_VERSION } from "../src/server/api/answerCache.js";
+import { buildTimelineCacheKey, TIMELINE_PROVIDER_VERSION } from "../src/server/api/timelineCache.js";
 
 const originalFetch = globalThis.fetch;
 const originalKey = process.env.GROQ_API_KEY;

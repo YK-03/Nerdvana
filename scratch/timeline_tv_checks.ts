@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import handler from "../api/timeline.js";
-import { buildTimelineCacheKey } from "../api/lib/timelineCache.js";
+import { buildTimelineCacheKey } from "../src/server/api/timelineCache.js";
 import type { StoryTimeline } from "../src/lib/timelineTypes.js";
 
 const originalFetch = globalThis.fetch;

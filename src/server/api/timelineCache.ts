@@ -2,7 +2,7 @@ import { getAdminDb } from "./firebaseAdmin.js";
 import type {
   StoryTimeline,
   TimelineMediaType,
-} from "../../src/lib/timelineTypes.js";
+} from "../../lib/timelineTypes.js";
 
 export const TIMELINE_SCHEMA_VERSION = "v1";
 export const TIMELINE_PROMPT_VERSION = "prompt-v5";

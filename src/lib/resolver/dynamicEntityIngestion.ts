@@ -1,5 +1,5 @@
 import type { MediaLens } from "../../app/mediaLens.js";
-import { getIGDBToken } from "../../../api/igdbAuth.js";
+import { getIGDBToken } from "../../server/igdbAuth.js";
 import {
   classifyComicsQueryType,
   normalizeComicVineResourceType,

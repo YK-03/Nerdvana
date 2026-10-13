@@ -8,10 +8,10 @@ import {
   normalizeComicVineResourceType,
 } from "../src/lib/resolver/providerMetadata.js";
 import { buildReadingOrder, buildContinuationSuggestions } from "../src/lib/resolver/readingOrder.js";
-import { checkRateLimit, extractClientIp } from "./lib/rateLimiter.js";
-import { buildCacheKey, getCachedAnswer, setCachedAnswer, getCacheIdentity } from "./lib/answerCache.js";
-import { generateGroqText, getGroqApiKey, type GroqGenerationResult } from "./lib/groqProvider.js";
-import { buildAnswerPrompt, type AnswerConversationMessage } from "./lib/answerPrompt.js";
+import { checkRateLimit, extractClientIp } from "../src/server/api/rateLimiter.js";
+import { buildCacheKey, getCachedAnswer, setCachedAnswer, getCacheIdentity } from "../src/server/api/answerCache.js";
+import { generateGroqText, getGroqApiKey, type GroqGenerationResult } from "../src/server/api/groqProvider.js";
+import { buildAnswerPrompt, type AnswerConversationMessage } from "../src/server/api/answerPrompt.js";
 
 type ConversationMessage = AnswerConversationMessage;
 

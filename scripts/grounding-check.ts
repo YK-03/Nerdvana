@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { buildAnswerPrompt, buildCanonicalEvidence } from "../api/lib/answerPrompt.js";
-import { buildCacheKey, ANSWER_PROVIDER_VERSION } from "../api/lib/answerCache.js";
+import { buildAnswerPrompt, buildCanonicalEvidence } from "../src/server/api/answerPrompt.js";
+import { buildCacheKey, ANSWER_PROVIDER_VERSION } from "../src/server/api/answerCache.js";
 
 const packet = (overrides: Record<string, unknown> = {}) => ({
   version: "v1",

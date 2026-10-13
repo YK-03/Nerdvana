@@ -6,7 +6,7 @@ import {
 import {
   extractClientIp,
   checkRateLimit,
-} from "./lib/rateLimiter.js";
+} from "../src/server/api/rateLimiter.js";
 import type {
   StoryTimeline,
   TimelineMediaType,
@@ -17,13 +17,13 @@ import {
   resolveTimelineEvidence,
   type TimelineEvidence,
   type TimelineEvidenceResult,
-} from "./lib/timelineEvidence.js";
+} from "../src/server/api/timelineEvidence.js";
 import {
   buildTimelineCacheKey,
   getCachedTimeline,
   setCachedTimeline,
-} from "./lib/timelineCache.js";
-import { generateGroqText, getGroqApiKey } from "./lib/groqProvider.js";
+} from "../src/server/api/timelineCache.js";
+import { generateGroqText, getGroqApiKey } from "../src/server/api/groqProvider.js";
 
 const MAX_EVENTS = 8;
 const MAX_TITLE_LENGTH = 140;

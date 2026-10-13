@@ -1,5 +1,5 @@
-import type { ServerCanonicalEvidence } from "../../src/lib/explorationTypes.js";
-import type { ResolverContextPacket } from "../../src/app/canonicalResolver.js";
+import type { ServerCanonicalEvidence } from "../../lib/explorationTypes.js";
+import type { ResolverContextPacket } from "../../app/canonicalResolver.js";
 
 export type AnswerConversationMessage = {
   role: "user" | "assistant";
