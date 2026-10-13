@@ -57,6 +57,7 @@ export type ValidatedVisualAsset = {
   posterUrl?: string | null;
   backdropUrl?: string | null;
   trailerKey?: string | null;
+  raw?: unknown;
 };
 
 export type VisualAssetValidationInput = {
@@ -493,9 +494,12 @@ function validateProviderTypeContinuity(
   const rawQueryType = classifyComicsQueryType(resolution.canonicalEntity);
   const expectedType = rawQueryType || (resolution.intent !== "franchise" && resolution.intent !== "title" ? resolution.intent : null);
 
-  const rawResourceType = candidate.raw?.resource_type;
+  const rawResourceType =
+    typeof candidate.raw === "object" && candidate.raw !== null && "resource_type" in candidate.raw
+      ? candidate.raw.resource_type
+      : undefined;
   const candidateType = rawResourceType
-    ? normalizeComicVineResourceType(rawResourceType, candidate.name)
+    ? normalizeComicVineResourceType(typeof rawResourceType === "string" ? rawResourceType : undefined, candidate.name)
     : classifyComicsQueryType(candidate.name);
 
   if (expectedType && candidateType && !isCompatibleComicVineType(expectedType, candidateType)) {

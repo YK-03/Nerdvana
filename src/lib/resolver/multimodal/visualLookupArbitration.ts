@@ -20,6 +20,7 @@ export interface VisualArbitrationContext {
   groundingTightening: number;
   embeddingAccepted: boolean;
   arbitrationScore: number;
+  arbitrationInfluence: number;
   visualEntropy: number;
   unsafeNeighborIds: string[];
   telemetry: ProductionRetrievalTelemetry;
@@ -97,9 +98,10 @@ export function buildVisualArbitrationContext(
     telemetry.entropyHotspots.push(packet.canonicalEntity);
   }
 
-  telemetry.arbitrationInfluence = enabled
+  const arbitrationInfluence = enabled
     ? Math.min(1, arbitrationScore * 0.6 + prebind.namespaceConfidence * 0.4 + groundingTightening)
     : 0;
+  telemetry.arbitrationInfluence = arbitrationInfluence;
 
   return {
     enabled,
@@ -108,6 +110,7 @@ export function buildVisualArbitrationContext(
     groundingTightening,
     embeddingAccepted,
     arbitrationScore,
+    arbitrationInfluence,
     visualEntropy,
     unsafeNeighborIds,
     telemetry,

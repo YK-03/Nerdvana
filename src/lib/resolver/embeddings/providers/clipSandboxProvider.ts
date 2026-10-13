@@ -152,21 +152,22 @@ async function getClipEmbedder(): Promise<ClipEmbedder> {
 
     clipEmbedder = {
       embedText: async (text: string) => {
-        const out = await textExtractor(text, { pooling: "mean", normalize: true });
+        const out = await textExtractor(text, { normalize: true });
         return Array.from(out.data as Float32Array);
       },
       embedImage: async (bytes: Uint8Array) => {
         try {
           const blob =
             typeof Blob !== "undefined"
-              ? new Blob([bytes], { type: "image/png" })
+              ? (() => {
+                  const buffer = new ArrayBuffer(bytes.byteLength);
+                  new Uint8Array(buffer).set(bytes);
+                  return new Blob([buffer], { type: "image/png" });
+                })()
               : null;
           if (!blob) return [];
           const image = await RawImage.fromBlob(blob);
-          const out = await imageExtractor(image, {
-            pooling: "mean",
-            normalize: true,
-          });
+          const out = await imageExtractor(image, {});
           return Array.from(out.data as Float32Array);
         } catch {
           return [];

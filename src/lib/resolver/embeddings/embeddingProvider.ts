@@ -1,4 +1,4 @@
-import { Modality } from "../provenanceTypes.js";
+import { Modality, EntropySource, VisualEntropySource } from "../provenanceTypes.js";
 
 /**
  * embeddingProvider.ts
@@ -18,7 +18,7 @@ export interface SemanticCandidate {
   id: string; // The candidate string or qualified ID
   score: number; // Similarity score (0.0 to 1.0)
   modality: Modality;
-  entropySource?: string;
+  entropySource?: EntropySource | VisualEntropySource;
 }
 
 export interface EmbeddingProvider {

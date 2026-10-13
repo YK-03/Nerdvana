@@ -242,7 +242,7 @@ export type ResolverContextPacket = {
   visualAnchors: string[];
   entityAliases: string[];
   franchiseAliases: string[];
-  conversationMode: conversationMode;
+  conversationMode: ConversationMode;
   queryMode: "entity";
   canonContext?: {
     universe?: string;
@@ -470,6 +470,7 @@ export async function resolveContextualIdentity(
     if (tempMatch) {
       history.push({
         stage: "deterministic",
+        modality: "text",
         candidate: tempMatch.id,
         accepted: true,
         reason: "Dynamic session entity match",
@@ -490,6 +491,7 @@ export async function resolveContextualIdentity(
   if (modularMatch) {
     history.push({
       stage: "deterministic",
+      modality: "text",
       candidate: modularMatch.id,
       accepted: true,
       reason: "Exact or deterministic match",
@@ -518,6 +520,7 @@ export async function resolveContextualIdentity(
       
       history.push({
         stage: "semantic_expansion",
+        modality: "text",
         candidate: suggestedNode.id,
         accepted: validation.valid,
         reason: validation.reason ?? "Passed ML gatekeeper",
@@ -574,6 +577,7 @@ export async function resolveContextualIdentity(
   if (registryMatch) {
     history.push({
       stage: "heuristic",
+      modality: "text",
       candidate: registryMatch.entity,
       accepted: true,
       reason: "Legacy registry fallback match",
@@ -596,6 +600,7 @@ export async function resolveContextualIdentity(
       const parent = CHARACTER_FRANCHISE_MAP[contextual.toLowerCase()] ?? contextual;
       history.push({
         stage: "heuristic",
+        modality: "text",
         candidate: contextual,
         accepted: true,
         reason: "Legacy contextual map match",
@@ -615,6 +620,7 @@ export async function resolveContextualIdentity(
     if (franchise) {
       history.push({
         stage: "heuristic",
+        modality: "text",
         candidate: entity,
         accepted: true,
         reason: "Legacy character franchise map match",
@@ -630,6 +636,7 @@ export async function resolveContextualIdentity(
 
   history.push({
     stage: "heuristic",
+    modality: "text",
     candidate: entity,
     accepted: false,
     reason: "No matches found across all stages",
@@ -1169,7 +1176,7 @@ export async function buildContextPacket(
           team: "4060",
           publisher: "4010"
         };
-        const prefix = prefixMap[resourceType];
+        const prefix = resourceType ? prefixMap[resourceType] : undefined;
         if (prefix) {
           try {
             const url = `https://comicvine.gamespot.com/api/${resourceType}/${prefix}-${cvId}/?api_key=${comicVineKey}&format=json&field_list=id,name,description,deck,start_year,publisher,aliases,concepts,teams,character_credits,volume_credits`;
@@ -1390,8 +1397,8 @@ export async function buildContextPacket(
   })();
 
   const canonContext = finalTopology ? {
-    universe: finalUniverse,
-    continuity: finalContinuity,
+    universe: finalUniverse ?? undefined,
+    continuity: finalContinuity ?? undefined,
     relationshipType: finalTopology.baseId ? (getRelationship(finalTopology.id, finalTopology.baseId)?.type ?? undefined) : undefined,
     parentEntity: finalTopology.baseId ?? undefined,
     canonicalAuthority: canonAuthority,
@@ -1614,6 +1621,12 @@ export async function buildContextPacket(
       inheritanceDepth: finalTopology?.inheritanceDepth ?? 0,
       qualifiedId: finalTopology?.id ?? null,
       candidateHistory,
+      lens: mediaLens,
+      topologyUsed: Boolean(finalTopology),
+      candidatePoolSize: candidateHistory.length,
+      rejectedCrossLensCandidates: candidateHistory.filter(
+        (entry) => entry.governanceFailureType === "media_domain_violation",
+      ).length,
       embeddingEntropyScore: entropyScore,
       visualEntropyScore: visualEntropyScore ?? 0,
       canonRelationshipPath,
@@ -1682,7 +1695,7 @@ export async function buildContextPacket(
       if (comicVineKey) {
         const parsedId = parseProviderId(finalExplorationProvider);
         const prefixMap: Record<string, string> = { character: "4005", volume: "4050", issue: "4000", story_arc: "4045", event: "4015", team: "4060", publisher: "4010" };
-        const prefix = prefixMap[parsedId.resourceType];
+        const prefix = parsedId.resourceType ? prefixMap[parsedId.resourceType] : undefined;
         if (prefix) {
           try {
             const url = `https://comicvine.gamespot.com/api/${parsedId.resourceType}/${prefix}-${parsedId.id}/?api_key=${comicVineKey}&format=json&field_list=id,name,description,deck,start_year,publisher,aliases,concepts,teams,character_credits,volume_credits`;

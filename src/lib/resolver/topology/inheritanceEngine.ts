@@ -33,6 +33,7 @@ export class TopologyEngine {
     // 1. Start with defaults
     let result: ResolvedTopology = {
       id: node.id,
+      baseId: node.baseId,
       canonicalEntity: node.canonicalEntity ?? "",
       parentFranchise: node.parentFranchise ?? "Unknown",
       universe: node.universe ?? null,

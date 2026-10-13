@@ -50,6 +50,7 @@ export interface SemanticTopologyNode {
 
 export interface ResolvedTopology {
   id: string;
+  baseId?: string;
   canonicalEntity: string;
   parentFranchise: string;
   universe: string | null;

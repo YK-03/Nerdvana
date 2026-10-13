@@ -7,7 +7,7 @@ import { EmbeddingProvider, SemanticCandidate } from "./embeddingProvider.js";
  * Used exclusively for validating architecture governance without API costs.
  */
 
-const MOCK_VECTOR_SPACE: Record<string, SemanticCandidate[]> = {
+const MOCK_VECTOR_SPACE: Record<string, Omit<SemanticCandidate, "modality">[]> = {
   "caped crusader": [{ id: "Batman", score: 0.95 }, { id: "Superman", score: 0.4 }],
   "green goliath": [{ id: "Hulk", score: 0.96 }, { id: "Green Lantern", score: 0.5 }],
   "wall maria protagonist": [{ id: "Eren Yeager", score: 0.92 }, { id: "Mikasa Ackerman", score: 0.85 }],

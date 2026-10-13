@@ -1,4 +1,5 @@
 import { EmbeddingProvider, SemanticCandidate, ProviderMode } from "../embeddingProvider.js";
+import type { Modality } from "../../provenanceTypes.js";
 
 /**
  * openaiProvider.ts

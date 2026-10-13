@@ -43,7 +43,7 @@ export class VisualEntropyMockProvider implements EmbeddingProvider {
     if (VISUAL_ENTROPY_MAP[norm]) {
       return VISUAL_ENTROPY_MAP[norm].map(c => ({
         ...c,
-        modality: "image"
+        modality: "image" as Modality
       })).slice(0, limit);
     }
 

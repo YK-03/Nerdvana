@@ -8,6 +8,7 @@ import { lensScore, type CatalogEntry } from "./lensFence.js";
 import {
   inferProviderTypeFromId,
   type ProviderMetadata,
+  type ProviderName,
 } from "./providerMetadata.js";
 import { isExternalProviderId } from "./providerIdUtility.js";
 
@@ -27,6 +28,10 @@ function debugWarn(...args: any[]) {
   if (isDebug) {
     console.warn(...args);
   }
+}
+
+function isProviderName(value: string): value is ProviderName {
+  return ["tmdb", "jikan", "igdb", "comicvine", "googlebooks", "anilist", "rawg"].includes(value);
 }
 
 export type AmbiguityLevel = "low" | "medium" | "high";
@@ -252,7 +257,7 @@ function formatMetadataLabel(
     
     // General high-fidelity fallback for games
     const cleanPrimary = (franchise ?? namespaceLabel ?? "").toUpperCase();
-    const cleanContinuity = continuityLabel ? continuityDisplay(continuityLabel).toUpperCase() : "";
+    const cleanContinuity = continuityLabel ? (continuityDisplay(continuityLabel) ?? "").toUpperCase() : "";
     
     if (cleanPrimary === "GAMES" || !cleanPrimary) {
       if (displayTitle) {
@@ -1055,6 +1060,9 @@ export function groundCanonicalIntent(input: {
       const parts = explicitSelection.split("::");
       const parsedProvider = parts[0];
       const parsedId = parts[2];
+      if (!isProviderName(parsedProvider) || !parsedId) {
+        throw new Error(`Unsupported provider identity: ${explicitSelection}`);
+      }
       
       resolvedMetadata = {
         provider: parsedProvider,

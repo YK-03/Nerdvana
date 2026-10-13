@@ -39,8 +39,8 @@ const ENTROPY_MAP: Record<string, (Omit<SemanticCandidate, 'modality'> & { entro
     { id: "Anime::DeathNote::Light", score: 0.93, entropySource: "shared_archetype" }
   ],
   "masked antihero with trauma": [
-    { id: "DC::Batman (DC Comics)", score: 0.94, entropySource: "archetypal_overlap" },
-    { id: "Marvel::Punisher", score: 0.89, entropySource: "archetypal_overlap" }
+    { id: "DC::Batman (DC Comics)", score: 0.94, entropySource: "shared_archetype" },
+    { id: "Marvel::Punisher", score: 0.89, entropySource: "shared_archetype" }
   ]
 };
 

@@ -160,7 +160,7 @@ export function isValidContinuityTraversal(
 
   // 4. Publisher boundary check
   if (from.publisher && to.publisher && from.publisher.toLowerCase() !== to.publisher.toLowerCase()) {
-    if (edgeDetails.type !== "adaptation" && edgeDetails.type !== "multiverse_variant") {
+    if (edgeDetails.type !== "multiverse_variant") {
       console.log(`[CONTINUITY_TRAVERSAL_BLOCKED] Traversal publisher mismatch rejected: ${from.publisher} -> ${to.publisher}`);
       return { valid: false, cost: currentCost, reason: "publisher_mismatch" };
     }
@@ -176,7 +176,7 @@ export function isValidContinuityTraversal(
   }
 
   if (from.providerType === "character") {
-    const allowedCharEdges = new Set(["same_team", "same_arc", "same_universe", "same_character", "multiverse_variant", "adaptation"]);
+    const allowedCharEdges = new Set(["same_team", "same_arc", "same_universe", "same_character", "multiverse_variant"]);
     if (!allowedCharEdges.has(edgeDetails.type)) {
       console.log(`[CONTINUITY_TRAVERSAL_BLOCKED] Unallowed character transition: ${edgeDetails.type}`);
       return { valid: false, cost: currentCost, reason: `unallowed_character_transition:${edgeDetails.type}` };

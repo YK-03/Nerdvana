@@ -54,6 +54,13 @@ export interface RetrievalTraceEntry {
   relaxationStage?: RetrievalMode;
   multimodalBoosts?: string[];
   multimodalPenalties?: string[];
+  finalScore?: number;
+  compatibilityScore?: number;
+  stageScores?: Record<string, number>;
+  stageCalculations?: Record<string, number>;
+  rules?: string[];
+  accepted?: boolean;
+  traceId?: string;
 }
 
 export type RetrievalOutcome =
@@ -84,6 +91,10 @@ function jsonResponse(payload: unknown, status: number, res?: any) {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+function rawRecord(raw: unknown): Record<string, unknown> {
+  return typeof raw === "object" && raw !== null ? raw as Record<string, unknown> : {};
 }
 
 function sanitizeAniListDescription(description: string | null | undefined): string {
@@ -1042,7 +1053,8 @@ async function adaptiveRetrieve(
 
   // ─── AniList Deterministic Visual Fetch Bypass ───
   if (packet.mediaLens === "anime" && packet.providerMetadata && packet.providerMetadata.provider === "anilist") {
-    const anilistId = packet.providerMetadata.id;
+    const anilistId = Number(packet.providerMetadata.id);
+    if (!Number.isInteger(anilistId) || anilistId <= 0) return null;
     const confidence = packet.providerMetadata.confidence ?? 1.0;
     
     // STEP 4 — Confidence Gating
@@ -1068,11 +1080,14 @@ async function adaptiveRetrieve(
       url: candidate.imageUrl ?? "",
       title: candidate.name,
       source: candidate.source,
+      mediaType: packet.mediaLens,
       compatibilityScore: 1.0,
       validated: true,
       genres: candidate.genres ?? [],
       year: candidate.year,
-      overview: candidate.raw?.description ?? "",
+      overview: typeof rawRecord(candidate.raw).description === "string"
+        ? rawRecord(candidate.raw).description as string
+        : "",
       raw: candidate.raw,
       posterUrl: candidate.posterUrl ?? candidate.imageUrl ?? null,
       backdropUrl: candidate.backdropUrl ?? null,
@@ -1085,11 +1100,20 @@ async function adaptiveRetrieve(
       mode: "STRICT",
       trace: [{
         candidate: candidate.name,
+        source: candidate.source,
         mode: "STRICT",
         score: 100,
         finalScore: 100,
         compatibilityScore: 1.0,
         tokenOverlap: 1.0,
+        confidence: "high",
+        entityGrounding: 1,
+        franchiseGrounding: 1,
+        providerReliability: 1,
+        entityTypeAlignment: true,
+        matchedAnchors: [],
+        boosts: [],
+        penalties: [],
         stageScores: { lexical: 100 },
         stageCalculations: { compatibilityScore: 1.0 },
         rules: ["deterministic-anilist-id-lock"],
@@ -1132,7 +1156,7 @@ async function adaptiveRetrieve(
     canonicalEntity: packet.canonicalEntity,
     intent: packet.entityKind as any,
     mediaLens: packet.mediaLens as any,
-    franchiseRoot: packet.providerMetadata?.franchiseRoot,
+    franchiseRoot: packet.providerMetadata?.franchiseRoot ?? undefined,
     retrievalDescriptor: packet.retrievalDescriptor,
     visualAnchors: packet.visualAnchors,
   };
@@ -1170,11 +1194,13 @@ async function adaptiveRetrieve(
         const expectedRoot = packet.providerMetadata.franchiseRoot || "";
         const expectedPublisher = packet.providerMetadata.publisherLabel || "";
 
-        const gotType = directCandidate.raw?.resource_type
-          ? normalizeComicVineResourceType(directCandidate.raw.resource_type, directCandidate.name)
+        const directRaw = rawRecord(directCandidate.raw);
+        const gotType = typeof directRaw.resource_type === "string"
+          ? normalizeComicVineResourceType(directRaw.resource_type, directCandidate.name)
           : (packet.providerId ? inferProviderTypeFromId(packet.providerId) : null);
 
-        const gotPublisher = directCandidate.publisher || directCandidate.raw?.publisher?.name || "";
+        const rawPublisher = rawRecord(directRaw.publisher);
+        const gotPublisher = directCandidate.publisher || (typeof rawPublisher.name === "string" ? rawPublisher.name : "") || "";
 
         const cleanCandidateName = directCandidate.name.toLowerCase().replace(/[^a-z0-9]/g, "");
         const cleanExpectedTitle = expectedTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -1221,11 +1247,14 @@ async function adaptiveRetrieve(
         url: directCandidate.imageUrl ?? "",
         title: directCandidate.name,
         source: directCandidate.source,
+        mediaType: packet.mediaLens,
         compatibilityScore: 1.0,
         validated: true,
         genres: directCandidate.genres ?? [],
         year: directCandidate.year,
-        overview: directCandidate.raw?.overview ?? "",
+        overview: typeof rawRecord(directCandidate.raw).overview === "string"
+          ? rawRecord(directCandidate.raw).overview as string
+          : "",
         raw: directCandidate.raw,
         posterUrl: directCandidate.posterUrl ?? directCandidate.imageUrl ?? null,
         backdropUrl: directCandidate.backdropUrl ?? null,
@@ -1238,11 +1267,20 @@ async function adaptiveRetrieve(
         mode: "STRICT",
         trace: [{
           candidate: directCandidate.name,
+          source: directCandidate.source,
           mode: "STRICT",
           score: 100,
           finalScore: 100,
           compatibilityScore: 1.0,
           tokenOverlap: 1.0,
+          confidence: "high",
+          entityGrounding: 1,
+          franchiseGrounding: 1,
+          providerReliability: 1,
+          entityTypeAlignment: true,
+          matchedAnchors: [],
+          boosts: [],
+          penalties: [],
           stageScores: { lexical: 100 },
           stageCalculations: { compatibilityScore: 1.0 },
           rules: ["direct-provider-id-lock"],

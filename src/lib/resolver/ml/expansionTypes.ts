@@ -8,7 +8,7 @@ import { ResolvedTopology } from "../topology/topologyTypes.js";
 
 export interface SemanticSuggestion {
   targetId: string; // The topology ID suggested
-  relationshipType: "alias" | "franchise_member" | "crossover" | "related_identity";
+  relationshipType: "exact" | "alias" | "franchise_member" | "crossover" | "related_identity";
   score: number; // 0.0 - 1.0
   reason: string;
 }
