@@ -16,3 +16,11 @@ export interface ExplorationDTO {
   artifacts: any[];
   relatedMedia: any[];
 }
+
+/** Evidence produced only after a server-side provider response is available. */
+export interface ServerCanonicalEvidence {
+  provenance: "server-provider-response";
+  providerId: string;
+  title?: string | null;
+  characters: Character[];
+}

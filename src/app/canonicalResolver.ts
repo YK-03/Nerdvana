@@ -15,7 +15,7 @@ import { SemanticSuggestion } from "../lib/resolver/ml/expansionTypes.js";
 import { getNeighborhoodEngine } from "../lib/resolver/embeddings/semanticNeighborhoodEngine.js";
 import { CandidateHistoryEntry } from "../lib/resolver/provenanceTypes.js";
 import { ExplorationBuilder } from "../lib/resolver/explorationBuilder.js";
-import { type ExplorationDTO } from "../lib/explorationTypes.js";
+import { type ExplorationDTO, type ServerCanonicalEvidence } from "../lib/explorationTypes.js";
 import { getIGDBToken } from "../../api/igdbAuth.js";
 import type { CanonicalGroundingResult } from "../lib/resolver/canonicalGrounding.js";
 import { 
@@ -1068,7 +1068,11 @@ export async function buildContextPacket(
   spoilerMode: boolean,
   previousEntity?: string | null,
   grounding?: CanonicalGroundingResult | null
-): Promise<{ packet: ResolverContextPacket; exploration: ExplorationDTO }> {
+): Promise<{
+  packet: ResolverContextPacket;
+  exploration: ExplorationDTO;
+  canonicalEvidence: ServerCanonicalEvidence | null;
+}> {
   const selectionVal = grounding?.selectedSelectionValue;
   const isProviderId = isExternalProviderId(selectionVal);
 
@@ -1708,10 +1712,33 @@ export async function buildContextPacket(
     rawData: fetchedProviderData
   }, finalContextualEntity, mediaLens);
 
+  const providerTitle =
+    typeof fetchedProviderData?.title === "string"
+      ? fetchedProviderData.title
+      : typeof fetchedProviderData?.name === "string"
+      ? fetchedProviderData.name
+      : typeof fetchedProviderData?.title?.english === "string"
+      ? fetchedProviderData.title.english
+      : typeof fetchedProviderData?.title?.romaji === "string"
+      ? fetchedProviderData.title.romaji
+      : typeof fetchedProviderData?.volumeInfo?.title === "string"
+      ? fetchedProviderData.volumeInfo.title
+      : null;
+
+  const canonicalEvidence: ServerCanonicalEvidence | null =
+    fetchedProviderData && finalExplorationProvider
+      ? {
+          provenance: "server-provider-response",
+          providerId: finalExplorationProvider,
+          title: providerTitle,
+          characters: exploration.characters,
+        }
+      : null;
+
   console.log("=== STAGE 4: CANONICAL RESOLVER ===", {
     explorationCharactersLength: exploration.characters.length,
     firstCharacter: exploration.characters[0] ?? null
   });
 
-  return { packet, exploration };
+  return { packet, exploration, canonicalEvidence };
 }

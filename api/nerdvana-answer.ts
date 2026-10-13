@@ -11,11 +11,9 @@ import { buildReadingOrder, buildContinuationSuggestions } from "../src/lib/reso
 import { checkRateLimit, extractClientIp } from "./lib/rateLimiter.js";
 import { buildCacheKey, getCachedAnswer, setCachedAnswer, getCacheIdentity } from "./lib/answerCache.js";
 import { generateGroqText, getGroqApiKey, type GroqGenerationResult } from "./lib/groqProvider.js";
+import { buildAnswerPrompt, type AnswerConversationMessage } from "./lib/answerPrompt.js";
 
-type ConversationMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
+type ConversationMessage = AnswerConversationMessage;
 
 type SourceLink = {
   title: string;
@@ -79,46 +77,6 @@ function normalizeConversation(input: unknown): ConversationMessage[] {
       return { role, content };
     })
     .filter((item) => item.content.length > 0);
-}
-
-function buildPrompt(
-  query: string,
-  packet: ResolverContextPacket,
-  conversation: ConversationMessage[],
-) {
-  const activeContext = `- Entity: ${packet.canonicalEntity ?? "Unknown"}\n- Franchise: ${packet.parentFranchise ?? "Unknown"}\n- Lens: ${packet.mediaLens}\n- Spoilers: ${packet.spoilerPolicy}\n- Mode: ${packet.conversationMode}\n- Confidence: ${packet.confidence}`;
-
-  const systemRole = `You are Nerdvana, a universal media intelligence engine.
-
-ACTIVE_CONTEXT:
-${activeContext}
-
-IMPORTANT GUIDELINES:
-- Provide concise answers in EXACTLY 2 paragraphs. Each paragraph 3-4 sentences max.
-- Do not greet the user. Start immediately with the answer content.
-- Use the ACTIVE_CONTEXT to ground your reasoning.
-- If Mode is "deep-theory", focus on implications and thematic analysis.
-- If Mode is "simple-comparison", compare the entities objectively.
-- If Spoilers is "strict", naturally avoid revealing major plot twists or endings. Do not mention spoiler policies, internal settings, or give warnings.`;
-
-  // We limit the conversation context to recent messages to prevent token explosion.
-  // As per architectural rules, conversation is only consulted for ambiguous follow-ups.
-  // Deterministic navigations must be strictly isolated to prevent cross-entity leaks.
-  const isAmbiguousFollowUp = packet.executionMode === "SEMANTIC";
-  const recentConversation = isAmbiguousFollowUp ? conversation.slice(-4) : [];
-  
-  const conversationContext =
-    recentConversation.length > 0
-      ? "\n\nRECENT CONVERSATION STATE:\n" +
-        recentConversation
-          .map(
-            (msg) =>
-              `${msg.role === "user" ? "User" : "Nerdvana"}: ${msg.content}`,
-          )
-          .join("\n")
-      : "";
-
-  return `${systemRole}${conversationContext}\n\nUSER QUERY:\n${query}\n\nANSWER:`;
 }
 
 async function generateAnswer(
@@ -415,6 +373,7 @@ export default async function handler(req: any, res?: any) {
     let packet: ResolverContextPacket;
     let packet2: ResolverContextPacket | null = null;
     let exploration: any = null;
+    let canonicalEvidence: any = null;
     let isMultiGround = false;
 
     const intentResolution = body?.intentResolution;
@@ -474,6 +433,7 @@ export default async function handler(req: any, res?: any) {
       const res1 = await buildContextPacket(e1, mediaLens, spoilerMode, previousEntity, g1);
       packet = res1.packet;
       exploration = res1.exploration;
+      canonicalEvidence = res1.canonicalEvidence;
       
       const res2 = await buildContextPacket(e2, mediaLens, spoilerMode, previousEntity, g2);
       packet2 = res2.packet;
@@ -487,6 +447,7 @@ export default async function handler(req: any, res?: any) {
       );
       packet = res.packet;
       exploration = res.exploration;
+      canonicalEvidence = res.canonicalEvidence;
     }
 
     if (packet.providerMetadata?.providerType) {
@@ -609,10 +570,11 @@ export default async function handler(req: any, res?: any) {
         : "";
       prompt = `${systemRole}${conversationContext}\n\nUSER QUERY:\n${rawQuery}\n\nANSWER:`;
     } else {
-      prompt = buildPrompt(
+      prompt = buildAnswerPrompt(
         query,
         packet,
         conversation,
+        canonicalEvidence,
       );
     }
 
