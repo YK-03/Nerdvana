@@ -22,6 +22,8 @@ import {
 import { fallbackIdentityMatches } from "../src/lib/resolver/entityIdentity.js";
 import type { ProductionRetrievalTelemetry } from "../src/lib/resolver/multimodal/productionRetrievalTelemetry.js";
 import { sanitizeExternalDescription } from "../src/lib/utils/sanitizeHtml.js";
+import { parseJsonBody, publicError } from "../src/server/api/requestSecurity.js";
+import { checkRateLimit, getRateLimitKey } from "../src/server/api/rateLimiter.js";
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -293,7 +295,7 @@ async function fetchTMDB(
     const results = Array.isArray(data?.results) ? data.results : [];
     return results.map((r: any) => mapTMDBToCandidate(r, type));
   } catch (err) {
-    console.warn(`[Nerdvana] TMDB fetch failed for ${type}:`, err);
+    console.warn("[TMDB_FETCH_FAILED]", { type, category: err instanceof Error ? err.name : "unknown" });
     return [];
   }
 }
@@ -316,7 +318,7 @@ async function fetchTMDBTrailerKey(
     );
     return trailer?.key?.trim() || null;
   } catch (err) {
-    console.warn(`[Nerdvana] TMDB trailer fetch failed for ${type} ${id}:`, err);
+    console.warn("[TMDB_TRAILER_FETCH_FAILED]", { type, category: err instanceof Error ? err.name : "unknown" });
     return null;
   }
 }
@@ -544,7 +546,7 @@ async function fetchCandidates(
       return await fetchGoogleBooks(query);
     }
   } catch (err) {
-    console.error("[Nerdvana] fetchCandidates exception:", err);
+    console.error("[VISUAL_CANDIDATE_FETCH_FAILED]", { category: err instanceof Error ? err.name : "unknown" });
   }
   return [];
 }
@@ -841,7 +843,7 @@ async function fetchDirectProvider(
         }
       }
     } catch (e) {
-      console.error("[Nerdvana] Direct ComicVine fetch failed:", e);
+      console.error("[COMICVINE_DIRECT_FETCH_FAILED]", { category: e instanceof Error ? e.name : "unknown" });
     }
   }
 
@@ -853,7 +855,7 @@ async function fetchDirectProvider(
         return mapTMDBToCandidate(raw, type);
       }
     } catch (e) {
-      console.error("[Nerdvana] Direct TMDB fetch failed:", e);
+      console.error("[TMDB_DIRECT_FETCH_FAILED]", { category: e instanceof Error ? e.name : "unknown" });
     }
   }
 
@@ -874,7 +876,7 @@ async function fetchDirectProvider(
         };
       }
     } catch (e) {
-      console.error("[Nerdvana] Direct RAWG fetch failed:", e);
+      console.error("[RAWG_DIRECT_FETCH_FAILED]", { category: e instanceof Error ? e.name : "unknown" });
     }
   }
 
@@ -910,7 +912,7 @@ async function fetchDirectProvider(
         }
       }
     } catch (e) {
-      console.error("[Nerdvana] Direct IGDB fetch failed:", e);
+      console.error("[IGDB_DIRECT_FETCH_FAILED]", { category: e instanceof Error ? e.name : "unknown" });
     }
   }
 
@@ -934,7 +936,7 @@ async function fetchDirectProvider(
         }
       }
     } catch (e) {
-      console.error("[Nerdvana] Direct Jikan fetch failed:", e);
+      console.error("[JIKAN_DIRECT_FETCH_FAILED]", { category: e instanceof Error ? e.name : "unknown" });
     }
   }
 
@@ -945,7 +947,7 @@ async function fetchDirectProvider(
         return await fetchAnimeVisualByCanonicalId(animeId, source === "jikan");
       }
     } catch (e) {
-      console.error("[Nerdvana] Direct anime fetch failed:", e);
+      console.error("[ANIME_DIRECT_FETCH_FAILED]", { category: e instanceof Error ? e.name : "unknown" });
     }
   }
 
@@ -1023,7 +1025,7 @@ async function fetchAnimeVisualByCanonicalId(animeId: number, isMal: boolean = f
       trailerKey,
     };
   } catch (err) {
-    console.error("[Nerdvana] fetchAnimeVisualByCanonicalId error:", err);
+    console.error("[ANIME_CANONICAL_FETCH_FAILED]", { category: err instanceof Error ? err.name : "unknown" });
     return null;
   }
 }
@@ -1287,7 +1289,7 @@ async function adaptiveRetrieve(
     // canonical title match. A franchise-level match can silently substitute
     // a different title or adaptation.
     if (isDeterministicMode && expectedSource !== "comicvine" && packet.providerMetadata?.canonicalTitle) {
-      console.log(`[Nerdvana] Direct provider lookup failed. Attempting exact-title recovery for: "${packet.providerMetadata.canonicalTitle}"`);
+      console.log("[DIRECT_PROVIDER_LOOKUP_FAILED] Attempting exact-title recovery.");
       const recoveryQuery = packet.providerMetadata.canonicalTitle;
       const candidates = await fetchCandidates(recoveryQuery, packet.mediaLens, keys);
       
@@ -1338,7 +1340,7 @@ async function adaptiveRetrieve(
   // ── TIER 1: STRICT ──────────────────────────────────────────────────
   {
     const mode: RetrievalMode = "STRICT";
-    console.log(`[Nerdvana] [${mode}] Fetching: "${tiers.strict}"`);
+      console.log(`[Nerdvana] [${mode}] Fetching strict tier.`);
     const candidates = await fetchCandidates(tiers.strict, mediaLens, keys);
     if (candidates.length > 0) {
       const ranked = scoreCandidatesWithTrace(candidates, baseScoringCtx, mode, trace, packet, mmCtx);
@@ -1376,7 +1378,7 @@ async function adaptiveRetrieve(
   // ── TIER 2: RELAXED ──────────────────────────────────────────────────
   {
     const mode: RetrievalMode = "RELAXED";
-    console.log(`[Nerdvana] [${mode}] Fetching: "${tiers.relaxed}"`);
+    console.log(`[Nerdvana] [${mode}] Fetching relaxed tier.`);
     const candidates = await fetchCandidates(tiers.relaxed, mediaLens, keys);
     if (candidates.length > 0) {
       const ranked = scoreCandidatesWithTrace(candidates, baseScoringCtx, mode, trace, packet, mmCtx);
@@ -1394,7 +1396,7 @@ async function adaptiveRetrieve(
   // ── TIER 3: FRANCHISE ────────────────────────────────────────────────
   {
     const mode: RetrievalMode = "FRANCHISE";
-    console.log(`[Nerdvana] [${mode}] Fetching: "${tiers.franchise}"`);
+    console.log(`[Nerdvana] [${mode}] Fetching franchise tier.`);
     const candidates = await fetchCandidates(tiers.franchise, mediaLens, keys);
     if (candidates.length > 0) {
       const ranked = scoreCandidatesWithTrace(candidates, baseScoringCtx, mode, trace, packet, mmCtx);
@@ -1412,7 +1414,7 @@ async function adaptiveRetrieve(
   // ── TIER 4: ENTITY ───────────────────────────────────────────────────
   {
     const mode: RetrievalMode = "ENTITY";
-    console.log(`[Nerdvana] [${mode}] Fetching: "${tiers.entity}"`);
+    console.log(`[Nerdvana] [${mode}] Fetching entity tier.`);
     const candidates = await fetchCandidates(tiers.entity, mediaLens, keys);
     if (candidates.length > 0) {
       const ranked = scoreCandidatesWithTrace(candidates, baseScoringCtx, mode, trace, packet, mmCtx);
@@ -1444,7 +1446,7 @@ async function adaptiveRetrieve(
         `[Nerdvana] [${mode}] SKIPPED — popularity tier is disabled for lens="${mediaLens}" entityKind="${packet.entityKind ?? "unknown"}" to prevent cross-franchise bleed.`
       );
     } else {
-      console.log(`[Nerdvana] [${mode}] Fetching: "${tiers.popularity}"`);
+      console.log(`[Nerdvana] [${mode}] Fetching popularity tier.`);
       const candidates = await fetchCandidates(tiers.popularity, mediaLens, keys);
       if (candidates.length > 0) {
         const ranked = scoreCandidatesWithTrace(candidates, baseScoringCtx, mode, trace, packet, mmCtx);
@@ -1470,8 +1472,13 @@ export default async function handler(req: any, res?: any) {
   const method = String(req?.method ?? "POST").toUpperCase();
   if (method !== "POST") return jsonResponse({ error: "Method Not Allowed" }, 405, res);
 
+  const rateLimit = checkRateLimit(getRateLimitKey(req, "visual"), 30, 60_000);
+  if (!rateLimit.allowed) return jsonResponse(publicError("Too many visual requests.", "RATE_LIMITED"), 429, res);
+
   try {
-    const body = await readBody(req);
+    const parsedBody = await parseJsonBody(req);
+    if (!parsedBody.ok) return jsonResponse(publicError(parsedBody.error, `REQUEST_${parsedBody.status}`), parsedBody.status, res);
+    const body = parsedBody.body;
     const packet: ResolverContextPacket = body.contextPacket;
 
     if (!packet || !packet.canonicalEntity) {
@@ -1528,10 +1535,9 @@ export default async function handler(req: any, res?: any) {
     return jsonResponse(outcome, 200, res);
 
   } catch (error: any) {
-    console.error("[Nerdvana] Visual Lookup Fatal Error:", error);
-    return jsonResponse({
-      state: "PROCESSING_ERROR",
-      error: String(error),
-    }, 500, res);
+    console.error("[VISUAL_LOOKUP_FAILURE]", {
+      category: error instanceof Error ? error.name : "unknown",
+    });
+    return jsonResponse(publicError("Visual lookup failed. Please try again.", "VISUAL_LOOKUP_FAILED"), 500, res);
   }
 }

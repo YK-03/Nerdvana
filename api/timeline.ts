@@ -24,6 +24,7 @@ import {
   setCachedTimeline,
 } from "../src/server/api/timelineCache.js";
 import { generateGroqText, getGroqApiKey } from "../src/server/api/groqProvider.js";
+import { parseJsonBody, publicError } from "../src/server/api/requestSecurity.js";
 
 const MAX_EVENTS = 8;
 const MAX_TITLE_LENGTH = 140;
@@ -351,7 +352,9 @@ export async function handler(
   }
 
   try {
-    const body = await readBody(req);
+    const parsedBody = await parseJsonBody(req);
+    if (!parsedBody.ok) return jsonResponse(publicError(parsedBody.error, `REQUEST_${parsedBody.status}`), parsedBody.status, res);
+    const body = parsedBody.body;
 
     // This check intentionally precedes rate limiting, TMDB access, cache access,
     // and model generation so locked requests cannot reveal or generate spoilers.
@@ -374,13 +377,10 @@ export async function handler(
       return jsonResponse({ error: "Movies do not support season selection." }, 400, res);
     }
 
-    const clientIp = extractClientIp(req);
-    if (clientIp !== "unknown") {
-      const rateLimit = checkRateLimit(`timeline:${clientIp}`, 12, 60_000);
-      if (!rateLimit.allowed) {
-        console.log("[TIMELINE_RATE_LIMITED]", { retryAfter: rateLimit.retryAfter });
-        return jsonResponse({ error: "Too many timeline requests." }, 429, res);
-      }
+    const rateLimit = checkRateLimit(getRateLimitKey(req, "timeline"), 12, 60_000);
+    if (!rateLimit.allowed) {
+      console.log("[TIMELINE_RATE_LIMITED]", { retryAfter: rateLimit.retryAfter });
+      return jsonResponse(publicError("Too many timeline requests.", "RATE_LIMITED"), 429, res);
     }
 
     const cacheSeasonNumber = provider.mediaType === "tv" ? (requestedSeasonNumber ?? 1) : null;

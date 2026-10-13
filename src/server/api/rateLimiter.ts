@@ -99,8 +99,8 @@ export function checkRateLimit(
  * Extracts the client IP from a Vercel serverless request.
  *
  * Vercel sets x-forwarded-for. On local dev the header may be absent;
- * falls back to "unknown" which is treated permissively (never blocked)
- * to avoid false positives in development.
+ * callers must use a namespace-specific fallback key for "unknown" rather
+ * than treating missing identity as unlimited.
  */
 export function extractClientIp(req: {
   headers?: Record<string, string | string[] | undefined> | any;
@@ -115,4 +115,9 @@ export function extractClientIp(req: {
   // x-forwarded-for can be a comma-separated list; the first is the real client IP
   const raw = Array.isArray(forwarded) ? forwarded[0] : String(forwarded);
   return typeof raw === "string" ? raw.split(",")[0].trim() || "unknown" : "unknown";
+}
+
+export function getRateLimitKey(req: any, namespace: string): string {
+  const ip = extractClientIp(req);
+  return ip === "unknown" ? `unknown:${namespace}` : `${namespace}:${ip}`;
 }

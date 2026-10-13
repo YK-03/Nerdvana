@@ -1,6 +1,7 @@
 
 import { getIGDBToken } from "../src/server/igdbAuth.js";
-import { checkRateLimit, extractClientIp } from "../src/server/api/rateLimiter.js";
+import { checkRateLimit, getRateLimitKey } from "../src/server/api/rateLimiter.js";
+import { MAX_QUERY_LENGTH } from "../src/server/api/requestSecurity.js";
 import {
   classifyComicsQueryType,
   comicProviderTypeLabel,
@@ -333,9 +334,9 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
           const msg = err?.message || "";
           const isTransient = err?.name === "AbortError" || err?.name === "TimeoutError" || msg.includes("ECONNRESET") || msg.includes("fetch failed") || msg.toLowerCase().includes("timeout");
           if (!isTransient) {
-            console.error("[IGDB AUTOCOMPLETE] Fetch Failed, falling back to local registry:", err.message);
+            console.error("[IGDB AUTOCOMPLETE] Fetch failed, falling back to local registry.");
           } else if (process.env.DEBUG_AUTOCOMPLETE === "true") {
-            console.log("[IGDB AUTOCOMPLETE] Transient fetch interruption:", err.message);
+            console.log("[IGDB AUTOCOMPLETE] Transient fetch interruption.");
           }
         }
       }
@@ -533,10 +534,12 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
     const msg = err?.message || "";
     const isTransient = err?.name === "AbortError" || msg.includes("ECONNRESET") || msg.includes("fetch failed") || msg.includes("Timeout");
     if (!isTransient) {
-      console.error("[Nerdvana Autocomplete] Error:", err);
+      console.error("[Nerdvana Autocomplete] Error:", {
+        category: err instanceof Error ? err.name : "unknown",
+      });
       throw new Error("provider_error");
     } else if (process.env.DEBUG_AUTOCOMPLETE === "true") {
-      console.log("[Nerdvana Autocomplete] Transient fetch interruption:", err.message);
+      console.log("[Nerdvana Autocomplete] Transient fetch interruption.");
     }
     throw new Error("timeout");
   }
@@ -544,9 +547,11 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
 }
 
 export default async function handler(req: any, res?: any) {
-  const clientIp = extractClientIp(req);
-  if (clientIp !== "unknown") {
-    const rateResult = checkRateLimit(clientIp, 60, 60_000);
+  if (String(req?.method ?? "GET").toUpperCase() !== "GET") {
+    return res ? res.status(405).json({ error: "Method Not Allowed" }) : new Response(JSON.stringify({ error: "Method Not Allowed" }), { status: 405 });
+  }
+  {
+    const rateResult = checkRateLimit(getRateLimitKey(req, "autocomplete"), 60, 60_000);
     if (!rateResult.allowed) {
       if (res && typeof res.setHeader === "function") {
         res.setHeader("Retry-After", String(rateResult.retryAfter));
@@ -585,6 +590,10 @@ export default async function handler(req: any, res?: any) {
       lens = req.query.lens || "movies";
     }
 
+    if (q.length > MAX_QUERY_LENGTH) {
+      const payload = { error: "Query is too long.", code: "INVALID_QUERY" };
+      return res ? res.status(400).json(payload) : new Response(JSON.stringify(payload), { status: 400 });
+    }
     if (!q || q.length < 2) {
       const payload = { status: "empty", data: [] };
       if (res) return res.status(200).json(payload);

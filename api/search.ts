@@ -1,4 +1,16 @@
+import { checkRateLimit, getRateLimitKey } from "../src/server/api/rateLimiter.js";
+import { MAX_QUERY_LENGTH } from "../src/server/api/requestSecurity.js";
+
 export default async function handler(req: any, res?: any) {
+  if (String(req?.method ?? "GET").toUpperCase() !== "GET") {
+    if (res) return res.status(405).json({ error: "Method Not Allowed" });
+    return new Response(JSON.stringify({ error: "Method Not Allowed" }), { status: 405 });
+  }
+  const rateLimit = checkRateLimit(getRateLimitKey(req, "search"), 30, 60_000);
+  if (!rateLimit.allowed) {
+    if (res) return res.status(429).json({ error: "Too many search requests.", code: "RATE_LIMITED" });
+    return new Response(JSON.stringify({ error: "Too many search requests.", code: "RATE_LIMITED" }), { status: 429 });
+  }
   try {
     let q = ""
 
@@ -9,7 +21,10 @@ export default async function handler(req: any, res?: any) {
       q = req.query.q || ""
     }
 
-    console.log("[Nerdvana] SERPER QUERY:", q)
+    if (q.length > MAX_QUERY_LENGTH) {
+      if (res) return res.status(400).json({ error: "Query is too long.", code: "INVALID_QUERY" });
+      return new Response(JSON.stringify({ error: "Query is too long.", code: "INVALID_QUERY" }), { status: 400 });
+    }
 
     if (!q) {
       const empty = JSON.stringify([])
@@ -59,11 +74,11 @@ export default async function handler(req: any, res?: any) {
       headers: { "Content-Type": "application/json" },
     })
   } catch (e) {
-    console.error("[Nerdvana] SERPER ERROR:", e)
+    console.error("[Nerdvana] SERPER ERROR", { category: "provider_failure" })
 
-    if (res) return res.status(200).json([])
-    return new Response(JSON.stringify([]), {
-      status: 200,
+    if (res) return res.status(502).json({ error: "Search provider unavailable.", code: "SEARCH_PROVIDER_FAILED" })
+    return new Response(JSON.stringify({ error: "Search provider unavailable.", code: "SEARCH_PROVIDER_FAILED" }), {
+      status: 502,
       headers: { "Content-Type": "application/json" },
     })
   }

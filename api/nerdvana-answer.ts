@@ -8,7 +8,14 @@ import {
   normalizeComicVineResourceType,
 } from "../src/lib/resolver/providerMetadata.js";
 import { buildReadingOrder, buildContinuationSuggestions } from "../src/lib/resolver/readingOrder.js";
-import { checkRateLimit, extractClientIp } from "../src/server/api/rateLimiter.js";
+import { checkRateLimit, getRateLimitKey } from "../src/server/api/rateLimiter.js";
+import {
+  parseJsonBody,
+  publicError,
+  redactRequestLog,
+  validateConversation,
+  validateQueryLength,
+} from "../src/server/api/requestSecurity.js";
 import { buildCacheKey, getCachedAnswer, setCachedAnswer, getCacheIdentity } from "../src/server/api/answerCache.js";
 import { generateGroqText, getGroqApiKey, type GroqGenerationResult } from "../src/server/api/groqProvider.js";
 import { buildAnswerPrompt, type AnswerConversationMessage } from "../src/server/api/answerPrompt.js";
@@ -158,13 +165,11 @@ export default async function handler(req: any, res?: any) {
 
   // ── Rate limiting (per-instance sliding window) ──────────────────────────
   // Check before any body parsing or expensive processing.
-  // Falls back to "unknown" when IP cannot be determined; unknown IPs are
-  // never blocked to avoid false positives in local dev.
-  const clientIp = extractClientIp(req);
-  if (clientIp !== "unknown") {
-    const rateResult = checkRateLimit(clientIp, 20, 60_000); // 20 req/min
+  // Missing IPs use a route-specific fallback key so they are still bounded.
+  {
+    const rateResult = checkRateLimit(getRateLimitKey(req, "answer"), 20, 60_000);
     if (!rateResult.allowed) {
-      console.log("[RATE_LIMITED]", { ip: clientIp, retryAfter: rateResult.retryAfter });
+      console.log("[RATE_LIMITED]", { route: "answer", retryAfter: rateResult.retryAfter });
       return jsonResponse(
         {
           error: "Too many requests",
@@ -179,21 +184,26 @@ export default async function handler(req: any, res?: any) {
   }
 
   try {
-    const body = await readBody(req);
+    const parsedBody = await parseJsonBody(req);
+    if (!parsedBody.ok) return jsonResponse(publicError(parsedBody.error, `REQUEST_${parsedBody.status}`), parsedBody.status, res);
+    const body = parsedBody.body;
 
-    console.log("[INCOMING_REQUEST_LOG]", {
-      query: body?.query,
-      item: body?.item,
-      lens: body?.mediaLens,
-      providerId: body?.item || body?.canonicalSelection || null,
-      previousEntity: body?.previousEntity || null
-    });
+    console.log("[INCOMING_REQUEST]", redactRequestLog({
+      requestId: body?.requestId,
+      mediaLens: body?.mediaLens,
+      hasExplicitSelection: Boolean(body?.item || body?.canonicalSelection),
+      conversationCount: Array.isArray(body?.conversation) ? body.conversation.length : 0,
+    }));
 
     const rawQuery = String(body?.query ?? "").trim();
+    const queryError = validateQueryLength(rawQuery);
+    if (queryError) return jsonResponse(publicError(queryError, "INVALID_QUERY"), 400, res);
     // Canonical normalization before all processing
     const canonicalQuery = normalizeQuery(rawQuery);
     const query = canonicalQuery.canonical ?? rawQuery;
     const conversation = normalizeConversation(body?.conversation);
+    const conversationError = validateConversation(body?.conversation);
+    if (conversationError) return jsonResponse(publicError(conversationError, "INVALID_CONVERSATION"), 400, res);
     const spoilerMode =
       typeof body?.spoilerMode === "boolean"
         ? body.spoilerMode
@@ -215,19 +225,9 @@ export default async function handler(req: any, res?: any) {
     const providerMetadata = body?.providerMetadata || undefined;
     const requestId = body?.requestId || undefined;
     
-    console.log("[LIFECYCLE_DEBUG_BACKEND] Payload received:", JSON.stringify({
-      requestId,
-      query: rawQuery,
-      item: explicitSelection,
-      lens: mediaLens,
-      conversation: body?.conversation,
-      previousEntity: body?.previousEntity,
-      executionMode: body?.executionMode
-    }, null, 2));
     if (providerMetadata?.providerType) {
       console.log("[TYPED_PROVIDER_PROPAGATED]", {
         stage: "request_payload",
-        query: rawQuery,
         mediaLens,
         providerType: providerMetadata.providerType,
         providerResourceType: providerMetadata.providerResourceType ?? null,
@@ -235,15 +235,10 @@ export default async function handler(req: any, res?: any) {
       });
     }
 
-    if (!query) {
-      return jsonResponse({ error: "Query is required" }, 400, res);
-    }
-
     const temporaryEntities: TemporaryCanonicalEntity[] = Array.isArray(body?.temporaryEntities) ? body.temporaryEntities : [];
     const classifiedComicType = mediaLens === "comics" ? classifyComicsQueryType(rawQuery) : null;
     if (classifiedComicType) {
       console.log("[TYPED_ENTITY_CLASSIFIED]", {
-        query: rawQuery,
         mediaLens,
         providerType: classifiedComicType,
       });
@@ -266,14 +261,12 @@ export default async function handler(req: any, res?: any) {
     if (!explicitSelection && !hasCarriedCanonicalContext) {
       if (mediaLens === "comics") {
         console.warn("[TYPED_AMBIGUITY_DETECTED]", {
-          query: rawQuery,
           mediaLens,
           classifiedType: classifiedComicType,
           stage: "before_provider_ingestion",
         });
       }
       console.log("[PROVIDER_TEXT_SEARCH_TRIGGERED]", {
-        query: rawQuery,
         mediaLens
       });
 
@@ -290,7 +283,6 @@ export default async function handler(req: any, res?: any) {
         rejectedExternalEntities = ingestion.rejectedCount;
         apiExactMatch = true;
         console.log("[PROVIDER_ENTITY_INGESTED]", {
-          query: rawQuery,
           mediaLens,
           provider: newTempEntity.source,
           id: newTempEntity.id,
@@ -300,7 +292,6 @@ export default async function handler(req: any, res?: any) {
         temporaryEntities.push(newTempEntity);
 
         console.log("[REGROUND_AFTER_INGESTION]", {
-          query: rawQuery,
           mediaLens,
           ingestedId: newTempEntity.id
         });
@@ -323,9 +314,8 @@ export default async function handler(req: any, res?: any) {
     });
 
     console.log("[CANONICAL_RESOLUTION_RESULT_LOG]", {
-      selectedCanonicalEntity: grounding.selectedCanonicalEntity,
-      selectedSelectionValue: grounding.selectedSelectionValue,
-      providerId: grounding.selectedSelectionValue,
+      hasSelectedCanonicalEntity: Boolean(grounding.selectedCanonicalEntity),
+      hasSelectedProviderId: Boolean(grounding.selectedSelectionValue),
       ambiguityLevel: grounding.ambiguityLevel,
       providerTextSearch: newTempEntity ? {
         provider: newTempEntity.source,
@@ -339,14 +329,12 @@ export default async function handler(req: any, res?: any) {
     if (!grounding.selectedCanonicalEntity) {
       if (mediaLens === "comics") {
         console.warn("[TYPED_AMBIGUITY_DETECTED]", {
-          query: rawQuery,
           mediaLens,
           classifiedType: classifiedComicType,
           stage: "before_semantic_fallback",
         });
       }
       console.log("[SEMANTIC_FALLBACK_TRIGGERED]", {
-        query: rawQuery,
         mediaLens
       });
       grounding = groundCanonicalIntent({
@@ -525,8 +513,8 @@ export default async function handler(req: any, res?: any) {
         : true;
 
       if (!titleMatch || !rootMatch || !typeMatch || !publisherMatch) {
-         console.log(`[DETERMINISTIC OWNERSHIP LOST] Pre-prompt ownership verification failed! Expected canonical "${canonical}" or root "${root}", got "${resolved}"`);
-         console.log(`[CANONICAL DRIFT DETECTED] Override blocked. Expected canonical "${canonical}" or root "${root}", got "${resolved}"`);
+         console.log("[DETERMINISTIC_OWNERSHIP_LOST] Pre-prompt ownership verification failed.");
+         console.log("[CANONICAL_DRIFT_DETECTED] Override blocked.");
          console.log("[TYPED_OWNERSHIP_REJECTED] Ownership verification components mismatched:", {
            titleMatch, expectedTitle: canonical, gotTitle: resolved,
            rootMatch, expectedRoot: root,
@@ -550,11 +538,11 @@ export default async function handler(req: any, res?: any) {
         type: resolvedType,
         publisher: packet.providerMetadata.publisherLabel
       });
-      console.log(`[DETERMINISTIC_PROVIDER_LOCK] Generating answer context for locked entity: "${packet.canonicalEntity}" (${packet.providerId})`);
+      console.log("[DETERMINISTIC_PROVIDER_LOCK] Generating answer context for locked entity.");
     }
 
     if (packet.executionMode === "DETERMINISTIC_PROVIDER") {
-      console.log(`[DETERMINISTIC OWNERSHIP PROPAGATED] Generating answer context for locked entity: "${packet.canonicalEntity}" (${packet.providerId})`);
+      console.log("[DETERMINISTIC_OWNERSHIP_PROPAGATED] Generating answer context for locked entity.");
     }
 
     // 2. Build Prompt and generate answer
@@ -763,13 +751,12 @@ export default async function handler(req: any, res?: any) {
       res,
     );
   } catch (error) {
-    console.error("Generation Failed", error);
+    console.error("[ANSWER_FAILURE]", {
+      category: error instanceof Error ? error.name : "unknown",
+    });
 
     return jsonResponse(
-      {
-        error: "Generation Failed",
-        details: String(error),
-      },
+      publicError("Generation failed. Please try again.", "GENERATION_FAILED"),
       500,
       res,
     );

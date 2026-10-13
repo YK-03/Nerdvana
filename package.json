@@ -6,7 +6,8 @@
   "scripts": {
     "build": "vite build",
     "test:phase1a": "tsx scripts/grounding-check.ts",
-    "test:phase1b": "tsx scripts/phase1b-identity-check.ts",
+    "test:phase1b": "tsx scripts/identity-check.ts",
+    "test:security": "tsx scripts/security-check.ts",
     "dev": "vite"
   },
   "dependencies": {
