@@ -509,12 +509,12 @@ async function fetchAutocomplete(query: string, lens: string, keys: any): Promis
 
             const consolidated: typeof candidates = [];
             for (const [key, clusterItems] of clusters.entries()) {
-              clusterItems.sort((a, b) => b.score - a.score);
+              clusterItems.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
               const leader = clusterItems[0];
-              const suppressed = clusterItems.slice(1).map(x => x.name);
+              const suppressed = clusterItems.slice(1).map((x: { name: string }) => x.name);
               
               if (process.env.DEBUG_AUTOCOMPLETE === "true") {
-                console.log(`[DUPLICATE_CLUSTER] Cluster Root: "${key}" | Members: [${clusterItems.map(x => `"${x.name}"`).join(", ")}]`);
+                console.log(`[DUPLICATE_CLUSTER] Cluster Root: "${key}" | Members: [${clusterItems.map((x: { name: string }) => `"${x.name}"`).join(", ")}]`);
                 if (suppressed.length > 0) {
                   console.log(`[CANONICAL_OWNER_SELECTED] Selected Leader: "${leader.name}" | Suppressed: [${suppressed.join(", ")}]`);
                 }

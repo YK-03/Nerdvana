@@ -19,6 +19,7 @@ import {
   buildVisualArbitrationContext,
   applyMultimodalArbitrationToCandidate,
 } from "../src/lib/resolver/multimodal/visualLookupArbitration.js";
+import { fallbackIdentityMatches } from "../src/lib/resolver/entityIdentity.js";
 import type { ProductionRetrievalTelemetry } from "../src/lib/resolver/multimodal/productionRetrievalTelemetry.js";
 import { sanitizeExternalDescription } from "../src/lib/utils/sanitizeHtml.js";
 
@@ -198,18 +199,9 @@ function verifyTitleAlignment(
 
   const tokenOverlap = computeTokenOverlap(candidateName, anchors);
 
-  // STRICT mode: already has its own validation chain — still run overlap
-  // as an additional diagnostic but don't add a new rejection layer here
-  // (STRICT already rejects on entityGrounding < 0.5).
-  if (mode === "STRICT") {
-    return { passed: true, tokenOverlap };
-  }
-
-  // RELAXED / FRANCHISE / ENTITY / POPULARITY:
-  // Must share at least 1 meaningful token with canonical entity or franchise.
-  // Threshold: 0.10 (i.e., at least ~1 shared token in a 10-token query).
-  // This is intentionally low — we want to catch complete non-overlaps
-  // like "Thus Spoke Kishibe Rohan" vs "Johan Liebert Monster".
+  // All modes must share at least one meaningful token with the canonical
+  // entity or franchise. Deterministic provider IDs additionally use exact
+  // provider lookup and must never relax into an unrelated title.
   const OVERLAP_THRESHOLD = 0.10;
 
   if (tokenOverlap < OVERLAP_THRESHOLD) {
@@ -1291,17 +1283,22 @@ async function adaptiveRetrieve(
       };
     }
 
-    // Direct fetch failed - if DETERMINISTIC_PROVIDER, attempt Constrained Franchise Recovery ONLY (for non-comics)
-    if (isDeterministicMode && expectedSource !== "comicvine" && packet.providerMetadata?.franchiseRoot) {
-      console.log(`[Nerdvana] Direct provider ID lookup failed. Attempting constrained deterministic recovery inside root: "${packet.providerMetadata.franchiseRoot}"`);
-      const recoveryQuery = packet.providerMetadata.franchiseRoot;
+    // Direct fetch failed - deterministic recovery may only use an exact
+    // canonical title match. A franchise-level match can silently substitute
+    // a different title or adaptation.
+    if (isDeterministicMode && expectedSource !== "comicvine" && packet.providerMetadata?.canonicalTitle) {
+      console.log(`[Nerdvana] Direct provider lookup failed. Attempting exact-title recovery for: "${packet.providerMetadata.canonicalTitle}"`);
+      const recoveryQuery = packet.providerMetadata.canonicalTitle;
       const candidates = await fetchCandidates(recoveryQuery, packet.mediaLens, keys);
       
       if (candidates.length > 0) {
-        const cleanExpectedRoot = packet.providerMetadata.franchiseRoot.toLowerCase().replace(/[^a-z0-9]/g, "");
         const filteredCandidates = candidates.filter(c => {
-          const normName = c.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-          return normName.includes(cleanExpectedRoot);
+          return fallbackIdentityMatches(
+            packet.providerMetadata?.canonicalTitle || packet.canonicalEntity,
+            c.name,
+            packet.mediaLens,
+            packet.entityAliases,
+          );
         });
 
         if (filteredCandidates.length > 0) {

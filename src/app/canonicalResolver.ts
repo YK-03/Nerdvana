@@ -39,7 +39,6 @@ import {
   normalizeText,
   uniqueNormalized,
   tokenize,
-  cleanAlphanumeric,
   CANONICAL_ALIASES,
   type NormalizedQuery
 } from "../lib/resolver/queryNormalizer.js";
@@ -50,6 +49,10 @@ import {
   extractNamespace,
   isExternalProviderId
 } from "../lib/resolver/providerIdUtility.js";
+import {
+  fallbackIdentityMatches,
+  isGenericMediaLabel,
+} from "../lib/resolver/entityIdentity.js";
 
 import {
   scoreCandidate,
@@ -894,10 +897,6 @@ async function resolveAnimeThroughAniList(
     }
   `;
 
-  const cleanString = (str: string) => cleanAlphanumeric(str);
-  const cleanResolved = cleanString(resolvedTitle);
-  const cleanRaw = cleanString(rawQuery);
-
   const searchTerms = Array.from(new Set([resolvedTitle, rawQuery].filter(Boolean)));
   
   const fetchPromises = searchTerms.map(async (term) => {
@@ -933,51 +932,15 @@ async function resolveAnimeThroughAniList(
       const native = media.title?.native || "";
       const synonyms = media.synonyms || [];
 
-      const primaryTitles = [english, romaji].filter(Boolean);
-      let matchConfidence = 0.0;
-
-      for (const title of primaryTitles) {
-        const cleanTitle = cleanString(title);
-        if (cleanTitle === cleanResolved || cleanTitle === cleanRaw) {
-          matchConfidence = 1.0;
-          break;
-        }
-        if (cleanTitle.startsWith(cleanResolved) || cleanTitle.startsWith(cleanRaw)) {
-          matchConfidence = Math.max(matchConfidence, 0.98);
-        }
-      }
-
-      if (matchConfidence < 1.0) {
-        for (const syn of synonyms) {
-          const cleanSyn = cleanString(syn);
-          if (cleanSyn === cleanResolved || cleanSyn === cleanRaw) {
-            matchConfidence = Math.max(matchConfidence, 0.95);
-            break;
-          }
-        }
-      }
-
-      if (matchConfidence < 0.95) {
-        const resolvedTokens = resolvedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
-        const rawTokens = rawQuery.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
-        const allTitles = [...primaryTitles, ...synonyms].filter(Boolean);
-        
-        for (const title of allTitles) {
-          const titleTokens = title.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
-          if (titleTokens.length === 0) continue;
-
-          const getOverlap = (tokens: string[]) => {
-            if (tokens.length === 0) return 0;
-            const shared = tokens.filter(t => titleTokens.includes(t));
-            return shared.length / Math.min(tokens.length, titleTokens.length);
-          };
-
-          const overlap = Math.max(getOverlap(resolvedTokens), getOverlap(rawTokens));
-          if (overlap >= 0.85) {
-            matchConfidence = Math.max(matchConfidence, 0.9);
-          }
-        }
-      }
+      const primaryTitles = [english, romaji, native].filter(Boolean);
+      const allTitles = [...primaryTitles, ...synonyms].filter(Boolean);
+      const matchesResolved = allTitles.some((title) =>
+        fallbackIdentityMatches(resolvedTitle, title, "anime", [resolvedTitle]),
+      );
+      const matchesRaw = allTitles.some((title) =>
+        fallbackIdentityMatches(rawQuery, title, "anime", [rawQuery]),
+      );
+      const matchConfidence = matchesResolved || matchesRaw ? 1.0 : 0.0;
 
       if (matchConfidence > globalMaxConfidence) {
         globalMaxConfidence = matchConfidence;
@@ -1012,6 +975,15 @@ async function resolveAnimeThroughAniList(
     selectedTitle: resolvedTitle
   });
 
+  return null;
+}
+
+function getProviderResponseTitle(rawData: any): string | null {
+  if (typeof rawData?.title === "string") return rawData.title;
+  if (typeof rawData?.name === "string") return rawData.name;
+  if (typeof rawData?.title?.english === "string") return rawData.title.english;
+  if (typeof rawData?.title?.romaji === "string") return rawData.title.romaji;
+  if (typeof rawData?.volumeInfo?.title === "string") return rawData.volumeInfo.title;
   return null;
 }
 
@@ -1088,7 +1060,7 @@ export async function buildContextPacket(
     (grounding?.providerMetadata?.canonicalTitle || grounding?.selectedCanonicalEntity);
 
   const executionMode = hasValidProviderOwnership ? "DETERMINISTIC_PROVIDER" : "SEMANTIC";
-  const providerId = isProviderId ? selectionVal : null;
+  let providerId = isProviderId ? selectionVal : null;
 
   console.log(
     "[PROVIDER_ID_RECEIVED] Received provider ID:",
@@ -1103,7 +1075,7 @@ export async function buildContextPacket(
   });
 
   const explicitSelectionUsed = grounding?.telemetry?.explicitSelectionUsed === true;
-  const hasDeterministicOwnershipFailure = explicitSelectionUsed && (
+  let hasDeterministicOwnershipFailure = explicitSelectionUsed && (
     !providerId ||
     executionMode !== "DETERMINISTIC_PROVIDER"
   );
@@ -1294,6 +1266,14 @@ export async function buildContextPacket(
     }
   }
 
+  if (executionMode === "DETERMINISTIC_PROVIDER" && providerId && !fetchedProviderData) {
+    hasDeterministicOwnershipFailure = true;
+    console.error(
+      "[DETERMINISTIC_OWNERSHIP_FAILURE]",
+      "Provider identity could not be verified because the provider returned no data."
+    );
+  }
+
   if (executionMode === "DETERMINISTIC_PROVIDER") {
     // EXACT PROVIDER GOVERNANCE ONLY
     if (fetchedComicVineData) {
@@ -1310,7 +1290,7 @@ export async function buildContextPacket(
       finalContinuity = fetchedComicVineData.start_year ? String(fetchedComicVineData.start_year) : null;
       finalContinuityType = "prime";
     } else {
-      finalContextualEntity = grounding?.providerMetadata?.canonicalTitle || grounding?.selectedCanonicalEntity || query;
+      finalContextualEntity = getProviderResponseTitle(fetchedProviderData) || grounding?.providerMetadata?.canonicalTitle || grounding?.selectedCanonicalEntity || query;
       finalParentFranchise = grounding?.providerMetadata?.franchiseRoot || grounding?.selectedFranchise || null;
       finalUniverse = grounding?.providerMetadata?.universe || null;
       finalContinuity = grounding?.providerMetadata?.releaseYear ? String(grounding.providerMetadata.releaseYear) : null;
@@ -1387,7 +1367,7 @@ export async function buildContextPacket(
     }
   }
 
-  const canonAuthority = (() => {
+  const canonAuthority: "primary" | "derived" | "variant" | "adaptation" = (() => {
     if (!finalTopology) return "primary";
     const ct = finalTopology.continuityType;
     if (ct === "prime") return "primary";
@@ -1408,20 +1388,20 @@ export async function buildContextPacket(
     ? getVariantFamily(finalTopology.id).map(v => v.id)
     : [];
 
-  if (executionMode === "DETERMINISTIC_PROVIDER") {
+  if (executionMode === "DETERMINISTIC_PROVIDER" && !fetchedProviderData) {
     finalContextualEntity = grounding?.providerMetadata?.canonicalTitle || grounding?.selectedCanonicalEntity || finalContextualEntity;
     finalParentFranchise = grounding?.providerMetadata?.franchiseRoot || grounding?.selectedFranchise || finalParentFranchise || null;
     console.log(`[DETERMINISTIC OWNERSHIP ACQUIRED] Locked provider identity for ID "${selectionVal}": Expected canonical "${finalContextualEntity}", root "${finalParentFranchise}"`);
   }
 
-  const contextualSearchQuery = buildContextualSearchQuery(
+  let contextualSearchQuery = buildContextualSearchQuery(
     finalContextualEntity,
     mediaLens as any,
     finalParentFranchise,
     intent
   );
 
-  const expandedEntity = finalTopology 
+  let expandedEntity = finalTopology
     ? finalTopology.canonicalEntity 
     : (isProviderId 
         ? (grounding?.providerMetadata?.canonicalTitle ?? grounding?.selectedCanonicalEntity ?? canonicalQuery.canonical ?? finalContextualEntity) 
@@ -1451,11 +1431,25 @@ export async function buildContextPacket(
     };
     console.log(`[DETERMINISTIC_PROVIDER_LOCK] Locked direct ComicVine providerMetadata:`, providerMetadata);
   } else if (grounding?.providerMetadata) {
-    providerMetadata = grounding.providerMetadata;
+    providerMetadata = {
+      ...grounding.providerMetadata,
+      canonicalTitle: getProviderResponseTitle(fetchedProviderData) || grounding.providerMetadata.canonicalTitle,
+    };
   } else if (mediaLens === "anime") {
     const animeTitleToResolve = finalParentFranchise || finalContextualEntity;
-    const resolution = await resolveAnimeThroughAniList(animeTitleToResolve, query);
+    const resolution = isGenericMediaLabel(animeTitleToResolve, "anime")
+      ? null
+      : await resolveAnimeThroughAniList(animeTitleToResolve, query);
     if (resolution) {
+      finalContextualEntity = resolution.name;
+      providerId = `anilist::anime::${resolution.id}`;
+      expandedEntity = resolution.name;
+      contextualSearchQuery = buildContextualSearchQuery(
+        finalContextualEntity,
+        mediaLens as any,
+        finalParentFranchise,
+        intent,
+      );
       providerMetadata = {
         provider: "anilist" as const,
         id: resolution.id,
@@ -1465,6 +1459,7 @@ export async function buildContextPacket(
       fetchedProviderData = resolution.rawData;
     }
   }
+
   const retrievalDescriptor = generateRetrievalDescriptor(
     expandedEntity,
     intent,
@@ -1532,6 +1527,12 @@ export async function buildContextPacket(
       (topologyConfidence * 0.1) +
       (continuityConfidence * 0.1)
     ).toFixed(2));
+  }
+
+  // A generic media label is not an entity. Do not allow a provider timeout
+  // or empty result to turn it into a confident unrelated title.
+  if (!providerMetadata && !fetchedProviderData && isGenericMediaLabel(finalContextualEntity, mediaLens)) {
+    overallConfidence = Math.min(overallConfidence, 0.24);
   }
 
   const resolutionCourage =
