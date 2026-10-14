@@ -8,6 +8,7 @@
     "test:phase1a": "tsx scripts/grounding-check.ts",
     "test:phase1b": "tsx scripts/identity-check.ts",
     "test:security": "tsx scripts/security-check.ts",
+    "test:regression": "npm run test:phase1a && npm run test:phase1b && npm run test:security",
     "dev": "vite"
   },
   "dependencies": {
