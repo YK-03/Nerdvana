@@ -24,6 +24,7 @@ interface RetrievalOutcome {
   error?: string;
   confidence?: RetrievalConfidence;
   mode?: RetrievalMode;
+  retryable?: boolean;
 }
 
 
@@ -69,6 +70,8 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
   const [loading, setLoading] = useState(false);
   const [searchPhase, setSearchPhase] = useState<SearchPhase>("idle");
   const [errorState, setErrorState] = useState<string | null>(null);
+  const [canRetry, setCanRetry] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
   const [confidence, setConfidence] = useState<RetrievalConfidence | null>(null);
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
@@ -137,6 +140,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
     let cancelled = false;
     setLoading(true);
     setErrorState(null);
+    setCanRetry(false);
     const normalizedReusableTitle = (reusableVisual?.title || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const normalizedCanonicalTitle = (contextPacket.canonicalEntity || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const reusableMatchesEntity = Boolean(
@@ -260,6 +264,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
             : outcome.error || outcome.reason || VISUAL_PHASE_LABELS.NO_IMAGE;
 
         setErrorState(userFriendlyError);
+        setCanRetry(outcome.retryable === true);
         onVisualResolutionComplete?.("failed");
       } catch (err: any) {
         if (cancelled) return;
@@ -274,6 +279,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
         setSearchPhase("done");
         setVisual(null);
         setErrorState(err.message || "Visual retrieval failed safely.");
+        setCanRetry(true);
         onVisualResolutionComplete?.("failed");
       } finally {
         if (!cancelled) setLoading(false);
@@ -282,7 +288,7 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
 
     fetchVisuals();
     return () => { cancelled = true; };
-  }, [contextPacket, activeTraceId]);
+  }, [contextPacket, activeTraceId, retryNonce]);
 
   if (!contextPacket || !contextPacket.canonicalEntity) return null;
 
@@ -516,7 +522,19 @@ export default function VisualPanel({ contextPacket, activeTraceId, reusableVisu
             className="p-5 text-[0.65rem] lg:text-[0.6rem] uppercase tracking-[0.14em]"
             style={{ /* pre-Inter-switch: fontFamily: '"Courier New", monospace' */ fontFamily: '"Inter", sans-serif', opacity: 0.3 }}
           >
-            {errorState || VISUAL_PHASE_LABELS.NO_IMAGE}
+            <>
+              <div>{errorState || VISUAL_PHASE_LABELS.NO_IMAGE}</div>
+              {canRetry && (
+                <button
+                  type="button"
+                  onClick={() => setRetryNonce((value) => value + 1)}
+                  className="mt-3 border px-2 py-1 text-[0.62rem] tracking-[0.12em] transition-colors hover:border-[var(--nerdvana-accent)] hover:text-[var(--nerdvana-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nerdvana-accent)]"
+                  style={{ borderColor: "var(--nerdvana-border)" }}
+                >
+                  Try again
+                </button>
+              )}
+            </>
           </div>
         )}
       </motion.div>

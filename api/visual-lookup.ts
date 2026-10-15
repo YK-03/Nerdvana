@@ -36,6 +36,28 @@ export type RetrievalMode =
   | "ENTITY"
   | "POPULARITY";
 
+export type VisualFailureCode =
+  | "PROVIDER_AUTHENTICATION_FAILED"
+  | "PROVIDER_RATE_LIMITED"
+  | "PROVIDER_TIMEOUT"
+  | "PROVIDER_NETWORK_FAILURE"
+  | "MALFORMED_PROVIDER_RESPONSE"
+  | "NO_IMAGE";
+
+class VisualProviderError extends Error {
+  constructor(public readonly code: VisualFailureCode) {
+    super(code);
+    this.name = "VisualProviderError";
+  }
+}
+
+function classifyVisualHttpFailure(status: number): VisualFailureCode {
+  if (status === 401 || status === 403) return "PROVIDER_AUTHENTICATION_FAILED";
+  if (status === 429) return "PROVIDER_RATE_LIMITED";
+  if (status === 408 || status === 504) return "PROVIDER_TIMEOUT";
+  return "PROVIDER_NETWORK_FAILURE";
+}
+
 export interface RetrievalTraceEntry {
   candidate: string;
   source: string;
@@ -81,8 +103,8 @@ export type RetrievalOutcome =
       retrievalTrace?: RetrievalTraceEntry[];
       productionTelemetry?: ProductionRetrievalTelemetry;
     }
-  | { state: "PROCESSING_ERROR"; error: string }
-  | { state: "API_ERROR"; error: string };
+  | { state: "PROCESSING_ERROR"; error: string; code?: VisualFailureCode; retryable?: boolean }
+  | { state: "API_ERROR"; error: string; code?: string };
 
 // ─── Utilities ────────────────────────────────────────────────────────
 
@@ -991,15 +1013,21 @@ async function fetchAnimeVisualByCanonicalId(animeId: number, isMal: boolean = f
         "Content-Type": "application/json",
         "Accept": "application/json",
       },
+      signal: AbortSignal.timeout(8_000),
       body: JSON.stringify({
         query,
         variables: { id: animeId }
       })
     });
-    if (!response.ok) return null;
-    const json = await response.json();
+    if (!response.ok) throw new VisualProviderError(classifyVisualHttpFailure(response.status));
+    let json: any;
+    try {
+      json = await response.json();
+    } catch {
+      throw new VisualProviderError("MALFORMED_PROVIDER_RESPONSE");
+    }
     const media = json?.data?.Media;
-    if (!media) return null;
+    if (!media) throw new VisualProviderError("MALFORMED_PROVIDER_RESPONSE");
 
     const normalizedMedia = {
       ...media,
@@ -1025,8 +1053,11 @@ async function fetchAnimeVisualByCanonicalId(animeId: number, isMal: boolean = f
       trailerKey,
     };
   } catch (err) {
-    console.error("[ANIME_CANONICAL_FETCH_FAILED]", { category: err instanceof Error ? err.name : "unknown" });
-    return null;
+    if (err instanceof VisualProviderError) throw err;
+    if (err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError")) {
+      throw new VisualProviderError("PROVIDER_TIMEOUT");
+    }
+    throw new VisualProviderError("PROVIDER_NETWORK_FAILURE");
   }
 }
 
@@ -1046,7 +1077,13 @@ async function adaptiveRetrieve(
   const mmCtx = buildVisualArbitrationContext(packet);
 
   // ─── AniList Deterministic Visual Fetch Bypass ───
-  if (packet.mediaLens === "anime" && packet.providerMetadata && packet.providerMetadata.provider === "anilist") {
+  if (
+    packet.mediaLens === "anime" &&
+    packet.providerMetadata &&
+    (packet.providerMetadata.provider === "anilist" || packet.providerMetadata.provider === "jikan")
+  ) {
+    const expectedProviderPrefix = packet.providerMetadata.provider === "jikan" ? "jikan::anime::" : "anilist::anime::";
+    if (!packet.providerId?.startsWith(expectedProviderPrefix)) return null;
     const anilistId = Number(packet.providerMetadata.id);
     if (!Number.isInteger(anilistId) || anilistId <= 0) return null;
     const confidence = packet.providerMetadata.confidence ?? 1.0;
@@ -1063,9 +1100,17 @@ async function adaptiveRetrieve(
       deterministic: true
     });
 
-    const candidate = await fetchAnimeVisualByCanonicalId(anilistId);
-    if (!candidate) {
-      console.log(`[Nerdvana] [ANILIST] ✗ AniList ID fetch failed or returned null for ID: ${anilistId}`);
+    const candidate = await fetchAnimeVisualByCanonicalId(
+      anilistId,
+      packet.providerMetadata.provider === "jikan",
+    );
+    if (!candidate || !candidate.imageUrl) return null;
+
+    if (!fallbackIdentityMatches(packet.canonicalEntity, candidate.name, "anime", packet.entityAliases)) {
+      console.log("[ANIME_VISUAL_IDENTITY_REJECTED]", {
+        expectedTitle: packet.canonicalEntity,
+        returnedTitle: candidate.name,
+      });
       return null;
     }
 
@@ -1500,7 +1545,7 @@ export default async function handler(req: any, res?: any) {
       const mmCtx = buildVisualArbitrationContext(packet);
       const outcome: RetrievalOutcome = {
         state: "NO_COMPATIBLE_RESULTS",
-        reason: "All retrieval tiers exhausted.",
+        reason: "No verified image is available for this title.",
         productionTelemetry: mmCtx.telemetry,
       };
       return jsonResponse(outcome, 200, res);
@@ -1535,9 +1580,16 @@ export default async function handler(req: any, res?: any) {
     return jsonResponse(outcome, 200, res);
 
   } catch (error: any) {
+    const code = error instanceof VisualProviderError ? error.code : "PROVIDER_NETWORK_FAILURE";
+    const status = code === "PROVIDER_RATE_LIMITED" ? 429 : code === "PROVIDER_AUTHENTICATION_FAILED" || code === "PROVIDER_TIMEOUT" || code === "PROVIDER_NETWORK_FAILURE" ? 503 : 502;
     console.error("[VISUAL_LOOKUP_FAILURE]", {
-      category: error instanceof Error ? error.name : "unknown",
+      category: code,
     });
-    return jsonResponse(publicError("Visual lookup failed. Please try again.", "VISUAL_LOOKUP_FAILED"), 500, res);
+    return jsonResponse({
+      state: "PROCESSING_ERROR",
+      error: code === "NO_IMAGE" ? "No image is available for this title." : "Image search is temporarily unavailable.",
+      code: `VISUAL_${code}`,
+      retryable: code !== "NO_IMAGE",
+    }, status, res);
   }
 }
