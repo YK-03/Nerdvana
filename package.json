@@ -8,7 +8,12 @@
     "test:phase1a": "tsx scripts/grounding-check.ts",
     "test:phase1b": "tsx scripts/identity-check.ts",
     "test:security": "tsx scripts/security-check.ts",
-    "test:regression": "npm run test:phase1a && npm run test:phase1b && npm run test:security",
+    "test:character-details": "tsx scripts/character-details-check.ts",
+    "test:ownership": "tsx scripts/ownership-check.ts",
+    "test:game-resolution": "tsx scripts/game-resolution-check.ts",
+    "test:igdb:live": "tsx scripts/igdb-live-smoke.ts",
+    "test:visual-lookup": "tsx scripts/visual-lookup-check.ts",
+    "test:regression": "npm run test:phase1a && npm run test:phase1b && npm run test:security && npm run test:character-details && npm run test:ownership && npm run test:game-resolution && npm run test:visual-lookup",
     "dev": "vite"
   },
   "dependencies": {
