@@ -235,6 +235,7 @@ export async function fetchDynamicEntity(
             Authorization: `Bearer ${igdbToken}`,
             "Content-Type": "text/plain",
           },
+          signal: AbortSignal.timeout(10_000),
           body: `search "${query}"; fields id, name, cover.url, first_release_date, rating, genres.name, involved_companies.company.name; limit 8;`,
         });
 

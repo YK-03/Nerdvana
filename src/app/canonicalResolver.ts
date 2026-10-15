@@ -16,7 +16,8 @@ import { getNeighborhoodEngine } from "../lib/resolver/embeddings/semanticNeighb
 import { CandidateHistoryEntry } from "../lib/resolver/provenanceTypes.js";
 import { ExplorationBuilder } from "../lib/resolver/explorationBuilder.js";
 import { type ExplorationDTO, type ServerCanonicalEvidence } from "../lib/explorationTypes.js";
-import { getIGDBToken } from "../server/igdbAuth.js";
+import { fetchVerifiedIgdbGame } from "../server/igdbGame.js";
+import { type IgdbFailureCode } from "../lib/resolver/igdbResponse.js";
 import type { CanonicalGroundingResult } from "../lib/resolver/canonicalGrounding.js";
 import { 
   type CanonRelationship,
@@ -217,6 +218,8 @@ export type ResolverContextPacket = {
   version: "v1";
   executionMode: "SEMANTIC" | "DETERMINISTIC_PROVIDER";
   deterministicOwnershipFailure?: boolean;
+  deterministicFailureCode?: IgdbFailureCode;
+  deterministicFailureHttpStatus?: number;
   ownershipGenerationId: string | null;
   canonicalEntity: string;
   expandedEntity: string;
@@ -1046,7 +1049,9 @@ export async function buildContextPacket(
   mediaLens: MediaType,
   spoilerMode: boolean,
   previousEntity?: string | null,
-  grounding?: CanonicalGroundingResult | null
+  grounding?: CanonicalGroundingResult | null,
+  expectedProviderTitle?: string | null,
+  correlationId?: string | null,
 ): Promise<{
   packet: ResolverContextPacket;
   exploration: ExplorationDTO;
@@ -1129,6 +1134,9 @@ export async function buildContextPacket(
 
   let fetchedComicVineData: any = null;
   let fetchedProviderData: any = null;
+  let providerFetchAttempted = false;
+  let deterministicFailureCode: IgdbFailureCode | undefined;
+  let deterministicFailureHttpStatus: number | undefined;
 
   if (executionMode === "DETERMINISTIC_PROVIDER" && providerId) {
     const env = (globalThis as any).process?.env ?? {};
@@ -1230,37 +1238,38 @@ export async function buildContextPacket(
         } catch (e) {}
       }
     } else if (providerId.startsWith("igdb::")) {
+      providerFetchAttempted = true;
       const igdbIdKey = (env.IGDB_CLIENT_ID || env.VITE_IGDB_CLIENT_ID)?.trim();
       const igdbSecretKey = (env.IGDB_CLIENT_SECRET || env.VITE_IGDB_CLIENT_SECRET)?.trim();
-      if (igdbIdKey && igdbSecretKey) {
-        const parsedId = parseProviderId(providerId);
-        const gameId = parseInt(parsedId.id);
-        if (!isNaN(gameId)) {
-          try {
-            const token = await getIGDBToken(igdbIdKey, igdbSecretKey);
-            if (token) {
-              const res = await fetch("https://api.igdb.com/v4/games", {
-                method: "POST",
-                headers: {
-                  "Client-ID": igdbIdKey,
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "text/plain"
-                },
-                body: `fields name, summary, characters.name, characters.description, characters.mug_shot.url; where id = ${gameId};`
-              });
-              if (res.ok) {
-                const games = await res.json();
-                if (Array.isArray(games) && games.length > 0) {
-                  fetchedProviderData = games[0];
-                  const chars = fetchedProviderData?.characters;
-                  console.log("=== STAGE 2: PROVIDER RESPONSE (IGDB) ===", {
-                    hasData: true,
-                    charactersLength: Array.isArray(chars) ? chars.length : 0
-                  });
-                }
-              }
-            }
-          } catch (e) {}
+      if (!igdbIdKey || !igdbSecretKey) {
+        deterministicFailureCode = "MISSING_PROVIDER_CREDENTIALS";
+      } else {
+        const expectedTitle = expectedProviderTitle?.trim() || grounding?.selectedCanonicalEntity || query;
+        const result = await fetchVerifiedIgdbGame({
+          providerId,
+          expectedTitle,
+          clientId: igdbIdKey,
+          clientSecret: igdbSecretKey,
+          correlationId: correlationId ?? undefined,
+        });
+        if (result.game) {
+          fetchedProviderData = result.game;
+          const chars = fetchedProviderData?.characters;
+          console.log("[IGDB_GAME_VERIFIED]", {
+            provider: "igdb",
+            attempts: result.attempts,
+            httpStatus: result.httpStatus ?? null,
+            charactersLength: Array.isArray(chars) ? chars.length : 0,
+          });
+        } else {
+          deterministicFailureCode = result.failureCode;
+          deterministicFailureHttpStatus = result.httpStatus;
+          console.warn("[IGDB_GAME_UNAVAILABLE]", {
+            provider: "igdb",
+            category: result.failureCode,
+            httpStatus: result.httpStatus ?? null,
+            attempts: result.attempts,
+          });
         }
       }
     }
@@ -1270,7 +1279,7 @@ export async function buildContextPacket(
     hasDeterministicOwnershipFailure = true;
     console.error(
       "[DETERMINISTIC_OWNERSHIP_FAILURE]",
-      "Provider identity could not be verified because the provider returned no data."
+      { provider: providerId.split("::")[0], category: deterministicFailureCode ?? "IDENTITY_MISMATCH" },
     );
   }
 
@@ -1296,7 +1305,9 @@ export async function buildContextPacket(
       finalContinuity = grounding?.providerMetadata?.releaseYear ? String(grounding.providerMetadata.releaseYear) : null;
       finalContinuityType = "prime";
     }
-    console.log(`[DETERMINISTIC OWNERSHIP ACQUIRED] Exact provider governance locked for ID "${selectionVal}": Canonical "${finalContextualEntity}", root "${finalParentFranchise}"`);
+    if (fetchedProviderData) {
+      console.log(`[DETERMINISTIC OWNERSHIP ACQUIRED] Exact provider governance locked for ID "${selectionVal}": Canonical "${finalContextualEntity}", root "${finalParentFranchise}"`);
+    }
   } else if (hasDeterministicOwnershipFailure) {
     // Zero-Semantic Recovery Firewall
     finalContextualEntity = query;
@@ -1391,7 +1402,10 @@ export async function buildContextPacket(
   if (executionMode === "DETERMINISTIC_PROVIDER" && !fetchedProviderData) {
     finalContextualEntity = grounding?.providerMetadata?.canonicalTitle || grounding?.selectedCanonicalEntity || finalContextualEntity;
     finalParentFranchise = grounding?.providerMetadata?.franchiseRoot || grounding?.selectedFranchise || finalParentFranchise || null;
-    console.log(`[DETERMINISTIC OWNERSHIP ACQUIRED] Locked provider identity for ID "${selectionVal}": Expected canonical "${finalContextualEntity}", root "${finalParentFranchise}"`);
+    console.warn("[DETERMINISTIC_OWNERSHIP_UNVERIFIED]", {
+      provider: providerId?.split("::")[0] ?? "unknown",
+      category: deterministicFailureCode ?? "IDENTITY_MISMATCH",
+    });
   }
 
   let contextualSearchQuery = buildContextualSearchQuery(
@@ -1578,6 +1592,8 @@ export async function buildContextPacket(
     version: "v1",
     executionMode,
     deterministicOwnershipFailure: hasDeterministicOwnershipFailure,
+    deterministicFailureCode: hasDeterministicOwnershipFailure ? deterministicFailureCode : undefined,
+    deterministicFailureHttpStatus: hasDeterministicOwnershipFailure ? deterministicFailureHttpStatus : undefined,
     ownershipGenerationId: executionMode === "DETERMINISTIC_PROVIDER" ? `gen_own_${Date.now()}_${Math.random().toString(36).substring(2, 9)}` : null,
     canonicalEntity: finalContextualEntity,
     expandedEntity,
@@ -1666,29 +1682,28 @@ export async function buildContextPacket(
 
   const finalExplorationProvider = providerId ?? (packet.providerMetadata ? `${packet.providerMetadata.provider}::${packet.providerMetadata.id}` : null) ?? packet.telemetry.qualifiedId;
   
-  if (!fetchedProviderData && finalExplorationProvider && typeof (globalThis as any).process !== "undefined") {
+  if (!fetchedProviderData && !providerFetchAttempted && finalExplorationProvider && typeof (globalThis as any).process !== "undefined") {
     const env = (globalThis as any).process.env ?? {};
     if (finalExplorationProvider.startsWith("igdb::")) {
+      providerFetchAttempted = true;
       const igdbIdKey = (env.IGDB_CLIENT_ID || env.VITE_IGDB_CLIENT_ID)?.trim();
       const igdbSecretKey = (env.IGDB_CLIENT_SECRET || env.VITE_IGDB_CLIENT_SECRET)?.trim();
-      if (igdbIdKey && igdbSecretKey) {
-        const parsedId = parseProviderId(finalExplorationProvider);
-        const gameId = parseInt(parsedId.id);
-        if (!isNaN(gameId)) {
-          try {
-            const token = await getIGDBToken(igdbIdKey, igdbSecretKey);
-            if (token) {
-              const res = await fetch("https://api.igdb.com/v4/games", {
-                method: "POST",
-                headers: { "Client-ID": igdbIdKey, Authorization: `Bearer ${token}`, "Content-Type": "text/plain" },
-                body: `fields name, summary, characters.name, characters.description, characters.mug_shot.url; where id = ${gameId};`
-              });
-              if (res.ok) {
-                const games = await res.json();
-                if (Array.isArray(games) && games.length > 0) fetchedProviderData = games[0];
-              }
-            }
-          } catch (e) {}
+      if (!igdbIdKey || !igdbSecretKey) {
+        deterministicFailureCode = "MISSING_PROVIDER_CREDENTIALS";
+      } else {
+        const expectedTitle = expectedProviderTitle?.trim() || grounding?.selectedCanonicalEntity || query;
+        const result = await fetchVerifiedIgdbGame({
+          providerId: finalExplorationProvider,
+          expectedTitle,
+          clientId: igdbIdKey,
+          clientSecret: igdbSecretKey,
+          correlationId: correlationId ?? undefined,
+        });
+        if (result.game) {
+          fetchedProviderData = result.game;
+        } else {
+          deterministicFailureCode = result.failureCode;
+          deterministicFailureHttpStatus = result.httpStatus;
         }
       }
     } else if (finalExplorationProvider.startsWith("comicvine::")) {

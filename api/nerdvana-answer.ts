@@ -418,12 +418,12 @@ export default async function handler(req: any, res?: any) {
       const g1 = groundCanonicalIntent({ query: e1, mediaLens, temporaryEntities });
       const g2 = groundCanonicalIntent({ query: e2, mediaLens, temporaryEntities });
 
-      const res1 = await buildContextPacket(e1, mediaLens, spoilerMode, previousEntity, g1);
+      const res1 = await buildContextPacket(e1, mediaLens, spoilerMode, previousEntity, g1, undefined, requestId);
       packet = res1.packet;
       exploration = res1.exploration;
       canonicalEvidence = res1.canonicalEvidence;
       
-      const res2 = await buildContextPacket(e2, mediaLens, spoilerMode, previousEntity, g2);
+      const res2 = await buildContextPacket(e2, mediaLens, spoilerMode, previousEntity, g2, undefined, requestId);
       packet2 = res2.packet;
     } else {
       const res = await buildContextPacket(
@@ -431,7 +431,9 @@ export default async function handler(req: any, res?: any) {
         mediaLens,
         spoilerMode,
         previousEntity,
-        grounding
+        grounding,
+        explicitSelection && canonicalContextEntity ? canonicalContextEntity : undefined,
+        requestId,
       );
       packet = res.packet;
       exploration = res.exploration;
@@ -456,19 +458,45 @@ export default async function handler(req: any, res?: any) {
     });
 
     if (packet.deterministicOwnershipFailure) {
+      const failureCode = packet.deterministicFailureCode || "IDENTITY_MISMATCH";
+      const failureStatus = failureCode === "PROVIDER_RATE_LIMITED"
+        ? 429
+        : failureCode === "IDENTITY_MISMATCH"
+        ? 409
+        : failureCode === "INVALID_PROVIDER_ID"
+        ? 400
+        : failureCode === "NO_MATCHING_GAME"
+        ? 404
+        : failureCode === "MALFORMED_PROVIDER_RESPONSE" || failureCode === "PROVIDER_HTTP_FAILURE"
+        ? 502
+        : 503;
+      const retryable = !["IDENTITY_MISMATCH", "NO_MATCHING_GAME", "INVALID_PROVIDER_ID"].includes(failureCode) &&
+        (failureCode !== "PROVIDER_HTTP_FAILURE" || (packet.deterministicFailureHttpStatus ?? 0) >= 500);
+      const failureMessage = failureCode === "IDENTITY_MISMATCH"
+        ? "The selected game could not be verified. Please choose the title again."
+        : failureCode === "NO_MATCHING_GAME"
+        ? "The selected game is unavailable from the provider."
+        : "The selected game is temporarily unavailable. Please try again.";
       console.log(
         "[DETERMINISTIC_OWNERSHIP_FAILURE]",
-        "Aborting semantic recovery after explicit selection."
+        {
+          provider: packet.providerId?.split("::")[0] ?? "unknown",
+          code: failureCode,
+          httpStatus: packet.deterministicFailureHttpStatus ?? null,
+          retryable,
+          requestId: requestId ?? null,
+        }
       );
 
       return jsonResponse({
-        answer: "Unable to establish deterministic ownership.",
-        sources: [],
+        error: failureMessage,
+        code: `GAME_${failureCode}`,
+        retryable,
         contextPacket: packet,
         alternatives: [],
         grounding: null,
         requiresGrounding: false
-      }, 200, res);
+      }, failureStatus, res);
     }
 
     // Strict Confidence Boundary (Phase 9C) - bypass if deferred or multi-ground

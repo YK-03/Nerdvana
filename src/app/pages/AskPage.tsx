@@ -915,7 +915,22 @@ ${new Error().stack}
         }
 
         if (!response.ok) {
-          throw new Error(`API ${response.status}`);
+          let failurePayload: any = null;
+          try {
+            failurePayload = await response.json();
+          } catch {
+            failurePayload = null;
+          }
+          const failure = new Error(
+            typeof failurePayload?.error === "string"
+              ? failurePayload.error
+              : response.status >= 500
+              ? "The answer service is temporarily unavailable. Please try again."
+              : "The selected title could not be verified."
+          ) as Error & { code?: string; retryable?: boolean };
+          failure.code = typeof failurePayload?.code === "string" ? failurePayload.code : undefined;
+          failure.retryable = failurePayload?.retryable === true;
+          throw failure;
         }
 
         recordRetrieval(context.traceId, { success: true });
