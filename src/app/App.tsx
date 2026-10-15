@@ -1,17 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import AskPage from "./pages/AskPage";
-import ExplorePage from "./pages/ExplorePage";
-import ItemPage from "./pages/ItemPage";
-import AboutPage from "./pages/AboutPage";
-import DebatesPage from "./pages/DebatesPage";
-import CommunityPage from "./pages/CommunityPage";
-import HistoryPage from "./pages/History";
-import SavedLorebooks from "./pages/SavedLorebooks";
-import ProfilePage from "./profile/page";
-import MarketingPage from "./(marketing)/page";
 import { useAuth } from "./hooks/useAuth";
 import {
   buildAskUrl,
@@ -27,6 +17,58 @@ import { useAutocompleteStore } from "./store/resolverSession";
 import AutocompleteOverlay from "./components/AutocompleteOverlay";
 import type { ProviderMetadata } from "../lib/resolver/providerMetadata.js";
 import { HexagonGridPatternShaders } from "./components/ui/hexagon-grid-pattern";
+
+const AskPage = lazy(() => import("./pages/AskPage"));
+const ExplorePage = lazy(() => import("./pages/ExplorePage"));
+const ItemPage = lazy(() => import("./pages/ItemPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const DebatesPage = lazy(() => import("./pages/DebatesPage"));
+const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const HistoryPage = lazy(() => import("./pages/History"));
+const SavedLorebooks = lazy(() => import("./pages/SavedLorebooks"));
+const ProfilePage = lazy(() => import("./profile/page"));
+const MarketingPage = lazy(() => import("./(marketing)/page"));
+
+function RouteLoading() {
+  return (
+    <main
+      className="min-h-screen flex items-center justify-center px-6"
+      style={{ backgroundColor: "var(--nerdvana-bg)", color: "var(--nerdvana-text)" }}
+      aria-live="polite"
+    >
+      <p className="font-legacy-chrome text-xs uppercase tracking-[0.18em]">Loading Nerdvana…</p>
+    </main>
+  );
+}
+
+class RouteErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+
+    return (
+      <main
+        className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center"
+        style={{ backgroundColor: "var(--nerdvana-bg)", color: "var(--nerdvana-text)" }}
+      >
+        <p className="font-legacy-chrome text-xs uppercase tracking-[0.18em]">This page could not load.</p>
+        <button
+          type="button"
+          className="font-legacy-chrome border-[2px] px-3 py-2 text-xs uppercase tracking-[0.14em]"
+          style={{ borderColor: "var(--nerdvana-border)" }}
+          onClick={() => window.location.reload()}
+        >
+          Reload page
+        </button>
+      </main>
+    );
+  }
+}
 
 const UNIVERSE_TAGLINES = [
   "The Story Ended. The Questions Didn't.",
@@ -757,5 +799,9 @@ export default function App() {
     return <MarketingPage onNavigatePage={navigateByHeaderPage} onStartInsights={navigateHome} />;
   }, [entry, isFocused, pathname, placeholderIndex, question, selectedUniverse, taglineIndex]);
 
-  return content;
+  return (
+    <RouteErrorBoundary>
+      <Suspense fallback={<RouteLoading />}>{content}</Suspense>
+    </RouteErrorBoundary>
+  );
 }

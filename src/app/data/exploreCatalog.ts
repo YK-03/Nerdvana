@@ -24,7 +24,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "tmdb::movie::438631",
         title: "Dune",
         mediaLens: "movies",
-        thumbnailUrl: "/explore/dune.jpg",
+        thumbnailUrl: "/explore/dune.webp",
         description: "Power, prophecy, ecology, and political control.",
       },
       {
@@ -77,7 +77,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "tmdb::tv::70523",
         title: "Dark",
         mediaLens: "tvShows",
-        thumbnailUrl: "/explore/dark.jpg",
+        thumbnailUrl: "/explore/dark.webp",
         description: "Time travel, causality, and family secrets.",
       },
       {
@@ -85,7 +85,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "tmdb::tv::1396",
         title: "Breaking Bad",
         mediaLens: "tvShows",
-        thumbnailUrl: "/explore/breaking-bad.jpg",
+        thumbnailUrl: "/explore/breaking-bad.webp",
         description: "Pride, moral decay, and the consequences of ambition.",
       },
       {
@@ -109,7 +109,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "tmdb::tv::1399",
         title: "Game of Thrones",
         mediaLens: "tvShows",
-        thumbnailUrl: "/explore/game-of-thrones.jpg",
+        thumbnailUrl: "/explore/game-of-thrones.webp",
         description: "Dynastic conflict, political betrayal, and ancient threats.",
       },
     ],
@@ -138,7 +138,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "jikan::anime::38000",
         title: "Demon Slayer",
         mediaLens: "anime",
-        thumbnailUrl: "/explore/demon-slayer.png",
+        thumbnailUrl: "/explore/demon-slayer.webp",
         description: "Family bonds, tragedy, and the pursuit of a cure.",
       },
       {
@@ -154,7 +154,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "jikan::anime::40748",
         title: "Jujutsu Kaisen",
         mediaLens: "anime",
-        thumbnailUrl: "/explore/jujutsu-kaisen.jpg",
+        thumbnailUrl: "/explore/jujutsu-kaisen.webp",
         description: "Cursed energy, sacrifice, and the weight of death.",
       },
     ],
@@ -167,7 +167,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "igdb::game::25076",
         title: "Red Dead Redemption 2",
         mediaLens: "games",
-        thumbnailUrl: "/explore/rdr2.jpg",
+        thumbnailUrl: "/explore/rdr2.webp",
         description: "Loyalty, survival, and the end of the Wild West.",
       },
       {
@@ -175,7 +175,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "igdb::game::119133",
         title: "Elden Ring",
         mediaLens: "games",
-        thumbnailUrl: "/explore/elden-ring.png",
+        thumbnailUrl: "/explore/elden-ring.webp",
         description: "Ambition, shattered grace, and the struggle for order.",
       },
       {
@@ -220,7 +220,7 @@ export const EXPLORE_CATALOG: ExploreSection[] = [
         providerId: "comicvine::character::1443",
         title: "Spider-Man",
         mediaLens: "comics",
-        thumbnailUrl: "/explore/spider-man.jpg",
+        thumbnailUrl: "/explore/spider-man.webp",
         description: "Responsibility, guilt, and balancing dual lives.",
       },
       {

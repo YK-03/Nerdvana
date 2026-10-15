@@ -33,6 +33,8 @@ function ExploreCard({ item, onAskQuestion }: ExploreCardProps) {
           src={item.thumbnailUrl}
           alt=""
           aria-hidden="true"
+          loading={item.id === "dune" ? "eager" : "lazy"}
+          decoding="async"
           className="pointer-events-none absolute inset-0 h-full w-full object-cover grayscale contrast-125 opacity-[0.18] transition-opacity duration-300 group-hover:opacity-[0.32]"
         />
       )}
