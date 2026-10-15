@@ -286,7 +286,7 @@ function LandingPage({
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-x-hidden flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--nerdvana-bg)" }}>
+    <div className="min-h-screen min-h-[100svh] w-full relative overflow-x-hidden flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--nerdvana-bg)" }}>
       <Header
         onNavigate={(page) => {
           onNavigatePage(page);
@@ -294,7 +294,7 @@ function LandingPage({
       />
 
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-10 xl:px-12 py-6 sm:py-8 md:py-12">
-        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="fixed inset-0 z-0 h-screen min-h-[100svh] w-full overflow-hidden pointer-events-none">
           <HexagonGridPatternShaders
             className="absolute inset-0 opacity-[0.08] dark:opacity-[0.14]"
             speed={0.12}

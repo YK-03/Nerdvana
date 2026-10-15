@@ -166,7 +166,7 @@ export const Shader = forwardRef<HTMLDivElement, ShaderProps>(function Shader(
 
   return (
     <div ref={forwardedRef} className={cn("relative h-full w-full overflow-hidden", className)} style={style} aria-hidden="true" {...props}>
-      {failed ? fallback : <canvas ref={canvasRef} className="block h-full w-full" />}
+      {failed ? fallback : <canvas ref={canvasRef} className="block h-full w-full aspect-auto" style={{ height: "100%", width: "100%" }} />}
     </div>
   );
 });
