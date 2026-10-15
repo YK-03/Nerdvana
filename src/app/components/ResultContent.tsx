@@ -82,7 +82,12 @@ export default function ResultContent({
       />
 
       {/* Exploration Sections */}
-      <CharacterSection characters={responseData?.exploration?.characters} />
+      <CharacterSection
+        characters={responseData?.exploration?.characters}
+        title={contextPacket?.canonicalEntity}
+        spoilerMode={spoilerMode}
+        mediaLens={contextPacket?.mediaLens}
+      />
 
 
       {/* Timeline & Reading Order Progression Panel */}

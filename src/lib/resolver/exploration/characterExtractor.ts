@@ -1,5 +1,21 @@
 import { type Character } from "../../explorationTypes.js";
 
+const MAX_CHARACTER_DESCRIPTION_LENGTH = 12_000;
+
+function preserveCharacterDescription(value: string): string {
+  const cleaned = value.replace(/<[^>]*>/g, "").trim();
+  if (cleaned.length <= MAX_CHARACTER_DESCRIPTION_LENGTH) return cleaned;
+
+  const bounded = cleaned.slice(0, MAX_CHARACTER_DESCRIPTION_LENGTH);
+  const sentenceBoundary = Math.max(
+    bounded.lastIndexOf(". "),
+    bounded.lastIndexOf("! "),
+    bounded.lastIndexOf("? "),
+  );
+  const cutoff = sentenceBoundary >= 0 ? sentenceBoundary + 1 : bounded.lastIndexOf(" ");
+  return `${bounded.slice(0, cutoff > 0 ? cutoff : MAX_CHARACTER_DESCRIPTION_LENGTH).trim()}…`;
+}
+
 export function extractTmdbCharacters(rawData: any): Character[] {
   const characters: Character[] = [];
   const rawCast = Array.isArray(rawData?.credits?.cast)
@@ -64,7 +80,7 @@ export function extractAnilistCharacters(rawData: any): Character[] {
         role: roleTitle,
         description:
           typeof node.description === "string"
-            ? node.description.replace(/<[^>]*>/g, "").trim().slice(0, 150)
+            ? preserveCharacterDescription(node.description)
             : undefined,
         imageUrl: node.image?.large || node.image?.medium || undefined,
       });
