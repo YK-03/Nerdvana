@@ -26,6 +26,7 @@ import {
 import { useAutocompleteStore } from "./store/resolverSession";
 import AutocompleteOverlay from "./components/AutocompleteOverlay";
 import type { ProviderMetadata } from "../lib/resolver/providerMetadata.js";
+import { HexagonGridPatternShaders } from "./components/ui/hexagon-grid-pattern";
 
 const UNIVERSE_TAGLINES = [
   "The Story Ended. The Questions Didn't.",
@@ -293,10 +294,14 @@ function LandingPage({
       />
 
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-10 xl:px-12 py-6 sm:py-8 md:py-12">
-        <div
-          className="deadpool-bg fixed inset-0 pointer-events-none bg-no-repeat"
-          style={{ backgroundImage: "url(/image.jpg)" }}
-        />
+        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+          <HexagonGridPatternShaders
+            className="absolute inset-0 opacity-[0.08] dark:opacity-[0.14]"
+            speed={0.12}
+            scale={2.6}
+            patternDensity={0.8}
+          />
+        </div>
         <div className="fixed inset-0 pointer-events-none paper-texture nerdvana-paper-texture" />
         <div className="fixed -top-28 -right-20 w-80 h-80 rounded-full blur-3xl pointer-events-none transition-opacity duration-300 nerdvana-gradient-accent" />
         <div className="fixed -bottom-20 left-1/3 w-72 h-72 rounded-full blur-3xl pointer-events-none transition-opacity duration-300 nerdvana-gradient-dark" />
@@ -439,20 +444,6 @@ function LandingPage({
         </div>
 
         <style>{`
-          .deadpool-bg {
-            background-position: 8% bottom;
-            background-size: auto 90%;
-            opacity: 0.6;
-            mix-blend-mode: multiply;
-            transition: opacity 0.3s ease, mix-blend-mode 0.3s ease, filter 0.3s ease;
-          }
-
-          .dark .deadpool-bg {
-            opacity: 0.9;
-            mix-blend-mode: multiply;
-            filter: brightness(1.15) contrast(1.15) saturate(1.08);
-          }
-
           .paper-texture {
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='6.5' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
             background-repeat: repeat;
@@ -508,12 +499,6 @@ function LandingPage({
           .animate-border-shift {
             background-size: 200% 200%;
             animation: border-shift 3s linear infinite;
-          }
-
-          @media (max-width: 1024px) {
-            .deadpool-bg {
-              display: none;
-            }
           }
 
         `}</style>
