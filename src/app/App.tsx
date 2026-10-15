@@ -313,13 +313,14 @@ function LandingPage({
             animate={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.03 }}
             transition={{ duration: 0.3 }}
-            className="nerdvana-clickable text-[clamp(2.4rem,14vw,6.8rem)] font-black tracking-[-0.04em] leading-[0.85] uppercase mb-2 cursor-pointer transition-colors duration-300"
+            className="nerdvana-clickable text-[clamp(2.4rem,14vw,6.8rem)] font-black tracking-[-0.025em] leading-[0.88] uppercase mb-2 cursor-pointer transition-colors duration-300"
             style={{
               fontFamily: '"Anton", Impact, "Arial Black", sans-serif',
-              color: "var(--nerdvana-text)"
+              color: "var(--nerdvana-wordmark)",
+              textShadow: "0 1px 0 var(--nerdvana-wordmark-shadow), 0 4px 12px var(--nerdvana-wordmark-shadow)"
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--nerdvana-accent)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--nerdvana-text)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--nerdvana-wordmark)")}
           >
             NERDVANA
           </motion.h1>

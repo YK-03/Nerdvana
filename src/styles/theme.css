@@ -52,6 +52,8 @@
   /* Nerdvana Theme Variables - Light Mode */
   --nerdvana-bg: #ebe8df;
   --nerdvana-text: #1a1918;
+  --nerdvana-wordmark: #1a1918;
+  --nerdvana-wordmark-shadow: transparent;
   --nerdvana-surface: #fff8dc;
   --nerdvana-header-bg: #ebe8df;
   --nerdvana-border: #1a1918;
@@ -123,6 +125,8 @@ body .font-legacy-prose.font-legacy-prose {
   /* Nerdvana Theme Variables - Dark Mode */
   --nerdvana-bg: #141211;                 /* page background: deep charcoal */
   --nerdvana-text: #f4efe2;              /* warm off‑white text */
+  --nerdvana-wordmark: #e8d9bd;          /* aged-paper display lettering */
+  --nerdvana-wordmark-shadow: rgba(8, 6, 5, 0.72);
   --nerdvana-surface: #25211e;          /* cards / buttons / input surface */
   --nerdvana-header-bg: #2b2723;        /* header strip */
   --nerdvana-border: #5b5650;           /* panel + button outlines */

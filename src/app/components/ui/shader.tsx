@@ -88,8 +88,11 @@ export const Shader = forwardRef<HTMLDivElement, ShaderProps>(function Shader(
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    let animationFrame = 0;
+    let animationFrame: number | null = null;
+    let disposed = false;
+    let needsReducedMotionRedraw = false;
     let resizeObserver: ResizeObserver | null = null;
+    let dprMediaQuery: MediaQueryList | null = null;
     let gl: WebGLRenderingContext | null = null;
     let program: WebGLProgram | null = null;
 
@@ -126,13 +129,18 @@ export const Shader = forwardRef<HTMLDivElement, ShaderProps>(function Shader(
       const resize = () => {
         const rect = canvas.getBoundingClientRect();
         const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-        gl!.viewport(0, 0, canvas.width, canvas.height);
+        const width = Math.max(1, Math.floor(rect.width * dpr));
+        const height = Math.max(1, Math.floor(rect.height * dpr));
+
+        if (canvas.width === width && canvas.height === height) return false;
+
+        canvas.width = width;
+        canvas.height = height;
+        gl!.viewport(0, 0, width, height);
+        return true;
       };
 
-      const render = (now: number) => {
-        resize();
+      const draw = (now: number) => {
         gl!.useProgram(program);
         if (resolution) gl!.uniform3f(resolution, canvas.width, canvas.height, 1);
         if (time) gl!.uniform1f(time, reducedMotion ? 0 : now / 1000);
@@ -141,17 +149,79 @@ export const Shader = forwardRef<HTMLDivElement, ShaderProps>(function Shader(
           if (location) setUniform(gl!, location, uniform);
         }
         gl!.drawArrays(gl!.TRIANGLES, 0, 6);
-        if (!reducedMotion) animationFrame = requestAnimationFrame(render);
       };
 
-      resizeObserver = new ResizeObserver(resize);
+      const scheduleRender = () => {
+        if (disposed || reducedMotion || document.hidden || animationFrame !== null) return;
+        animationFrame = requestAnimationFrame((now) => {
+          animationFrame = null;
+          if (disposed || document.hidden) return;
+          draw(now);
+          scheduleRender();
+        });
+      };
+
+      const handleResize = () => {
+        const changed = resize();
+        if (!changed || !reducedMotion) return;
+
+        if (document.hidden) {
+          needsReducedMotionRedraw = true;
+          return;
+        }
+
+        needsReducedMotionRedraw = false;
+        draw(performance.now());
+      };
+
+      const handleDprChange = () => {
+        handleResize();
+        subscribeToDprChanges();
+      };
+
+      const subscribeToDprChanges = () => {
+        dprMediaQuery?.removeEventListener?.("change", handleDprChange);
+        dprMediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+        dprMediaQuery.addEventListener?.("change", handleDprChange);
+      };
+
+      const handleVisibilityChange = () => {
+        if (document.hidden) {
+          if (animationFrame !== null) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+          }
+          return;
+        }
+
+        if (reducedMotion) {
+          if (needsReducedMotionRedraw) {
+            needsReducedMotionRedraw = false;
+            draw(performance.now());
+          }
+          return;
+        }
+
+        scheduleRender();
+      };
+
+      resizeObserver = new ResizeObserver(handleResize);
       resizeObserver.observe(canvas);
+      window.addEventListener("resize", handleResize);
+      subscribeToDprChanges();
+      document.addEventListener("visibilitychange", handleVisibilityChange);
       setFailed(false);
-      animationFrame = requestAnimationFrame(render);
+      resize();
+      draw(performance.now());
+      scheduleRender();
 
       return () => {
-        cancelAnimationFrame(animationFrame);
+        disposed = true;
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame);
         resizeObserver?.disconnect();
+        window.removeEventListener("resize", handleResize);
+        dprMediaQuery?.removeEventListener?.("change", handleDprChange);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
         gl?.deleteBuffer(positionBuffer);
         gl?.deleteShader(vertexShader);
         gl?.deleteShader(fragmentShader);
