@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
 import { auth, db } from "@/firebase";
 import { buildAskUrl, normalizeMediaLens, type MediaLens } from "../mediaLens";
+import { buildRestorationPayload } from "../../lib/resolver/restorationContext";
 import { DEFAULT_AVATAR } from "../utils/getOrCreateAvatarSeed";
 
 interface ProfilePageProps {
@@ -250,37 +251,14 @@ export default function ProfilePage({ onNavigatePage }: ProfilePageProps) {
   };
 
   const handleLorebookClick = (item: any) => {
-    let restoredAnswer = { summary: "", categories: [], spoilers: "" };
-    let restoredConversation: any[] = [];
-
-    if (item.conversation && item.conversation.length > 0) {
-      const firstAssistantIndex = item.conversation.findIndex(m => m.role === "assistant");
-      if (firstAssistantIndex !== -1) {
-        restoredAnswer = {
-          summary: item.conversation[firstAssistantIndex].content,
-          categories: [],
-          spoilers: ""
-        };
-        if (item.conversation.length > 2) {
-          restoredConversation = item.conversation.slice(2);
-        }
-      }
-    }
-
-    const stateToPush = {
-      query: item.title || item.topic,
-      conversation: restoredConversation,
-      results: item.results || [],
-      answer: restoredAnswer,
-      rehydrated: true,
-      mediaLens: normalizeMediaLens(item.mediaLens),
-      item: item.providerId || null
-    };
+    const payload = buildRestorationPayload(item);
+    const targetQuery = payload.query || payload.topic;
+    if (!targetQuery) return;
 
     window.history.pushState(
-      stateToPush,
+      payload,
       "",
-      buildAskUrl(item.title || item.topic, { lens: normalizeMediaLens(item.mediaLens), item: item.providerId })
+      buildAskUrl(targetQuery, { lens: payload.mediaLens, item: payload.item || undefined })
     );
     window.dispatchEvent(new PopStateEvent("popstate"));
   };

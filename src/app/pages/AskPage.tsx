@@ -37,8 +37,19 @@ import {
   processSemanticPivots 
 } from "../lib/resolver/followUpEngine";
 
-function mapVisualAsset(owner: ActiveVisualOwner | null) {
-  if (!owner?.asset) return null;
+function mapVisualAsset(owner: any) {
+  if (!owner) return null;
+  if (owner.posterUrl || owner.backdropUrl || owner.url) {
+    return {
+      title: owner.title || "",
+      posterUrl: owner.posterUrl || owner.url || null,
+      backdropUrl: owner.backdropUrl || null,
+      mediaType: owner.mediaType || "",
+      provider: owner.provider || owner.source || "",
+      trailerKey: owner.trailerKey || null
+    };
+  }
+  if (!owner.asset) return null;
   const asset = owner.asset;
   return {
     title: asset.title,
@@ -441,8 +452,10 @@ export default function AskPage({
           if (payload.renderEntityPacket) {
             setRenderEntityPacket(payload.renderEntityPacket, "history-restoration");
           }
-          if (payload.activeVisualOwnerMetadata) {
-            setActiveVisualOwnerMetadata(payload.activeVisualOwnerMetadata);
+          const visualData = payload.activeVisualOwnerMetadata || payload.visual || null;
+          if (visualData) {
+            setActiveVisualOwnerMetadata(visualData);
+            activeVisualOwnerRef.current = visualData;
           }
 
           if (payload.historyId) {
@@ -473,6 +486,34 @@ export default function AskPage({
             status: "completed",
             startedAt: Date.now()
           };
+
+          const explorationKey = `${restoredItem}|${payload.mediaLens || mediaLens}`;
+          lastExploredEntityRef.current = explorationKey;
+
+          if (user?.uid) {
+            const mappedVisual = mapVisualAsset(visualData || activeVisualOwnerRef.current);
+            const restoredExplorationData = {
+              title: payload.renderEntityPacket?.title || payload.contextPacket?.canonicalEntity || targetQuestion,
+              query: targetQuestion,
+              topic: payload.topic || targetQuestion,
+              providerId: restoredItem,
+              item: restoredItem,
+              mediaLens: payload.mediaLens || mediaLens,
+              visual: mappedVisual,
+              answer: payload.answer,
+              results: payload.results || [],
+              conversation: restoredConversation,
+              contextPacket: payload.contextPacket || null,
+              grounding: payload.grounding || null,
+              renderEntityPacket: payload.renderEntityPacket || null,
+              activeVisualOwnerMetadata: payload.activeVisualOwnerMetadata || visualData || null,
+              historyId: payload.historyId || null,
+              timestamp: serverTimestamp()
+            };
+            setDoc(doc(db, "users", user.uid, "state", "currentExploration"), restoredExplorationData).catch((err) => {
+              console.warn("Restored exploration sync failed", err);
+            });
+          }
 
           setIsLoading(false);
           return true;
@@ -1375,6 +1416,9 @@ ${new Error().stack}
               if (context.requestId !== activeRequestIdRef.current) return;
               if (abortController.signal.aborted) return;
               setCurrentHistoryId(docRef.id);
+              setDoc(doc(db, "users", user.uid, "state", "currentExploration"), {
+                historyId: docRef.id
+              }, { merge: true }).catch(() => {});
             }
           } catch (error) {
             console.error("Failed to save history session", error);
@@ -1672,11 +1716,34 @@ ${new Error().stack}
     if (lastExploredEntityRef.current === explorationKey) return;
     
     if (user) {
+      const canonicalTitle = renderEntityPacket?.title || contextPacket?.canonicalEntity || resolvedItem;
+      const canonicalItem = renderEntityPacket?.providerId || contextPacket?.providerId || resolvedItem;
+      const visualData = mapVisualAsset(activeVisualOwnerRef.current);
+
       const currentExplorationData = {
-        title: renderEntityPacket?.title || contextPacket?.canonicalEntity || resolvedItem,
-        providerId: renderEntityPacket?.providerId || contextPacket?.providerId || resolvedItem,
+        title: canonicalTitle,
+        query: fullQuestion || canonicalTitle,
+        topic: canonicalTitle,
+        providerId: canonicalItem,
+        item: canonicalItem,
         mediaLens,
-        visual: mapVisualAsset(activeVisualOwnerRef.current),
+        visual: visualData,
+        answer: {
+          summary: responseData.answer.summary,
+          categories: responseData.answer.categories || [],
+          spoilers: responseData.answer.spoilers || ""
+        },
+        results: (results || []).map((r: any) => ({
+          title: r.title,
+          url: r.url,
+          source: r.source
+        })),
+        conversation: conversation || [],
+        contextPacket: contextPacket || null,
+        grounding: grounding || null,
+        renderEntityPacket: renderEntityPacket || null,
+        activeVisualOwnerMetadata: activeVisualOwnerMetadata || visualData || null,
+        historyId: currentHistoryId || null,
         timestamp: serverTimestamp()
       };
       
@@ -1687,7 +1754,7 @@ ${new Error().stack}
     }
     
     lastExploredEntityRef.current = explorationKey;
-  }, [responseData?.answer?.summary, contextIsValid, isAmbiguous, mediaLens, resolvedItem, user, visualResolutionStatus, renderEntityPacket, contextPacket]);
+  }, [responseData?.answer?.summary, contextIsValid, isAmbiguous, mediaLens, resolvedItem, user, visualResolutionStatus, renderEntityPacket, contextPacket, currentHistoryId, activeVisualOwnerMetadata, results, conversation, fullQuestion]);
 
   const handleFollowUpSubmit = async (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
@@ -2052,16 +2119,23 @@ ${new Error().stack}
         setIsGeneratingFollowUp(false);
       }
 
-      if (followUpContext.requestId === activeRequestIdRef.current && user && currentHistoryId) {
+      if (followUpContext.requestId === activeRequestIdRef.current && user) {
         const finalConversation = [
           ...conversation,
           { role: "user", content: trimmedQuery } as ConversationMessage,
           { role: "assistant", content: fullAssistantAnswer } as ConversationMessage
         ];
 
-        updateDoc(doc(db, "users", user.uid, "history", currentHistoryId), {
-          conversation: finalConversation
-        }).catch(err => console.error("Failed to update history conversation", err));
+        if (currentHistoryId) {
+          updateDoc(doc(db, "users", user.uid, "history", currentHistoryId), {
+            conversation: finalConversation
+          }).catch(err => console.error("Failed to update history conversation", err));
+        }
+
+        setDoc(doc(db, "users", user.uid, "state", "currentExploration"), {
+          conversation: finalConversation,
+          timestamp: serverTimestamp()
+        }, { merge: true }).catch(err => console.warn("Failed to update current exploration conversation", err));
       }
     }
   };

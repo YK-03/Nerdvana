@@ -5,9 +5,10 @@ import {
   consumeRestorationState,
   normalizeRestoredConversation,
   shouldSkipSearchOnRestoration,
+  buildRestorationPayload,
   type RestorationPayload
 } from "../src/lib/resolver/restorationContext.js";
-import { buildExecutionSearchKey } from "../src/lib/resolver/conversationContext.js";
+import { buildExecutionSearchKey, shouldResetConversationOnEntityChange } from "../src/lib/resolver/conversationContext.js";
 
 console.log("Running Phase 2 restoration integrity regression checks...");
 
@@ -325,5 +326,237 @@ console.log("Running Phase 2 restoration integrity regression checks...");
     "Restored search key and reconciled search key must be identical to avoid re-triggering search"
   );
 }
+ 
+// ============================================================================
+// 11. PROFILE CONTINUE EXPLORING: COMPLETE RECORD RESTORATION
+// ============================================================================
+{
+  const currentExplorationRecord = {
+    title: "Severance",
+    query: "Severance",
+    providerId: "tmdb::tv::95396",
+    item: "tmdb::tv::95396",
+    mediaLens: "tv",
+    visual: {
+      backdropUrl: "https://image.tmdb.org/t/p/original/95396_backdrop.jpg",
+      posterUrl: "https://image.tmdb.org/t/p/w500/95396_poster.jpg"
+    },
+    answer: {
+      summary: "Severance is a workplace sci-fi psychological thriller series created by Dan Erickson.",
+      categories: [],
+      spoilers: ""
+    },
+    results: [
+      { title: "Severance - Apple TV+", url: "https://tv.apple.com/show/severance" }
+    ],
+    conversation: [
+      { role: "user", content: "Who is Mark Scout?" },
+      { role: "assistant", content: "Mark Scout is the macrodata refinement team lead portrayed by Adam Scott." }
+    ],
+    contextPacket: {
+      canonicalEntity: "Severance",
+      providerId: "tmdb::tv::95396",
+      mediaLens: "tv"
+    },
+    grounding: {
+      selectedCanonicalEntity: "Severance"
+    },
+    renderEntityPacket: {
+      title: "Severance",
+      providerId: "tmdb::tv::95396"
+    },
+    historyId: "hist-severance-999"
+  };
 
-console.log("Phase 2 restoration integrity regression checks completed.");
+  const payload = buildRestorationPayload(currentExplorationRecord);
+
+  assert.equal(payload.rehydrated, true, "Payload from current exploration must be flagged rehydrated");
+  assert.equal(payload.query, "Severance", "Payload query must match title/query");
+  assert.equal(payload.item, "tmdb::tv::95396", "Payload item must match providerId");
+  assert.equal(payload.mediaLens, "tv", "MediaLens must be normalized");
+  assert.ok(payload.answer, "Answer object must be preserved");
+  assert.equal(
+    payload.answer?.summary,
+    "Severance is a workplace sci-fi psychological thriller series created by Dan Erickson."
+  );
+  assert.equal(payload.conversation?.length, 2, "Conversation turns must be preserved");
+  assert.equal(payload.results?.length, 1, "Results must be preserved");
+  assert.equal(payload.historyId, "hist-severance-999", "HistoryId must be preserved");
+  assert.ok(payload.visual || payload.activeVisualOwnerMetadata, "Visual metadata must be preserved");
+
+  assert.equal(
+    isValidRestorationState(payload, "Severance"),
+    true,
+    "Restored payload must be valid for target query Severance"
+  );
+  assert.equal(
+    hasSufficientRestorationData(payload),
+    true,
+    "Complete current exploration record must have sufficient restoration data"
+  );
+  assert.equal(
+    shouldSkipSearchOnRestoration(payload, "Severance"),
+    true,
+    "Search must be skipped when restoring complete Profile exploration"
+  );
+}
+
+// ============================================================================
+// 12. PROFILE CONTINUE EXPLORING: INCOMPLETE / OLDER RECORD GRACEFUL HANDLING
+// ============================================================================
+{
+  const olderIncompleteRecord = {
+    title: "Blade Runner 2049",
+    providerId: "tmdb::movie::335984",
+    mediaLens: "movies",
+    visual: {
+      posterUrl: "https://image.tmdb.org/t/p/w500/blade_runner.jpg"
+    }
+    // Lacks answer, conversation, results, etc.
+  };
+
+  const payload = buildRestorationPayload(olderIncompleteRecord);
+
+  assert.equal(payload.rehydrated, true, "Payload must be constructed with rehydrated flag");
+  assert.equal(payload.query, "Blade Runner 2049", "Payload query must fall back to title");
+  assert.equal(payload.item, "tmdb::movie::335984", "Payload item must use providerId");
+  assert.equal(payload.mediaLens, "movies", "MediaLens must be preserved");
+  assert.equal(payload.answer, null, "Incomplete record without answer must produce null answer");
+  assert.deepEqual(payload.conversation, [], "Incomplete record without conversation must produce empty array");
+
+  assert.equal(
+    isValidRestorationState(payload, "Blade Runner 2049"),
+    true,
+    "Incomplete payload must still be valid for target query"
+  );
+  assert.equal(
+    hasSufficientRestorationData(payload),
+    false,
+    "Incomplete record must NOT be considered sufficient"
+  );
+  assert.equal(
+    shouldSkipSearchOnRestoration(payload, "Blade Runner 2049"),
+    false,
+    "Must NOT skip search for incomplete record — must fall back cleanly to fresh search"
+  );
+}
+
+// ============================================================================
+// 13. PROFILE YOUR LIBRARY: LEGACY LOREBOOK COMPATIBILITY
+// ============================================================================
+{
+  const legacyLorebook = {
+    topic: "Death Note",
+    mediaLens: "anime",
+    item: "jikan::anime::1535",
+    conversation: [
+      { role: "user", content: "What is Death Note?" },
+      { role: "assistant", content: "Death Note is a psychological supernatural thriller anime." },
+      { role: "user", content: "Who is L?" },
+      { role: "assistant", content: "L Lawliet is the eccentric master detective who opposes Light." }
+    ],
+    results: [{ title: "Death Note - MAL", url: "https://myanimelist.net/anime/1535" }]
+  };
+
+  const payload = buildRestorationPayload(legacyLorebook);
+
+  assert.equal(payload.query, "Death Note");
+  assert.equal(
+    payload.answer?.summary,
+    "Death Note is a psychological supernatural thriller anime.",
+    "First assistant turn must be extracted as canonical answer summary"
+  );
+  assert.equal(
+    payload.conversation?.length,
+    2,
+    "Subsequent conversation turns must be preserved as follow-up history"
+  );
+  assert.equal(payload.conversation?.[0].content, "Who is L?");
+  assert.equal(payload.conversation?.[1].content, "L Lawliet is the eccentric master detective who opposes Light.");
+  assert.equal(hasSufficientRestorationData(payload), true);
+  assert.equal(shouldSkipSearchOnRestoration(payload, "Death Note"), true);
+}
+
+// ============================================================================
+// 14. PROFILE CONTEXTUAL FOLLOW-UP CONTINUATION
+// ============================================================================
+{
+  const restoredProfileExploration = {
+    title: "Arcane",
+    query: "Arcane",
+    providerId: "tmdb::tv::94605",
+    mediaLens: "tv",
+    answer: {
+      summary: "Arcane is an animated series set in Piltover and Zaun.",
+      categories: [],
+      spoilers: ""
+    },
+    conversation: [
+      { role: "user", content: "Who created Hextech?" },
+      { role: "assistant", content: "Jayce Talis and Viktor created Hextech together." }
+    ],
+    historyId: "hist-arcane-followup"
+  };
+
+  const payload = buildRestorationPayload(restoredProfileExploration);
+
+  // Full conversation chain sent to answer prompt
+  const conversationChainForPrompt = [
+    { role: "user", content: payload.query },
+    { role: "assistant", content: payload.answer!.summary },
+    ...payload.conversation!
+  ];
+
+  assert.equal(conversationChainForPrompt.length, 4, "Chained conversation must contain all 4 prior turns");
+  assert.equal(conversationChainForPrompt[0].content, "Arcane");
+  assert.equal(conversationChainForPrompt[1].content, "Arcane is an animated series set in Piltover and Zaun.");
+  assert.equal(conversationChainForPrompt[2].content, "Who created Hextech?");
+  assert.equal(conversationChainForPrompt[3].content, "Jayce Talis and Viktor created Hextech together.");
+
+  // When next follow-up arrives:
+  const newFollowUp = [
+    ...payload.conversation!,
+    { role: "user", content: "What happened to Viktor?" } as const,
+    { role: "assistant", content: "Viktor fell ill and turned to the Hexcore." } as const
+  ];
+  assert.equal(newFollowUp.length, 4, "Follow-up conversation extends smoothly without losing context");
+}
+
+// ============================================================================
+// 15. PROFILE RESTORATION ENTITY ISOLATION
+// ============================================================================
+{
+  const severanceProfileState = buildRestorationPayload({
+    title: "Severance",
+    providerId: "tmdb::tv::95396",
+    mediaLens: "tv",
+    answer: { summary: "Severance summary..." }
+  });
+
+  // Target query mismatch
+  assert.equal(
+    isValidRestorationState(severanceProfileState, "Elden Ring"),
+    false,
+    "Severance restoration state must NOT apply when query is Elden Ring"
+  );
+
+  // Entity switch resets conversation
+  const currentEntity = {
+    canonicalEntity: "Severance",
+    providerId: "tmdb::tv::95396",
+    mediaLens: "tv"
+  };
+  const nextEntity = {
+    canonicalEntity: "Elden Ring",
+    providerId: "igdb::game::119133",
+    mediaLens: "games"
+  };
+  assert.equal(
+    shouldResetConversationOnEntityChange(currentEntity, nextEntity),
+    true,
+    "Switching entities must reset conversation state to prevent leakage"
+  );
+}
+
+console.log("Phase 2 & Phase 3 restoration integrity regression checks completed.");
+

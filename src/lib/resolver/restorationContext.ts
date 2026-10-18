@@ -1,4 +1,4 @@
-import type { MediaLens } from "../../app/mediaLens.js";
+import { normalizeMediaLens, type MediaLens } from "../../app/mediaLens.js";
 import type { ProviderMetadata } from "../../types/index.js";
 
 export interface RestoredAnswer {
@@ -176,3 +176,85 @@ export function consumeRestorationState(
 
   return payload;
 }
+
+/**
+ * Constructs a standardized RestorationPayload from an exploration record,
+ * history document, or saved lorebook.
+ */
+export function buildRestorationPayload(
+  record: any
+): RestorationPayload {
+  if (!record || typeof record !== "object") {
+    return { rehydrated: false };
+  }
+
+  const query = (record.query || record.title || record.topic || "").trim();
+  const topic = (record.topic || record.title || record.query || "").trim();
+  const item = record.providerId || record.item || null;
+  const mediaLens = normalizeMediaLens(record.mediaLens);
+
+  let restoredAnswer: RestoredAnswer | null = null;
+  let restoredConversation: RestoredConversationMessage[] = [];
+
+  if (record.answer && typeof record.answer.summary === "string" && record.answer.summary.trim()) {
+    restoredAnswer = {
+      summary: record.answer.summary,
+      categories: Array.isArray(record.answer.categories) ? record.answer.categories : [],
+      spoilers: typeof record.answer.spoilers === "string" ? record.answer.spoilers : ""
+    };
+    restoredConversation = normalizeRestoredConversation(record.conversation);
+  } else if (Array.isArray(record.conversation) && record.conversation.length > 0) {
+    const firstAssistantIdx = record.conversation.findIndex(
+      (m: any) => m && m.role === "assistant" && typeof m.content === "string" && m.content.trim()
+    );
+
+    if (firstAssistantIdx !== -1) {
+      restoredAnswer = {
+        summary: record.conversation[firstAssistantIdx].content,
+        categories: [],
+        spoilers: ""
+      };
+
+      if (record.conversation.length > firstAssistantIdx + 1) {
+        restoredConversation = normalizeRestoredConversation(
+          record.conversation.slice(firstAssistantIdx + 1)
+        );
+      }
+    } else {
+      restoredConversation = normalizeRestoredConversation(record.conversation);
+    }
+  }
+
+  const results = Array.isArray(record.results)
+    ? record.results
+        .filter((r: any) => r && typeof r.title === "string" && typeof r.url === "string")
+        .map((r: any) => ({
+          title: r.title,
+          url: r.url,
+          source: typeof r.source === "string" ? r.source : undefined
+        }))
+    : [];
+
+  const visualMeta =
+    record.activeVisualOwnerMetadata || record.visual || record.visualAsset || null;
+
+  return {
+    query,
+    topic,
+    mediaLens,
+    answer: restoredAnswer,
+    conversation: restoredConversation,
+    results,
+    item,
+    contextPacket: record.contextPacket || null,
+    grounding: record.grounding || null,
+    renderEntityPacket: record.renderEntityPacket || null,
+    activeVisualOwnerMetadata: visualMeta,
+    visual: visualMeta,
+    historyId: record.historyId || record.historyDocId || (record.id && !record.lorebookId ? record.id : undefined),
+    lorebookId: record.lorebookId || (record.id && record.lorebookId ? record.id : undefined),
+    providerMetadata: record.providerMetadata || null,
+    rehydrated: true
+  };
+}
+
