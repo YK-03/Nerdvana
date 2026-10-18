@@ -36,10 +36,11 @@ export function normalizeQuery(raw: string): NormalizedQuery {
 
 export function normalizeText(value: unknown): string {
   return String(value ?? "")
+    .normalize("NFKC")
     .toLowerCase()
     .replace(/[''`]/g, "'")
     .replace(/[""]/g, '"')
-    .replace(/[^a-z0-9\s:&/-]/g, " ")
+    .replace(/[^\p{L}\p{N}\p{M}\s:&/-]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -49,8 +50,9 @@ export function normalizeText(value: unknown): string {
  */
 export function cleanAlphanumeric(value: unknown): string {
   return String(value ?? "")
+    .normalize("NFKC")
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, "")
+    .replace(/[^\p{L}\p{N}\p{M}]/gu, "")
     .trim();
 }
 

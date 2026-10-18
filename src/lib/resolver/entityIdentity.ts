@@ -10,9 +10,10 @@ const GENERIC_MEDIA_LABELS: Record<MediaLens, Set<string>> = {
 
 export function normalizeEntityTitle(value: unknown): string {
   return String(value ?? "")
+    .normalize("NFKC")
     .toLowerCase()
     .replace(/[’'`]/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/[^\p{L}\p{N}\p{M}]+/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

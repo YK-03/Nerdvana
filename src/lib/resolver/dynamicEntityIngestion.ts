@@ -13,7 +13,7 @@ export type TemporaryCanonicalEntity = {
   normalizedTitle: string;
   aliases: string[];
   lens: MediaLens;
-  source: "tmdb" | "jikan" | "igdb" | "comicvine" | "googlebooks";
+  source: "tmdb" | "jikan" | "igdb" | "comicvine" | "googlebooks" | "anilist";
   authority: "external_ingested";
   confidence: number;
   metadata: {
@@ -29,14 +29,26 @@ export type TemporaryCanonicalEntity = {
   };
 };
 
+type DynamicEntityResult = {
+  entity: TemporaryCanonicalEntity | null;
+  rejectedCount: number;
+  ambiguousEntities?: TemporaryCanonicalEntity[];
+};
+
 export function normalize(value: string): string {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ");
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\p{M}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function safeNormalize(value: string): string {
-  let norm = value.toLowerCase().trim();
-  // Strip punctuation
-  norm = norm.replace(/[^a-z0-9\s]+/g, " ");
+  let norm = value.normalize("NFKC").toLowerCase().trim();
+  // Strip punctuation while preserving letters, numbers, and combining marks in any script
+  norm = norm.replace(/[^\p{L}\p{N}\p{M}\s]+/gu, " ");
   // Compress multiple spaces
   norm = norm.replace(/\s+/g, " ").trim();
   
@@ -46,6 +58,79 @@ export function safeNormalize(value: string): string {
     return words.slice(1).join(" ");
   }
   return norm;
+}
+
+const ROMAN_TO_ARABIC: Record<string, string> = {
+  i: "1",
+  ii: "2",
+  iii: "3",
+  iv: "4",
+  v: "5",
+  vi: "6",
+  vii: "7",
+  viii: "8",
+  ix: "9",
+  x: "10",
+};
+
+export function normalizeNumerals(text: string): string {
+  return text
+    .split(" ")
+    .map((token) => ROMAN_TO_ARABIC[token] ?? token)
+    .join(" ");
+}
+
+export function titleMatchScore(queryNorm: string, safeQueryNorm: string, candidateTitle: string): number {
+  const candidateNorm = normalize(candidateTitle);
+  const safeCandidateNorm = safeNormalize(candidateTitle);
+
+  const queryNum = normalizeNumerals(queryNorm);
+  const safeQueryNum = normalizeNumerals(safeQueryNorm);
+  const candNum = normalizeNumerals(candidateNorm);
+  const safeCandNum = normalizeNumerals(safeCandidateNorm);
+
+  if (
+    candidateNorm === queryNorm ||
+    safeCandidateNorm === safeQueryNorm ||
+    candidateNorm === safeQueryNorm ||
+    safeCandidateNorm === queryNorm ||
+    candNum === queryNum ||
+    safeCandNum === safeQueryNum ||
+    candNum === safeQueryNum ||
+    safeCandNum === queryNum
+  ) {
+    return 100;
+  }
+
+  // A provider title that begins with the query is a useful partial match,
+  // but it must rank below an exact title. This avoids accepting a later
+  // edition when the base title is present in the same response.
+  if (
+    (queryNorm.length >= 4 && candidateNorm.startsWith(queryNorm)) ||
+    (queryNum.length >= 4 && candNum.startsWith(queryNum))
+  ) {
+    return 80;
+  }
+
+  const queryTokens = queryNorm.split(" ").filter(Boolean);
+  const candidateTokens = candidateNorm.split(" ").filter(Boolean);
+  if (queryTokens.length === 0 || candidateTokens.length === 0) return 0;
+
+  const queryNumTokens = queryNum.split(" ").filter(Boolean);
+  const candNumTokens = candNum.split(" ").filter(Boolean);
+
+  const querySet = new Set(queryNumTokens);
+  const candidateSet = new Set(candNumTokens);
+  let sharedTokens = 0;
+  for (const token of candidateSet) {
+    if (querySet.has(token)) sharedTokens++;
+  }
+
+  // Symmetrical overlap avoids awarding short candidates a high score when a long
+  // query merely contains their single common word.
+  const maxTokens = Math.max(querySet.size, candidateSet.size);
+  const symmetricCoverage = maxTokens > 0 ? sharedTokens / maxTokens : 0;
+  return symmetricCoverage >= 0.7 ? 60 : 0;
 }
 
 const TMDB_MOVIE_GENRES: Record<number, string> = {
@@ -66,7 +151,7 @@ export async function fetchDynamicEntity(
   query: string,
   lens: MediaLens,
   keys: { tmdb?: string; rawg?: string; igdbId?: string; igdbSecret?: string; comicVine?: string }
-): Promise<{ entity: TemporaryCanonicalEntity | null; rejectedCount: number }> {
+): Promise<DynamicEntityResult> {
   const queryNorm1 = normalize(query);
   const queryNorm2 = safeNormalize(query);
   let rejectedCount = 0;
@@ -87,6 +172,7 @@ export async function fetchDynamicEntity(
 
       const data = await res.json();
       const results = data.results || [];
+      const matches: Array<{ entity: TemporaryCanonicalEntity; score: number; popularity: number }> = [];
 
       for (const r of results) {
         const title = r.title ?? r.name ?? r.original_title ?? r.original_name;
@@ -102,45 +188,20 @@ export async function fetchDynamicEntity(
           r.original_name,
         ].filter(Boolean) as string[];
 
-        let isExactMatch = false;
-        let matchedTitle = title;
-
-        for (const candName of candidateNames) {
-          const candNorm1 = normalize(candName);
-          const candNorm2 = safeNormalize(candName);
-
+        const titleScores = candidateNames.map((candName) => {
           const candWithYear1 = releaseYear ? normalize(`${candName} ${releaseYear}`) : "";
           const candWithYear2 = releaseYear ? safeNormalize(`${candName} ${releaseYear}`) : "";
+          const isYearExact = releaseYear ? (
+            queryNorm1 === candWithYear1 || queryNorm1 === candWithYear2 ||
+            queryNorm2 === candWithYear1 || queryNorm2 === candWithYear2
+          ) : false;
+          const baseScore = titleMatchScore(queryNorm1, queryNorm2, candName);
+          const score = isYearExact ? 100 : baseScore;
+          return { candName, score };
+        });
+        const bestTitle = titleScores.sort((a, b) => b.score - a.score)[0];
 
-          if (
-            candNorm1 === queryNorm1 ||
-            candNorm2 === queryNorm2 ||
-            candNorm1 === queryNorm2 ||
-            candNorm2 === queryNorm1 ||
-            (Boolean(candWithYear1) && (candWithYear1 === queryNorm1 || candWithYear1 === queryNorm2)) ||
-            (Boolean(candWithYear2) && (candWithYear2 === queryNorm1 || candWithYear2 === queryNorm2))
-          ) {
-            isExactMatch = true;
-            matchedTitle = candName;
-            break;
-          }
-        }
-
-        if (!isExactMatch) {
-          // Multilingual/alias looser lexical match: check token overlap
-          for (const candName of candidateNames) {
-            const queryTokens = queryNorm1.split(" ");
-            const candTokens = normalize(candName).split(" ");
-            const overlap = queryTokens.filter(t => candTokens.includes(t)).length / Math.min(queryTokens.length, candTokens.length);
-            if (overlap >= 0.7) {
-              isExactMatch = true;
-              matchedTitle = candName;
-              break;
-            }
-          }
-        }
-
-        if (isExactMatch) {
+        if (bestTitle && bestTitle.score > 0) {
           const genreIds = r.genre_ids || [];
           const genres = genreIds.map((id: number) => 
             lens === "movies" ? TMDB_MOVIE_GENRES[id] : TMDB_TV_GENRES[id]
@@ -148,8 +209,8 @@ export async function fetchDynamicEntity(
 
           const entity: TemporaryCanonicalEntity = {
             id: `tmdb::${type}::${r.id}`,
-            title: matchedTitle,
-            normalizedTitle: normalize(matchedTitle),
+            title: bestTitle.candName,
+            normalizedTitle: normalize(bestTitle.candName),
             aliases: [...candidateNames, r.title, r.name, r.original_title, r.original_name].filter(Boolean),
             lens,
             source: "tmdb",
@@ -162,62 +223,212 @@ export async function fetchDynamicEntity(
               poster: r.poster_path ? `https://image.tmdb.org/t/p/w342${r.poster_path}` : undefined
             }
           };
-          return { entity, rejectedCount };
+          matches.push({ entity, score: bestTitle.score, popularity: Number(r.popularity) || 0 });
         } else {
           rejectedCount++;
         }
       }
-    } else if (lens === "anime") {
-      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=8`);
-      if (!res.ok) return { entity: null, rejectedCount: 0 };
 
-      const data = await res.json();
-      const results = data.data || [];
-
-      for (const r of results) {
-        const titles = [r.title_english, r.title, r.title_japanese, ...(r.titles?.map((t: any) => t.title) || [])].filter(Boolean);
-        let matchFound = false;
-        let matchedTitle = r.title_english ?? r.title;
-
-        for (const t of titles) {
-          const candNorm1 = normalize(t);
-          const candNorm2 = safeNormalize(t);
-          if (
-            candNorm1 === queryNorm1 ||
-            candNorm2 === queryNorm2 ||
-            candNorm1 === queryNorm2 ||
-            candNorm2 === queryNorm1
-          ) {
-            matchFound = true;
-            matchedTitle = t;
-            break;
+      matches.sort((a, b) => b.score - a.score || b.popularity - a.popularity);
+      if (matches[0]) {
+        const top = matches[0];
+        const tiedTop = matches.filter((candidate) => candidate.score === top.score);
+        const distinctEntities = tiedTop.filter((c, idx, arr) => arr.findIndex((o) => o.entity.id === c.entity.id) === idx);
+        if (distinctEntities.length > 1) {
+          if (top.score < 100) {
+            return {
+              entity: null,
+              rejectedCount,
+              ambiguousEntities: distinctEntities.slice(0, 5).map((candidate) => candidate.entity),
+            };
+          }
+          const distinctYears = new Set(distinctEntities.map((c) => c.entity.metadata.releaseYear ?? null));
+          if (distinctYears.size > 1) {
+            return {
+              entity: null,
+              rejectedCount,
+              ambiguousEntities: distinctEntities.slice(0, 5).map((candidate) => candidate.entity),
+            };
           }
         }
+        return { entity: top.entity, rejectedCount };
+      }
+    } else if (lens === "anime") {
+      let results: any[] = [];
+      let isAniListFallback = false;
 
-        if (matchFound) {
-          const releaseYear = r.aired?.prop?.from?.year || undefined;
-          const genres = (r.genres || []).map((g: any) => g.name).filter(Boolean);
+      try {
+        const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=8`, {
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          results = data.data || [];
+        }
+      } catch (err) {
+        console.warn("[Nerdvana Ingestion] Jikan fetch failed, attempting AniList fallback:", err);
+      }
+
+      // AniList fallback if Jikan failed or returned no results
+      if (results.length === 0) {
+        try {
+          const anilistQuery = `
+            query ($search: String) {
+              Page (page: 1, perPage: 8) {
+                media (search: $search, type: ANIME) {
+                  id
+                  title {
+                    romaji
+                    english
+                    native
+                  }
+                  synonyms
+                  meanScore
+                  startDate {
+                    year
+                  }
+                  genres
+                  description
+                  coverImage {
+                    large
+                  }
+                }
+              }
+            }
+          `;
+          const alRes = await fetch("https://graphql.anilist.co", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            signal: AbortSignal.timeout(10_000),
+            body: JSON.stringify({
+              query: anilistQuery,
+              variables: { search: query },
+            }),
+          });
+          if (alRes.ok) {
+            const alData = await alRes.json();
+            const alList = alData?.data?.Page?.media || [];
+            if (alList.length > 0) {
+              results = alList;
+              isAniListFallback = true;
+            }
+          }
+        } catch (alErr) {
+          console.warn("[Nerdvana Ingestion] AniList fallback failed:", alErr);
+        }
+      }
+
+      if (results.length === 0) return { entity: null, rejectedCount: 0 };
+
+      const matches: Array<{ entity: TemporaryCanonicalEntity; score: number; popularity: number }> = [];
+
+      for (const r of results) {
+        const candidateNames = isAniListFallback
+          ? [r.title?.english, r.title?.romaji, r.title?.native, ...(r.synonyms || [])].filter(Boolean) as string[]
+          : [
+              r.title_english,
+              r.title,
+              r.title_japanese,
+              ...(r.titles?.map((t: any) => t.title) || []),
+            ].filter(Boolean) as string[];
+
+        if (candidateNames.length === 0) continue;
+
+        const releaseYear = isAniListFallback
+          ? r.startDate?.year || undefined
+          : r.aired?.prop?.from?.year || undefined;
+
+        const titleScores = candidateNames.map((candName) => {
+          const candWithYear1 = releaseYear ? normalize(`${candName} ${releaseYear}`) : "";
+          const candWithYear2 = releaseYear ? safeNormalize(`${candName} ${releaseYear}`) : "";
+          const isYearExact = releaseYear ? (
+            queryNorm1 === candWithYear1 || queryNorm1 === candWithYear2 ||
+            queryNorm2 === candWithYear1 || queryNorm2 === candWithYear2
+          ) : false;
+          const baseScore = titleMatchScore(queryNorm1, queryNorm2, candName);
+          const score = isYearExact ? 100 : baseScore;
+          return { candName, score };
+        });
+        const bestTitle = titleScores.sort((a, b) => b.score - a.score)[0];
+
+        if (bestTitle && bestTitle.score > 0) {
+          const genres = isAniListFallback
+            ? (r.genres || []).filter(Boolean)
+            : (r.genres || []).map((g: any) => g.name).filter(Boolean);
+
+          const providerSource = isAniListFallback ? "anilist" : "jikan";
+          const rawId = isAniListFallback ? String(r.id) : String(r.mal_id);
+          const entityId = `${providerSource}::anime::${rawId}`;
+          const poster = isAniListFallback
+            ? r.coverImage?.large || undefined
+            : r.images?.jpg?.image_url || undefined;
+          const overview = isAniListFallback ? r.description : r.synopsis;
 
           const entity: TemporaryCanonicalEntity = {
-            id: `jikan::anime::${r.mal_id}`,
-            title: matchedTitle,
-            normalizedTitle: normalize(matchedTitle),
-            aliases: titles,
+            id: entityId,
+            title: bestTitle.candName,
+            normalizedTitle: normalize(bestTitle.candName),
+            aliases: candidateNames,
             lens,
-            source: "jikan",
+            source: providerSource,
             authority: "external_ingested",
             confidence: 0.99,
             metadata: {
               releaseYear,
               genres,
-              overview: r.synopsis,
-              poster: r.images?.jpg?.image_url || undefined
-            }
+              overview,
+              poster,
+              providerType: "anime",
+              providerResourceType: "anime",
+              providerMetadata: {
+                provider: providerSource,
+                id: rawId,
+                confidence: 0.99,
+                canonicalTitle: bestTitle.candName,
+                releaseYear,
+                providerType: "anime",
+                providerResourceType: "anime",
+              },
+            },
           };
-          return { entity, rejectedCount };
+          matches.push({
+            entity,
+            score: bestTitle.score,
+            popularity: isAniListFallback
+              ? Number(r.meanScore ? r.meanScore * 1000 : 0)
+              : Number(r.members) || Number(r.score ? r.score * 10000 : 0),
+          });
         } else {
           rejectedCount++;
         }
+      }
+
+      matches.sort((a, b) => b.score - a.score || b.popularity - a.popularity);
+      if (matches[0]) {
+        const top = matches[0];
+        const tiedTop = matches.filter((candidate) => candidate.score === top.score);
+        const distinctEntities = tiedTop.filter((c, idx, arr) => arr.findIndex((o) => o.entity.id === c.entity.id) === idx);
+        if (distinctEntities.length > 1) {
+          if (top.score < 100) {
+            return {
+              entity: null,
+              rejectedCount,
+              ambiguousEntities: distinctEntities.slice(0, 5).map((candidate) => candidate.entity),
+            };
+          }
+          const distinctYears = new Set(distinctEntities.map((c) => c.entity.metadata.releaseYear).filter(Boolean));
+          if (distinctYears.size > 1) {
+            return {
+              entity: null,
+              rejectedCount,
+              ambiguousEntities: distinctEntities.slice(0, 5).map((candidate) => candidate.entity),
+            };
+          }
+        }
+        return { entity: top.entity, rejectedCount };
       }
     } else if (lens === "games") {
       if (!keys.igdbId || !keys.igdbSecret) {
@@ -242,31 +453,25 @@ export async function fetchDynamicEntity(
         if (!res.ok) return { entity: null, rejectedCount: 0 };
         const data = await res.json();
         const results = Array.isArray(data) ? data : [];
+        const matches: Array<{ entity: TemporaryCanonicalEntity; score: number; popularity: number }> = [];
 
         for (const r of results) {
           const title = r.name;
           if (!title) continue;
 
           const candNorm1 = normalize(title);
-          const candNorm2 = safeNormalize(title);
+          const releaseYear = r.first_release_date ? new Date(r.first_release_date * 1000).getFullYear() : undefined;
+          const candWithYear1 = releaseYear ? normalize(`${title} ${releaseYear}`) : "";
+          const candWithYear2 = releaseYear ? safeNormalize(`${title} ${releaseYear}`) : "";
+          const isYearExact = releaseYear ? (
+            queryNorm1 === candWithYear1 || queryNorm1 === candWithYear2 ||
+            queryNorm2 === candWithYear1 || queryNorm2 === candWithYear2
+          ) : false;
+          const baseScore = titleMatchScore(queryNorm1, queryNorm2, title);
+          const score = isYearExact ? 100 : baseScore;
 
-          let isExactMatch =
-            candNorm1 === queryNorm1 ||
-            candNorm2 === queryNorm2 ||
-            candNorm1 === queryNorm2 ||
-            candNorm2 === queryNorm1;
+          if (score > 0) {
 
-          if (!isExactMatch) {
-            const queryTokens = queryNorm1.split(" ");
-            const candTokens = candNorm1.split(" ");
-            const overlap = queryTokens.filter(t => candTokens.includes(t)).length / Math.min(queryTokens.length, candTokens.length);
-            if (overlap >= 0.7) {
-              isExactMatch = true;
-            }
-          }
-
-          if (isExactMatch) {
-            const releaseYear = r.first_release_date ? new Date(r.first_release_date * 1000).getFullYear() : undefined;
             const genres = r.genres?.map((g: any) => g.name) || [];
             
             // Early franchiseRoot extraction during Dynamic Ingestion (first word/splitting logic)
@@ -286,13 +491,49 @@ export async function fetchDynamicEntity(
                 genres,
                 overview: undefined,
                 poster: r.cover?.url ? `https:${r.cover.url.replace("t_thumb", "t_cover_big")}` : undefined,
-                franchiseRoot
+                franchiseRoot,
+                providerType: "game",
+                providerResourceType: "game",
+                providerMetadata: {
+                  provider: "igdb",
+                  id: String(r.id),
+                  confidence: 0.99,
+                  canonicalTitle: title,
+                  releaseYear,
+                  providerType: "game",
+                  providerResourceType: "game",
+                },
               }
             };
-            return { entity, rejectedCount };
+            matches.push({ entity, score, popularity: Number(r.rating) || 0 });
           } else {
             rejectedCount++;
           }
+        }
+
+        matches.sort((a, b) => b.score - a.score || b.popularity - a.popularity);
+        if (matches[0]) {
+          const top = matches[0];
+          const tiedTop = matches.filter((candidate) => candidate.score === top.score);
+          const distinctEntities = tiedTop.filter((c, idx, arr) => arr.findIndex((o) => o.entity.id === c.entity.id) === idx);
+          if (distinctEntities.length > 1) {
+            if (top.score < 100) {
+              return {
+                entity: null,
+                rejectedCount,
+                ambiguousEntities: distinctEntities.slice(0, 5).map((candidate) => candidate.entity),
+              };
+            }
+            const distinctYears = new Set(distinctEntities.map((c) => c.entity.metadata.releaseYear ?? null));
+            if (distinctYears.size > 1) {
+              return {
+                entity: null,
+                rejectedCount,
+                ambiguousEntities: distinctEntities.slice(0, 5).map((candidate) => candidate.entity),
+              };
+            }
+          }
+          return { entity: top.entity, rejectedCount };
         }
       } catch (err) {
         console.error("[Nerdvana Ingestion] IGDB fetch failed:", err);
@@ -330,10 +571,10 @@ export async function fetchDynamicEntity(
                 ["volume", "issue", "story_arc"].includes(resourceType)
                   ? classifiedType
                   : rawProviderType;
-              const queryTokens = queryNorm1.split(" ");
-              const titleTokens = normalizedTitle.split(" ");
+              const queryTokens = queryNorm1.split(" ").filter(Boolean);
+              const titleTokens = normalizedTitle.split(" ").filter(Boolean);
               const overlap = queryTokens.length > 0 && titleTokens.length > 0
-                ? queryTokens.filter((t) => titleTokens.includes(t)).length / Math.min(queryTokens.length, titleTokens.length)
+                ? queryTokens.filter((t) => titleTokens.includes(t)).length / Math.max(queryTokens.length, titleTokens.length)
                 : 0;
               const typeBoost = classifiedType && providerType === classifiedType ? 25 : 0;
               const typePenalty = classifiedType && providerType !== classifiedType ? -60 : 0;
@@ -350,7 +591,12 @@ export async function fetchDynamicEntity(
                 score: exactBoost + typeBoost + typePenalty + overlapBoost,
               };
             })
-            .sort((a: any, b: any) => b.score - a.score);
+            .sort((a: any, b: any) =>
+              b.score - a.score ||
+              (b.titleExact ? 1 : 0) - (a.titleExact ? 1 : 0) ||
+              b.overlap - a.overlap ||
+              String(a.raw.id).localeCompare(String(b.raw.id))
+            );
 
           if (rankedResults.length > 1) {
             const providerTypes = Array.from(new Set(rankedResults.slice(0, 4).map((r: any) => r.providerType)));
@@ -364,14 +610,21 @@ export async function fetchDynamicEntity(
             }
           }
 
+          const candidateEntities: Array<{ entity: TemporaryCanonicalEntity; ranked: typeof rankedResults[number] }> = [];
+          const seenIds = new Set<string>();
+
           for (const ranked of rankedResults) {
             const r = ranked.raw;
             const title = r.name;
             if (!title) continue;
             const candNorm1 = ranked.normalizedTitle;
-            const isExactMatch = ranked.titleExact || ranked.overlap >= 0.9;
+            const isPlausibleMatch = ranked.titleExact || (ranked.overlap >= 0.75 && ranked.score > 0);
 
-            if (isExactMatch) {
+            if (isPlausibleMatch) {
+              const entityId = `comicvine::${ranked.resourceType}::${r.id}`;
+              if (seenIds.has(entityId)) continue;
+              seenIds.add(entityId);
+
               const releaseYear = r.start_year ? parseInt(r.start_year) : undefined;
               const genres = r.publisher?.name ? [r.publisher.name] : [];
               const providerMetadata: ProviderMetadata = {
@@ -387,7 +640,7 @@ export async function fetchDynamicEntity(
               };
 
               const entity: TemporaryCanonicalEntity = {
-                id: `comicvine::${ranked.resourceType}::${r.id}`,
+                id: entityId,
                 title,
                 normalizedTitle: candNorm1,
                 aliases: [title],
@@ -407,26 +660,64 @@ export async function fetchDynamicEntity(
                   publisherLabel: r.publisher?.name ?? null,
                 }
               };
-              console.log("[TYPED_PROVIDER_ACQUIRED]", {
-                query,
-                lens,
-                id: providerMetadata.id,
-                providerType: providerMetadata.providerType,
-                providerResourceType: providerMetadata.providerResourceType,
-                title,
-              });
-              console.log("[TYPED_INGESTION_RESULT]", {
-                query,
-                lens,
-                matchedTitle: title,
-                providerType: ranked.providerType,
-                providerResourceType: ranked.resourceType,
-                providerId: entity.id,
-              });
-              return { entity, rejectedCount };
+              candidateEntities.push({ entity, ranked });
             } else {
               rejectedCount++;
             }
+          }
+
+          if (candidateEntities.length > 0) {
+            const top = candidateEntities[0];
+            const tiedTop = candidateEntities.filter((c) => c.ranked.score === top.ranked.score);
+            const distinctEntities = tiedTop.filter(
+              (c, idx, arr) => arr.findIndex((o) => o.entity.id === c.entity.id) === idx
+            );
+
+            if (distinctEntities.length > 1) {
+              if (top.ranked.score < 100) {
+                return {
+                  entity: null,
+                  rejectedCount,
+                  ambiguousEntities: distinctEntities.slice(0, 5).map(({ entity }) => entity),
+                };
+              }
+              const distinctTypes = new Set(distinctEntities.map(({ ranked }) => ranked.providerType));
+              const distinctYears = new Set(
+                distinctEntities.map(({ entity }) => entity.metadata.releaseYear).filter(Boolean)
+              );
+              if ((!classifiedType && distinctTypes.size > 1) || distinctYears.size > 1) {
+                console.warn("[TYPED_AMBIGUITY_DETECTED]", {
+                  query,
+                  lens,
+                  classifiedType: classifiedType ?? null,
+                  providerTypes: Array.from(distinctTypes),
+                });
+                return {
+                  entity: null,
+                  rejectedCount,
+                  ambiguousEntities: distinctEntities.slice(0, 5).map(({ entity }) => entity),
+                };
+              }
+            }
+
+            const { entity, ranked } = top;
+            console.log("[TYPED_PROVIDER_ACQUIRED]", {
+              query,
+              lens,
+              id: ranked.raw.id,
+              providerType: ranked.providerType,
+              providerResourceType: ranked.resourceType,
+              title: entity.title,
+            });
+            console.log("[TYPED_INGESTION_RESULT]", {
+              query,
+              lens,
+              matchedTitle: entity.title,
+              providerType: ranked.providerType,
+              providerResourceType: ranked.resourceType,
+              providerId: entity.id,
+            });
+            return { entity, rejectedCount };
           }
         }
       }

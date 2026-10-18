@@ -1,4 +1,5 @@
-import { fallbackIdentityMatches } from "./entityIdentity.js";
+import { fallbackIdentityMatches, normalizeEntityTitle } from "./entityIdentity.js";
+import { normalizeNumerals } from "./dynamicEntityIngestion.js";
 
 export type IgdbFailureCode =
   | "MISSING_PROVIDER_CREDENTIALS"
@@ -68,6 +69,39 @@ export function isRetryableIgdbFailure(code: IgdbFailureCode, status?: number): 
 }
 
 /**
+ * Provider titles may add a subtitle to a catalog title (for example,
+ * "The Witcher 3" -> "The Witcher 3: Wild Hunt"). The provider ID is still
+ * required to match exactly; this only prevents a legitimate subtitle from
+ * being rejected as a different title.
+ */
+export function verifiedGameTitleMatches(expectedTitle: string, candidateTitle: string): boolean {
+  if (fallbackIdentityMatches(expectedTitle, candidateTitle, "games")) return true;
+
+  const expectedNorm = normalizeNumerals(normalizeEntityTitle(expectedTitle));
+  const candidateNorm = normalizeNumerals(normalizeEntityTitle(candidateTitle));
+  if (expectedNorm && candidateNorm && expectedNorm === candidateNorm) return true;
+
+  const separatorMatch = candidateTitle.match(/[:\-–—]\s*\S/);
+  if (separatorMatch && separatorMatch.index != null) {
+    const basePart = candidateTitle.slice(0, separatorMatch.index).trim();
+    const basePartNorm = normalizeNumerals(normalizeEntityTitle(basePart));
+    if (basePartNorm && expectedNorm && basePartNorm === expectedNorm) {
+      return true;
+    }
+  }
+
+  const expected = expectedTitle.trim().replace(/\s+/g, " ");
+  const candidate = candidateTitle.trim().replace(/\s+/g, " ");
+  if (!expected || !candidate || candidate.length <= expected.length) return false;
+
+  const prefixMatches = candidate.slice(0, expected.length).toLocaleLowerCase() === expected.toLocaleLowerCase();
+  const suffix = candidate.slice(expected.length).trim();
+  if (prefixMatches && /^[:\-–—]\s*\S/.test(suffix)) return true;
+
+  return false;
+}
+
+/**
  * Selects only the IGDB record that proves both requested identity dimensions:
  * the provider ID and the canonical game title. Presentation fields are
  * intentionally optional so sparse but valid records remain usable.
@@ -87,7 +121,7 @@ export function selectVerifiedIgdbGame(
     const record = candidate as Record<string, any>;
     if (String(record.id ?? "").trim() !== expectedIdText) continue;
     if (typeof record.name !== "string" || !record.name.trim()) continue;
-    if (!fallbackIdentityMatches(expectedTitle, record.name, "games")) continue;
+    if (!verifiedGameTitleMatches(expectedTitle, record.name)) continue;
     return record;
   }
 
