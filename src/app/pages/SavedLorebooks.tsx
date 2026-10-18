@@ -19,6 +19,10 @@ interface LorebookItem {
   results: any[];
   createdAt: any;
   mediaLens?: MediaLens;
+  item?: string | null;
+  contextPacket?: any;
+  grounding?: any;
+  renderEntityPacket?: any;
 }
 
 export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) {
@@ -49,13 +53,6 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
   }, [user]);
 
   const handleLorebookClick = (item: LorebookItem) => {
-    // Navigate to search with this topic AND restore state
-    // Deconstruct conversation to restore state
-    // We assume:
-    // [0] = User Query (Implicit)
-    // [1] = Initial Answer (Assistant) -> goes to 'answer' state
-    // [2...] = Follow ups -> goes to 'conversation' state
-
     let restoredAnswer = { summary: "", categories: [], spoilers: "" };
     let restoredConversation: any[] = [];
 
@@ -70,31 +67,31 @@ export default function SavedLorebooks({ onNavigatePage }: SavedLorebooksProps) 
           spoilers: ""
         };
 
-        // The rest after the first assistant message are follow-ups
-        // (Assuming standard User -> Assistant -> User -> Assistant flow)
-        // But wait, our save logic pushes: Query, Summary, then FollowUps.
-        // So index 0 is Query, Index 1 is Summary.
-        // Follow ups start at index 2.
-
-        if (item.conversation.length > 2) {
-          restoredConversation = item.conversation.slice(2);
+        if (item.conversation.length > firstAssistantIndex + 1) {
+          restoredConversation = item.conversation.slice(firstAssistantIndex + 1);
         }
       }
     }
 
     const stateToPush = {
       query: item.topic,
+      topic: item.topic,
       conversation: restoredConversation,
-      results: item.results,
+      results: item.results || [],
       answer: restoredAnswer,
       rehydrated: true,
-      mediaLens: normalizeMediaLens(item.mediaLens)
+      lorebookId: item.id,
+      mediaLens: normalizeMediaLens(item.mediaLens),
+      item: item.item || null,
+      contextPacket: item.contextPacket || null,
+      grounding: item.grounding || null,
+      renderEntityPacket: item.renderEntityPacket || null
     };
 
     window.history.pushState(
       stateToPush,
       "",
-      buildAskUrl(item.topic, { lens: normalizeMediaLens(item.mediaLens) })
+      buildAskUrl(item.topic, { lens: normalizeMediaLens(item.mediaLens), item: item.item || undefined })
     );
     window.dispatchEvent(new PopStateEvent("popstate"));
   };

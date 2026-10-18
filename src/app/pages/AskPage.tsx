@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ChatBubble from "../components/ChatBubble";
@@ -23,6 +23,8 @@ import { doc, updateDoc, setDoc } from "firebase/firestore";
 import { startNewSession, useQuerySessionStore, useAutocompleteStore, useIntentStore } from "../store/resolverSession";
 import { isExternalProviderId } from "../../lib/resolver/providerIdUtility.js";
 import { getProviderQualifiedSelection, getVerifiedItemForAnswer } from "../../lib/resolver/searchSelection.js";
+import { buildExecutionSearchKey, shouldResetConversationOnEntityChange } from "../../lib/resolver/conversationContext.js";
+import { isValidRestorationState, hasSufficientRestorationData, consumeRestorationState, normalizeRestoredConversation } from "../../lib/resolver/restorationContext.js";
 import type { CanonicalGroundingResult } from "../../lib/resolver/canonicalGrounding.js";
 import AutocompleteOverlay from "../components/AutocompleteOverlay";
 import ClarificationOverlay from "../components/ClarificationOverlay";
@@ -199,15 +201,6 @@ export default function AskPage({
 }: AskPageProps) {
   const [urlParams, setUrlParams] = useState(() => readAskQueryParams());
   const { item: queryItem, mediaLens } = urlParams;
-
-  useEffect(() => {
-    const handlePopState = () => {
-      clearActiveEntityState();
-      setUrlParams(readAskQueryParams());
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
 
   const fullQuestion = question.trim();
   const [queryInput, setQueryInput] = useState(fullQuestion);
@@ -415,7 +408,150 @@ export default function AskPage({
     setGrounding(null, "clearActiveEntityState");
     setActiveVisualOwner(null);
     setActiveVisualOwnerMetadata(null);
+    setConversation([], "clearActiveEntityState");
+    setCurrentHistoryId(null);
   };
+
+  const attemptRestoration = useCallback((targetQuestion: string) => {
+    if (!targetQuestion) return false;
+
+    // 1. Check window.history.state first (navigation from History or Saved Lorebooks)
+    const historyState = typeof window !== "undefined" ? window.history.state : null;
+    if (isValidRestorationState(historyState, targetQuestion)) {
+      const payload = consumeRestorationState(historyState);
+      if (payload) {
+        const hasSufficient = hasSufficientRestorationData(payload);
+
+        if (hasSufficient && payload.answer) {
+          setResults(payload.results || []);
+          setResponseData({
+            answer: payload.answer,
+            results: payload.results || []
+          }, "history-restoration");
+
+          const restoredConversation = normalizeRestoredConversation(payload.conversation);
+          setConversation(restoredConversation, "history-restoration");
+
+          if (payload.contextPacket) {
+            setContextPacket(payload.contextPacket, "history-restoration");
+          }
+          if (payload.grounding) {
+            setGrounding(payload.grounding, "history-restoration");
+          }
+          if (payload.renderEntityPacket) {
+            setRenderEntityPacket(payload.renderEntityPacket, "history-restoration");
+          }
+          if (payload.activeVisualOwnerMetadata) {
+            setActiveVisualOwnerMetadata(payload.activeVisualOwnerMetadata);
+          }
+
+          if (payload.historyId) {
+            setCurrentHistoryId(payload.historyId);
+          } else {
+            setCurrentHistoryId(null);
+          }
+
+          // Register search keys to prevent runSearch from executing a duplicate network call
+          const restoredItem = payload.item || payload.contextPacket?.providerId || queryItem || null;
+          const restoredCanonicalKey = buildExecutionSearchKey(
+            targetQuestion,
+            payload.mediaLens || mediaLens,
+            user?.uid,
+            restoredItem
+          );
+          const restoredInitialKey = buildExecutionSearchKey(
+            targetQuestion,
+            payload.mediaLens || mediaLens,
+            user?.uid,
+            ""
+          );
+          lastPrimaryQueryRef.current = restoredCanonicalKey;
+          lastSearchKeyRef.current = [restoredCanonicalKey, restoredInitialKey];
+
+          activeExecutionRef.current = {
+            searchKey: restoredCanonicalKey,
+            status: "completed",
+            startedAt: Date.now()
+          };
+
+          setIsLoading(false);
+          return true;
+        } else {
+          // Record lacks answer: preserve historyId if available, fall back to fresh search
+          if (payload.historyId) {
+            setCurrentHistoryId(payload.historyId);
+          }
+          if (payload.conversation && payload.conversation.length > 0) {
+            setConversation(normalizeRestoredConversation(payload.conversation), "history-restoration-partial");
+          }
+          return false;
+        }
+      }
+    }
+
+    // 2. Fall back to active session cache in localStorage if topic matches
+    try {
+      const saved = typeof window !== "undefined" ? localStorage.getItem("nerdvana_active_session") : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.topic && parsed.topic.trim().toLowerCase() === targetQuestion.trim().toLowerCase()) {
+          const restoredAnswer = parsed.answer || { summary: "", categories: [], spoilers: "" };
+          const restoredResults = parsed.results || [];
+
+          setResults(restoredResults);
+          setResponseData({ answer: restoredAnswer, results: restoredResults }, "session-restore");
+          setConversation(parsed.conversation || [], "session-restore");
+
+          if (parsed.contextPacket) setContextPacket(parsed.contextPacket, "session-restore");
+          if (parsed.grounding) setGrounding(parsed.grounding, "session-restore");
+          if (parsed.renderEntityPacket) setRenderEntityPacket(parsed.renderEntityPacket, "session-restore");
+          if (parsed.activeVisualOwnerMetadata) setActiveVisualOwnerMetadata(parsed.activeVisualOwnerMetadata);
+
+          const restoredItem = queryItem || parsed.contextPacket?.providerId || null;
+          const restoredKey = buildExecutionSearchKey(
+            targetQuestion,
+            mediaLens,
+            user?.uid,
+            restoredItem
+          );
+          lastPrimaryQueryRef.current = restoredKey;
+          lastSearchKeyRef.current = [restoredKey];
+
+          activeExecutionRef.current = {
+            searchKey: restoredKey,
+            status: "completed",
+            startedAt: Date.now()
+          };
+          setIsLoading(false);
+          return true;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to restore session from localStorage", e);
+    }
+
+    return false;
+  }, [mediaLens, queryItem, user?.uid]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const freshParams = readAskQueryParams();
+      setUrlParams(freshParams);
+      const urlQuestion = (new URLSearchParams(window.location.search).get("q") ?? "").trim();
+      if (urlQuestion) {
+        onQuestionChange?.(urlQuestion);
+        setQueryInput(urlQuestion);
+        const restored = attemptRestoration(urlQuestion);
+        if (!restored) {
+          clearActiveEntityState();
+        }
+      } else {
+        clearActiveEntityState();
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [attemptRestoration, onQuestionChange]);
 
   const handleSelectSuggestion = (suggestion: any) => {
     const startedAt = activeExecutionRef.current?.startedAt ?? Date.now();
@@ -535,6 +671,10 @@ export default function AskPage({
         conversation: fullSession,
         results: results.map(s => ({ title: s.title, url: s.url })),
         visual,
+        item: renderEntityPacket?.providerId || contextPacket?.providerId || (urlParams.item || null),
+        contextPacket: contextPacket || null,
+        grounding: grounding || null,
+        renderEntityPacket: renderEntityPacket || null,
         createdAt: serverTimestamp()
       });
       alert("Saved to Library!");
@@ -548,53 +688,17 @@ export default function AskPage({
     setQueryInput(fullQuestion);
   }, [fullQuestion]);
 
-  const hasRestoredSessionRef = useRef(false);
+  const lastRestoredQuestionRef = useRef<string>("");
 
   useEffect(() => {
-    if (hasRestoredSessionRef.current) return;
-    hasRestoredSessionRef.current = true;
+    if (!fullQuestion) return;
+    if (lastRestoredQuestionRef.current === fullQuestion) return;
 
-    try {
-      const saved = localStorage.getItem("nerdvana_active_session");
-      if (!saved) return;
-
-      const parsed = JSON.parse(saved);
-
-      if (parsed.topic === fullQuestion) {
-        const restoredAnswer =
-          parsed.answer || { summary: "", categories: [], spoilers: "" };
-
-        const restoredResults = parsed.results || [];
-
-        setResults(restoredResults);
-
-        setResponseData({
-          answer: restoredAnswer,
-          results: restoredResults
-        }, "session-restore");
-
-        setConversation(parsed.conversation || [], "session-restore");
-
-        if (parsed.contextPacket) {
-          setContextPacket(parsed.contextPacket, "session-restore");
-        }
-
-        if (parsed.grounding) {
-          setGrounding(parsed.grounding, "session-restore");
-        }
-
-        if (parsed.renderEntityPacket) {
-          setRenderEntityPacket(parsed.renderEntityPacket, "session-restore");
-        }
-
-        if (parsed.activeVisualOwnerMetadata) {
-          setActiveVisualOwnerMetadata(parsed.activeVisualOwnerMetadata);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to restore session", e);
+    const restored = attemptRestoration(fullQuestion);
+    if (restored) {
+      lastRestoredQuestionRef.current = fullQuestion;
     }
-  }, []);
+  }, [fullQuestion, attemptRestoration]);
 
   useEffect(() => {
     if (!fullQuestion) return;
@@ -621,8 +725,14 @@ export default function AskPage({
     const params = new URLSearchParams(window.location.search);
     if (params.get("lens")) return;
 
+    const existingState = typeof window !== "undefined" ? window.history.state : null;
+    if (existingState?.rehydrated) {
+      return;
+    }
+
     window.history.replaceState(
       { 
+        ...(existingState || {}),
         mediaLens, 
         ...(queryItem ? { item: queryItem } : {}),
         providerMetadata: window.history.state?.providerMetadata || urlParams.providerMetadata || null
@@ -661,14 +771,14 @@ export default function AskPage({
 
     const desynced = (queryItem || null) !== currentItem;
 
-    const searchKey = `${normalizedQuestion}|${mediaLens}|${user?.uid ?? ""}|${currentItem || ""}`;
+    const searchKey = buildExecutionSearchKey(normalizedQuestion, mediaLens, user?.uid, currentItem);
     const lastKeys = Array.isArray(lastSearchKeyRef.current) ? lastSearchKeyRef.current : [lastSearchKeyRef.current];
 
     if (activeExecutionRef.current?.searchKey === searchKey && activeExecutionRef.current?.status === "running") {
       return;
     }
 
-    const primaryQueryKey = `${normalizedQuestion}|${mediaLens}|${currentItem || ""}`;
+    const primaryQueryKey = buildExecutionSearchKey(normalizedQuestion, mediaLens, null, currentItem);
     if (lastPrimaryQueryRef.current !== primaryQueryKey || isAutocompleteSelectionRef.current || desynced) {
       const currentVisualOwner = activeVisualOwnerRef.current;
       const normalizedCurrentItem = extractProviderId(currentItem);
@@ -681,6 +791,23 @@ export default function AskPage({
         setActiveVisualOwner(null);
         setActiveVisualOwnerMetadata(null);
       }
+
+      // Check whether this represents an entity switch requiring conversation isolation
+      const currentEntityDescriptor = {
+        title: renderEntityPacket?.title || contextPacket?.canonicalEntity || (lastPrimaryQueryRef.current ? lastPrimaryQueryRef.current.split("|")[0] : null),
+        providerId: renderEntityPacket?.providerId || contextPacket?.providerId || currentVisualOwner?.providerId || null,
+        mediaLens
+      };
+      const nextEntityDescriptor = {
+        title: normalizedQuestion,
+        providerId: currentItem,
+        mediaLens
+      };
+
+      if (shouldResetConversationOnEntityChange(currentEntityDescriptor, nextEntityDescriptor)) {
+        clearActiveEntityState();
+      }
+
       lastPrimaryQueryRef.current = primaryQueryKey;
     }
 
@@ -1064,9 +1191,10 @@ ${new Error().stack}
         }
 
         // Defensive: Set the search key ref immediately to prevent state-change re-renders 
-        // from re-triggering the search pipeline.
-        const newSearchKey = `${canonicalTitle.toLowerCase().trim()}|${mediaLens}|${user?.uid ?? ""}|${canonicalItem}`;
-        lastSearchKeyRef.current = newSearchKey;
+        // from re-triggering the search pipeline. Both the canonical and initial query keys are preserved.
+        const canonicalSearchKey = buildExecutionSearchKey(canonicalTitle, mediaLens, user?.uid, canonicalItem);
+        const initialSearchKey = buildExecutionSearchKey(context.query, mediaLens, user?.uid, canonicalItem);
+        lastSearchKeyRef.current = [canonicalSearchKey, initialSearchKey, searchKey];
 
         if (payload?.grounding) {
           setGrounding(payload.grounding, payload.requestId);
@@ -1225,17 +1353,29 @@ ${new Error().stack}
 
         if (user && canonicalTitle.trim()) {
           try {
-            const docRef = await addDoc(collection(db, "users", user.uid, "history"), {
-              query: canonicalTitle.trim(),
-              mediaLens,
-              conversation: [],
-              results: rawResults.map((r: any) => ({ title: r.title, url: r.url })),
-              createdAt: serverTimestamp()
-            });
+            if (currentHistoryId) {
+              await updateDoc(doc(db, "users", user.uid, "history", currentHistoryId), {
+                query: canonicalTitle.trim(),
+                mediaLens,
+                results: rawResults.map((r: any) => ({ title: r.title, url: r.url })),
+                answer: { summary: aiAnswer, categories: [], spoilers: "" },
+                item: canonicalItem || undefined
+              });
+            } else {
+              const docRef = await addDoc(collection(db, "users", user.uid, "history"), {
+                query: canonicalTitle.trim(),
+                mediaLens,
+                conversation: [],
+                results: rawResults.map((r: any) => ({ title: r.title, url: r.url })),
+                answer: { summary: aiAnswer, categories: [], spoilers: "" },
+                item: canonicalItem || undefined,
+                createdAt: serverTimestamp()
+              });
 
-            if (context.requestId !== activeRequestIdRef.current) return;
-            if (abortController.signal.aborted) return;
-            setCurrentHistoryId(docRef.id);
+              if (context.requestId !== activeRequestIdRef.current) return;
+              if (abortController.signal.aborted) return;
+              setCurrentHistoryId(docRef.id);
+            }
           } catch (error) {
             console.error("Failed to save history session", error);
           }

@@ -19,6 +19,11 @@ interface HistoryItem {
   results?: any[];
   timestamp?: number;
   mediaLens?: MediaLens;
+  answer?: any;
+  item?: string | null;
+  contextPacket?: any;
+  grounding?: any;
+  renderEntityPacket?: any;
 }
 
 function formatCreatedAt(value: unknown) {
@@ -46,7 +51,18 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
     const unsubscribe = onSnapshot(historyQuery, (snapshot) => {
       const next = snapshot.docs
         .map((entry) => {
-          const data = entry.data() as { query?: unknown; createdAt?: unknown; conversation?: any[]; results?: any[]; mediaLens?: unknown };
+          const data = entry.data() as {
+            query?: unknown;
+            createdAt?: unknown;
+            conversation?: any[];
+            results?: any[];
+            mediaLens?: unknown;
+            answer?: any;
+            item?: string | null;
+            contextPacket?: any;
+            grounding?: any;
+            renderEntityPacket?: any;
+          };
           if (typeof data.query !== "string" || !data.query.trim()) {
             return null;
           }
@@ -57,7 +73,12 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
             conversation: data.conversation || [],
             results: data.results || [],
             timestamp: (data.createdAt as any)?.toMillis?.() || Date.now(),
-            mediaLens: normalizeMediaLens(data.mediaLens)
+            mediaLens: normalizeMediaLens(data.mediaLens),
+            answer: data.answer || null,
+            item: data.item || null,
+            contextPacket: data.contextPacket || null,
+            grounding: data.grounding || null,
+            renderEntityPacket: data.renderEntityPacket || null
           } as HistoryItem;
         })
         .filter((entry): entry is HistoryItem => Boolean(entry));
@@ -92,17 +113,26 @@ export default function HistoryPage({ onNavigatePage }: HistoryPageProps) {
   };
 
   const handleHistoryClick = (item: HistoryItem) => {
-    // Push state with conversation and results to permit restoration without re-fetching
+    // Push state with conversation, answer, and results to permit restoration without re-fetching
     const stateToPush = {
       query: item.query,
-      conversation: item.conversation,
-      results: item.results,
+      conversation: item.conversation || [],
+      results: item.results || [],
+      answer: item.answer || null,
+      item: item.item || null,
+      contextPacket: item.contextPacket || null,
+      grounding: item.grounding || null,
+      renderEntityPacket: item.renderEntityPacket || null,
       rehydrated: true,
       historyId: item.id,
       mediaLens: item.mediaLens
     };
 
-    window.history.pushState(stateToPush, "", buildAskUrl(item.query, { lens: item.mediaLens }));
+    window.history.pushState(
+      stateToPush,
+      "",
+      buildAskUrl(item.query, { lens: item.mediaLens, item: item.item || undefined })
+    );
     // Notify App
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
