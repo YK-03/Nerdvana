@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import handler from "../api/nerdvana-answer.ts";
-import { MAX_IGDB_DIAGNOSTIC_MESSAGE_LENGTH, sanitizeIgdbProviderMessage, selectVerifiedIgdbGame } from "../src/lib/resolver/igdbResponse.ts";
+import { MAX_IGDB_DIAGNOSTIC_MESSAGE_LENGTH, sanitizeIgdbProviderMessage, selectVerifiedIgdbGame, verifiedGameTitleMatches } from "../src/lib/resolver/igdbResponse.ts";
 import { buildIgdbGameQuery } from "../src/server/igdbGame.ts";
 import { invalidateIGDBToken } from "../src/server/igdbAuth.ts";
 
@@ -272,6 +272,10 @@ try {
   assert.equal(forgedMetadata.body.contextPacket.deterministicOwnershipFailure, true);
 
   assert.equal(selectVerifiedIgdbGame([{ id: 25076, name: "Red Dead Redemption 2" }], 25076, "Red Dead Redemption 2")?.id, 25076);
+  assert.equal(verifiedGameTitleMatches("The Witcher 3", "The Witcher 3: Wild Hunt"), true);
+  assert.equal(selectVerifiedIgdbGame([{ id: 1942, name: "The Witcher 3: Wild Hunt" }], 1942, "The Witcher 3")?.id, 1942);
+  assert.equal(verifiedGameTitleMatches("The Witcher 3", "The Witcher 2: Assassins of Kings"), false);
+  assert.equal(selectVerifiedIgdbGame([{ id: 1942, name: "The Witcher 2: Assassins of Kings" }], 1942, "The Witcher 3"), null);
   assert.equal(selectVerifiedIgdbGame([{ id: 25076 }], 25076, "Red Dead Redemption 2"), null);
   assert.equal(selectVerifiedIgdbGame([{ id: 999, name: "Red Dead Redemption 2" }], 25076, "Red Dead Redemption 2"), null);
   assert.equal(selectVerifiedIgdbGame([{ id: 25076, name: "Unrelated Game" }], 25076, "Red Dead Redemption 2"), null);

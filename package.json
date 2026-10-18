@@ -13,7 +13,11 @@
     "test:game-resolution": "tsx scripts/game-resolution-check.ts",
     "test:igdb:live": "tsx scripts/igdb-live-smoke.ts",
     "test:visual-lookup": "tsx scripts/visual-lookup-check.ts",
-    "test:regression": "npm run test:phase1a && npm run test:phase1b && npm run test:security && npm run test:character-details && npm run test:ownership && npm run test:game-resolution && npm run test:visual-lookup",
+    "test:search-reliability": "tsx scripts/search-reliability-check.ts",
+    "test:search-candidates": "tsx scripts/search-candidate-check.ts",
+    "test:search-targeted": "tsx scripts/search-reliability-targeted-fix-check.ts",
+    "test:search-reliability-regression": "tsx scripts/search-reliability-regression.ts",
+    "test:regression": "npm run test:phase1a && npm run test:phase1b && npm run test:security && npm run test:character-details && npm run test:ownership && npm run test:game-resolution && npm run test:visual-lookup && npm run test:search-reliability && npm run test:search-candidates && npm run test:search-targeted && npm run test:search-reliability-regression",
     "dev": "vite"
   },
   "dependencies": {
