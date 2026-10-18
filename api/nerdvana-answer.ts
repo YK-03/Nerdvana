@@ -19,6 +19,8 @@ import {
 import { buildCacheKey, getCachedAnswer, setCachedAnswer, getCacheIdentity } from "../src/server/api/answerCache.js";
 import { generateGroqText, getGroqApiKey, type GroqGenerationResult } from "../src/server/api/groqProvider.js";
 import { buildAnswerPrompt, type AnswerConversationMessage } from "../src/server/api/answerPrompt.js";
+import { getProviderQualifiedSelection } from "../src/lib/resolver/searchSelection.js";
+import { normalizeEntityTitle } from "../src/lib/resolver/entityIdentity.js";
 
 type ConversationMessage = AnswerConversationMessage;
 
@@ -26,6 +28,34 @@ type SourceLink = {
   title: string;
   link: string;
 };
+
+function toDynamicClarificationSuggestion(entity: TemporaryCanonicalEntity, index: number, mediaLens: MediaLens) {
+  const providerType = entity.metadata.providerType ?? entity.metadata.providerResourceType ?? null;
+  const metadataParts = [
+    providerType,
+    entity.metadata.releaseYear ? String(entity.metadata.releaseYear) : null,
+    entity.metadata.publisherLabel ?? null,
+  ].filter(Boolean);
+
+  return {
+    canonicalEntity: entity.title,
+    selectionValue: entity.id,
+    displayTitle: entity.title,
+    franchise: entity.metadata.franchiseRoot ?? null,
+    mediaLens,
+    mediaLabel: providerType || (mediaLens === "comics" ? "Comics" : mediaLens),
+    namespaceLabel: entity.source.toUpperCase(),
+    continuityLabel: entity.metadata.releaseYear ? String(entity.metadata.releaseYear) : null,
+    metadataLabel: metadataParts.join(" · ") || entity.source.toUpperCase(),
+    universe: null,
+    source: "supplemental" as const,
+    score: 100 - index,
+    qualifiedId: entity.id,
+    thumbnailUrl: entity.metadata.poster ?? null,
+    aliases: entity.aliases,
+    matchReasons: ["provider-search", "ambiguous-resource-type"],
+  };
+}
 
 function jsonResponse(
   payload: unknown,
@@ -188,10 +218,11 @@ export default async function handler(req: any, res?: any) {
     if (!parsedBody.ok) return jsonResponse(publicError(parsedBody.error, `REQUEST_${parsedBody.status}`), parsedBody.status, res);
     const body = parsedBody.body;
 
+    const rawSelectionValue = String(body?.item ?? body?.canonicalSelection ?? "").trim();
     console.log("[INCOMING_REQUEST]", redactRequestLog({
       requestId: body?.requestId,
       mediaLens: body?.mediaLens,
-      hasExplicitSelection: Boolean(body?.item || body?.canonicalSelection),
+      hasExplicitSelection: Boolean(getProviderQualifiedSelection(rawSelectionValue)),
       conversationCount: Array.isArray(body?.conversation) ? body.conversation.length : 0,
     }));
 
@@ -211,18 +242,23 @@ export default async function handler(req: any, res?: any) {
     const previousEntity =
       String(body?.previousEntity ?? "").trim() || undefined;
     const mediaLens = normalizeMediaLens(body?.mediaLens ?? DEFAULT_MEDIA_LENS);
-    const explicitSelection =
-      String(body?.item ?? body?.canonicalSelection ?? "").trim() || undefined;
+    const explicitSelection = getProviderQualifiedSelection(rawSelectionValue) ?? undefined;
+    if (rawSelectionValue && !explicitSelection) {
+      console.warn("[UNQUALIFIED_SELECTION_TREATED_AS_QUERY_HINT]", {
+        mediaLens,
+        requestId: body?.requestId ?? null,
+      });
+    }
     const canonicalContextEntity =
       String(body?.canonicalEntity ?? body?.previousEntity ?? "").trim() || undefined;
-    const normalizeEntityLabel = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const normalizeEntityLabel = (value: string) => normalizeEntityTitle(value);
     const hasCarriedCanonicalContext = Boolean(
       canonicalContextEntity &&
       previousEntity &&
       normalizeEntityLabel(canonicalContextEntity) === normalizeEntityLabel(previousEntity) &&
       !explicitSelection
     );
-    const providerMetadata = body?.providerMetadata || undefined;
+    const providerMetadata = explicitSelection ? body?.providerMetadata || undefined : undefined;
     const requestId = body?.requestId || undefined;
     
     if (providerMetadata?.providerType) {
@@ -278,6 +314,56 @@ export default async function handler(req: any, res?: any) {
       };
 
       const ingestion = await fetchDynamicEntity(rawQuery, mediaLens, keys);
+      if (ingestion.ambiguousEntities && ingestion.ambiguousEntities.length > 1) {
+        const suggestions = ingestion.ambiguousEntities.map((entity, index) =>
+          toDynamicClarificationSuggestion(entity, index, mediaLens),
+        );
+        return jsonResponse({
+          answer: "Select a match to continue.",
+          sources: [],
+          contextPacket: {
+            canonicalEntity: rawQuery,
+            providerId: null,
+            mediaLens,
+            executionMode: "SEMANTIC",
+            queryMode: "entity",
+            confidence: 0,
+          },
+          alternatives: suggestions,
+          grounding: {
+            originalQuery: rawQuery,
+            normalizedQuery: rawQuery.toLowerCase().trim(),
+            selectedCanonicalEntity: null,
+            selectedSelectionValue: null,
+            selectedFranchise: null,
+            ambiguityLevel: "high",
+            behavior: "require_selection",
+            confidence: 0,
+            suggestions,
+            telemetry: {
+              hotspot: false,
+              explicitSelectionUsed: false,
+              autoResolved: false,
+              overrideRequired: true,
+              failedAutoResolution: true,
+              namespaceConflict: true,
+              suggestionCount: suggestions.length,
+              lens: mediaLens,
+              topologyUsed: false,
+              candidatePoolSize: suggestions.length,
+              rejectedCrossLensCandidates: 0,
+            },
+            policy: {
+              suggestionVisibility: "expanded",
+              tightenNamespace: true,
+              narrowRetrieval: true,
+              arbitrationThresholdBias: 0.08,
+              retrievalBreadth: suggestions.length,
+            },
+          },
+          requiresGrounding: true,
+        }, 200, res);
+      }
       if (ingestion.entity) {
         newTempEntity = ingestion.entity;
         rejectedExternalEntities = ingestion.rejectedCount;
@@ -472,11 +558,6 @@ export default async function handler(req: any, res?: any) {
         : 503;
       const retryable = !["IDENTITY_MISMATCH", "NO_MATCHING_GAME", "INVALID_PROVIDER_ID"].includes(failureCode) &&
         (failureCode !== "PROVIDER_HTTP_FAILURE" || (packet.deterministicFailureHttpStatus ?? 0) >= 500);
-      const failureMessage = failureCode === "IDENTITY_MISMATCH"
-        ? "The selected game could not be verified. Please choose the title again."
-        : failureCode === "NO_MATCHING_GAME"
-        ? "The selected game is unavailable from the provider."
-        : "The selected game is temporarily unavailable. Please try again.";
       console.log(
         "[DETERMINISTIC_OWNERSHIP_FAILURE]",
         {
@@ -488,9 +569,20 @@ export default async function handler(req: any, res?: any) {
         }
       );
 
+      const publicPrefix = mediaLens === "games" ? "GAME" : "ENTITY";
+      const failureMessage = failureCode === "IDENTITY_MISMATCH"
+        ? mediaLens === "games"
+          ? "The selected game could not be verified. Please choose the title again."
+          : "The selected title could not be verified. Please choose the title again."
+        : failureCode === "NO_MATCHING_GAME"
+        ? mediaLens === "games"
+          ? "The selected game is unavailable from the provider."
+          : "The selected title is unavailable from the provider."
+        : "The selected title is temporarily unavailable. Please try again.";
+
       return jsonResponse({
         error: failureMessage,
-        code: `GAME_${failureCode}`,
+        code: `${publicPrefix}_${failureCode}`,
         retryable,
         contextPacket: packet,
         alternatives: [],
@@ -521,9 +613,9 @@ export default async function handler(req: any, res?: any) {
 
     // Canonical Entity Ownership Verification
     if (packet.providerMetadata) {
-      const canonical = packet.providerMetadata.canonicalTitle?.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const root = packet.providerMetadata.franchiseRoot?.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const resolved = packet.canonicalEntity.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const canonical = packet.providerMetadata.canonicalTitle ? normalizeEntityTitle(packet.providerMetadata.canonicalTitle) : "";
+      const root = packet.providerMetadata.franchiseRoot ? normalizeEntityTitle(packet.providerMetadata.franchiseRoot) : "";
+      const resolved = normalizeEntityTitle(packet.canonicalEntity);
 
       const titleMatch = canonical ? resolved.includes(canonical) || canonical.includes(resolved) : true;
       const rootMatch = root ? resolved.includes(root) : true;
@@ -534,8 +626,8 @@ export default async function handler(req: any, res?: any) {
         ? (packet.providerMetadata.provider === "comicvine" ? isCompatibleComicVineType(expectedType, resolvedType) : expectedType === resolvedType)
         : true;
 
-      const expectedPublisher = packet.providerMetadata.publisherLabel?.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const resolvedPublisher = (packet.providerMetadata.publisherLabel || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const expectedPublisher = packet.providerMetadata.publisherLabel ? normalizeEntityTitle(packet.providerMetadata.publisherLabel) : "";
+      const resolvedPublisher = packet.providerMetadata.publisherLabel ? normalizeEntityTitle(packet.providerMetadata.publisherLabel) : "";
       const publisherMatch = expectedPublisher && resolvedPublisher
         ? resolvedPublisher.includes(expectedPublisher) || expectedPublisher.includes(resolvedPublisher)
         : true;

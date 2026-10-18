@@ -1064,7 +1064,7 @@ export async function buildContextPacket(
     selectionVal && 
     (grounding?.providerMetadata?.canonicalTitle || grounding?.selectedCanonicalEntity);
 
-  const executionMode = hasValidProviderOwnership ? "DETERMINISTIC_PROVIDER" : "SEMANTIC";
+  let executionMode = hasValidProviderOwnership ? "DETERMINISTIC_PROVIDER" : "SEMANTIC";
   let providerId = isProviderId ? selectionVal : null;
 
   console.log(
@@ -1415,11 +1415,14 @@ export async function buildContextPacket(
     intent
   );
 
-  let expandedEntity = finalTopology
-    ? finalTopology.canonicalEntity 
-    : (isProviderId 
-        ? (grounding?.providerMetadata?.canonicalTitle ?? grounding?.selectedCanonicalEntity ?? canonicalQuery.canonical ?? finalContextualEntity) 
-        : (grounding?.selectedSelectionValue ?? grounding?.selectedCanonicalEntity ?? canonicalQuery.canonical ?? finalContextualEntity)
+  let expandedEntity = (executionMode === "DETERMINISTIC_PROVIDER" && finalContextualEntity)
+    ? finalContextualEntity
+    : (finalTopology
+        ? finalTopology.canonicalEntity
+        : (isProviderId
+            ? (grounding?.providerMetadata?.canonicalTitle ?? grounding?.selectedCanonicalEntity ?? canonicalQuery.canonical ?? finalContextualEntity)
+            : (grounding?.selectedSelectionValue ?? grounding?.selectedCanonicalEntity ?? canonicalQuery.canonical ?? finalContextualEntity)
+          )
       );
 
   let providerMetadata: ProviderMetadata | null = null;
@@ -1471,7 +1474,15 @@ export async function buildContextPacket(
         providerType: "anime",
       };
       fetchedProviderData = resolution.rawData;
+      if (resolution.confidence >= 0.85) {
+        executionMode = "DETERMINISTIC_PROVIDER";
+        hasDeterministicOwnershipFailure = false;
+      }
     }
+  }
+
+  if (executionMode === "DETERMINISTIC_PROVIDER" && finalContextualEntity) {
+    expandedEntity = finalContextualEntity;
   }
 
   const retrievalDescriptor = generateRetrievalDescriptor(
@@ -1481,10 +1492,13 @@ export async function buildContextPacket(
     finalParentFranchise
   );
   
+  const isDeterministic = executionMode === "DETERMINISTIC_PROVIDER";
+  const rawQueryIsSameEntity = fallbackIdentityMatches(finalContextualEntity, query, mediaLens as any);
+
   const visualAnchors = uniqueNormalized([
     ...generateVisualAnchors(expandedEntity, finalParentFranchise, mediaLens),
-    ...(context?.visualAnchors ?? []),
-    ...(finalTopology?.visualAnchors ?? []),
+    ...(isDeterministic && !rawQueryIsSameEntity ? [] : (context?.visualAnchors ?? [])),
+    ...(isDeterministic && !rawQueryIsSameEntity ? [] : (finalTopology?.visualAnchors ?? [])),
   ]);
 
   const cvAliases = fetchedComicVineData?.aliases
@@ -1493,11 +1507,11 @@ export async function buildContextPacket(
   const entityAliases: string[] = uniqueNormalized([
     expandedEntity,
     finalContextualEntity,
-    query,
-    ...(canonicalQuery.canonical ? [canonicalQuery.canonical] : []),
+    ...(rawQueryIsSameEntity ? [query] : []),
+    ...(rawQueryIsSameEntity && canonicalQuery.canonical ? [canonicalQuery.canonical] : []),
     ...cvAliases,
-    ...(context?.aliases ?? []),
-    ...(finalTopology?.aliases ?? []),
+    ...(isDeterministic && !rawQueryIsSameEntity ? [] : (context?.aliases ?? [])),
+    ...(isDeterministic && !rawQueryIsSameEntity ? [] : (finalTopology?.aliases ?? [])),
   ]);
 
   const franchiseAliases: string[] = getFranchiseAliases(finalParentFranchise);

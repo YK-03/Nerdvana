@@ -22,6 +22,7 @@ import { auth, db } from "../lib/firebase";
 import { doc, updateDoc, setDoc } from "firebase/firestore";
 import { startNewSession, useQuerySessionStore, useAutocompleteStore, useIntentStore } from "../store/resolverSession";
 import { isExternalProviderId } from "../../lib/resolver/providerIdUtility.js";
+import { getProviderQualifiedSelection, getVerifiedItemForAnswer } from "../../lib/resolver/searchSelection.js";
 import type { CanonicalGroundingResult } from "../../lib/resolver/canonicalGrounding.js";
 import AutocompleteOverlay from "../components/AutocompleteOverlay";
 import ClarificationOverlay from "../components/ClarificationOverlay";
@@ -120,11 +121,12 @@ function readAskQueryParams() {
     window.history.state && typeof window.history.state.mediaLens === "string"
       ? window.history.state.mediaLens.trim()
       : "";
+  const rawItem = urlItem || stateItem;
+  const item = getProviderQualifiedSelection(rawItem) ?? "";
   const providerMetadata =
-    window.history.state && typeof window.history.state.providerMetadata === "object"
+    item && window.history.state && typeof window.history.state.providerMetadata === "object"
       ? window.history.state.providerMetadata
       : null;
-  const item = urlItem || stateItem;
   return {
     item,
     mediaLens: normalizeMediaLens(urlLens || stateLens || DEFAULT_MEDIA_LENS),
@@ -1056,7 +1058,7 @@ ${new Error().stack}
         recordAI(context.traceId, { normalized: true });
 
         let canonicalTitle = context.query;
-        const canonicalItem = payload?.grounding?.selectedSelectionValue || context.item || "";
+        const canonicalItem = getVerifiedItemForAnswer(payload, context.item) || "";
         if (payload?.grounding?.selectedCanonicalEntity) {
           canonicalTitle = payload.grounding.suggestions?.[0]?.displayTitle ?? payload.grounding.selectedCanonicalEntity;
         }

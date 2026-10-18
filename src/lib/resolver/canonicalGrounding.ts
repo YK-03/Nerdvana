@@ -141,7 +141,13 @@ const LENS_SUPPRESSION: Record<MediaLens, MediaLens[]> = {
 };
 
 function normalize(value: string): string {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ");
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\p{M}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function tokenize(value: string): string[] {
@@ -586,9 +592,9 @@ function getPrefixIndexByLens() {
 }
 
 function safeNormalize(value: string): string {
-  let norm = value.toLowerCase().trim();
-  // Strip punctuation
-  norm = norm.replace(/[^a-z0-9\s]+/g, " ");
+  let norm = value.normalize("NFKC").toLowerCase().trim();
+  // Strip punctuation while preserving letters, numbers, and combining marks in any script
+  norm = norm.replace(/[^\p{L}\p{N}\p{M}\s]+/gu, " ");
   // Compress multiple spaces
   norm = norm.replace(/\s+/g, " ").trim();
   
@@ -1091,20 +1097,22 @@ export function groundCanonicalIntent(input: {
       });
     }
 
+    const canonicalTitle = tempMatch?.title ?? originalQuery;
+
     const suggestion = toSuggestion({
-      canonicalEntity: tempMatch?.title ?? originalQuery,
+      canonicalEntity: canonicalTitle,
       selectionValue: explicitSelection,
-      displayTitle: tempMatch?.title ?? originalQuery,
+      displayTitle: canonicalTitle,
       franchise: resolvedMetadata?.franchiseRoot ?? null,
       mediaLenses: [input.mediaLens],
       mediaLabel: lensLabel(input.mediaLens),
       namespaceLabel: "DETERMINISTIC",
       continuityLabel: resolvedMetadata?.releaseYear ? String(resolvedMetadata.releaseYear) : null,
       continuityType: null,
-      metadataLabel: tempMatch?.title ?? originalQuery,
+      metadataLabel: canonicalTitle,
       universe: null,
       qualifiedId: explicitSelection,
-      aliases: [tempMatch?.title ?? originalQuery],
+      aliases: [canonicalTitle],
       source: "registry",
       thumbnailUrl: null,
     }, input.mediaLens, 140, ["deterministic-id-bypass"]);
@@ -1112,7 +1120,7 @@ export function groundCanonicalIntent(input: {
     return {
       originalQuery,
       normalizedQuery,
-      selectedCanonicalEntity: tempMatch?.title ?? originalQuery,
+      selectedCanonicalEntity: canonicalTitle,
       selectedSelectionValue: explicitSelection,
       selectedFranchise: resolvedMetadata?.franchiseRoot ?? null,
       ambiguityLevel: "low",
