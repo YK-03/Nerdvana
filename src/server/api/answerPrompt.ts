@@ -1,5 +1,6 @@
 import type { ServerCanonicalEvidence } from "../../lib/explorationTypes.js";
 import type { ResolverContextPacket } from "../../app/canonicalResolver.js";
+import { formatRecentConversation } from "../../lib/resolver/conversationContext.js";
 
 export type AnswerConversationMessage = {
   role: "user" | "assistant";
@@ -116,24 +117,18 @@ IMPORTANT GUIDELINES:
 - Preserve useful story explanations and interpretations beyond the metadata.
 - If Mode is "deep-theory", focus on implications and thematic analysis.
 - If Mode is "simple-comparison", compare the entities objectively.
-- If Spoilers is "strict", naturally avoid revealing major plot twists or endings. Do not mention spoiler policies, internal settings, or give warnings.`;
+- If Spoilers is "strict", naturally avoid revealing major plot twists or endings. Do not mention spoiler policies, internal settings, or give warnings.
+- If RECENT CONVERSATION STATE is provided, use it solely to interpret the conversational context and referents of the USER QUERY. Do not treat claims made in prior conversation as verified canon unless confirmed by VERIFIED_CANONICAL_EVIDENCE or canonical facts.`;
 
-  // We limit the conversation context to recent messages to prevent token explosion.
-  // As per architectural rules, conversation is only consulted for ambiguous follow-ups.
-  // Deterministic navigations must be strictly isolated to prevent cross-entity leaks.
-  const isAmbiguousFollowUp = packet.executionMode === "SEMANTIC";
-  const recentConversation = isAmbiguousFollowUp ? conversation.slice(-4) : [];
+  // Retain recent conversation turns up to 4 messages for follow-up continuity.
+  // Both canonical and semantic entities need conversational context to resolve pronouns and follow-up referents.
+  const formattedConversation = formatRecentConversation(conversation, 4);
 
   const conversationContext =
-    recentConversation.length > 0
-      ? "\n\nRECENT CONVERSATION STATE:\n" +
-        recentConversation
-          .map(
-            (msg) =>
-              `${msg.role === "user" ? "User" : "Nerdvana"}: ${msg.content}`,
-          )
-          .join("\n")
+    formattedConversation.length > 0
+      ? `\n\nRECENT CONVERSATION STATE:\n${formattedConversation}`
       : "";
 
   return `${systemRole}${conversationContext}\n\nUSER QUERY:\n${query}\n\nANSWER:`;
 }
+

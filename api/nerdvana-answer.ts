@@ -21,6 +21,7 @@ import { generateGroqText, getGroqApiKey, type GroqGenerationResult } from "../s
 import { buildAnswerPrompt, type AnswerConversationMessage } from "../src/server/api/answerPrompt.js";
 import { getProviderQualifiedSelection } from "../src/lib/resolver/searchSelection.js";
 import { normalizeEntityTitle } from "../src/lib/resolver/entityIdentity.js";
+import { formatRecentConversation } from "../src/lib/resolver/conversationContext.js";
 
 type ConversationMessage = AnswerConversationMessage;
 
@@ -671,10 +672,9 @@ export default async function handler(req: any, res?: any) {
       const activeContext = `- Entity 1: ${packet.canonicalEntity ?? "Unknown"}\n- Franchise 1: ${packet.parentFranchise ?? "Unknown"}\n- Entity 2: ${packet2.canonicalEntity ?? "Unknown"}\n- Franchise 2: ${packet2.parentFranchise ?? "Unknown"}\n- Lens: ${mediaLens}\n- Mode: COMPARATIVE_REASONING`;
       const systemRole = `You are Nerdvana, a universal media intelligence engine.\n\nACTIVE_CONTEXT:\n${activeContext}\n\nIMPORTANT GUIDELINES:\n- Provide concise answers in EXACTLY 2 paragraphs. Each paragraph 3-4 sentences max.\n- Do not greet the user. Start immediately with the answer content.\n- Compare the two entities objectively using the provided canonical information.`;
 
-      const isAmbiguousFollowUp = packet.executionMode === "SEMANTIC";
-      const recentConversation = isAmbiguousFollowUp ? conversation.slice(-4) : [];
-      const conversationContext = recentConversation.length > 0
-        ? "\n\nRECENT CONVERSATION STATE:\n" + recentConversation.map(msg => `${msg.role === "user" ? "User" : "Nerdvana"}: ${msg.content}`).join("\n")
+      const formattedConversation = formatRecentConversation(conversation, 4);
+      const conversationContext = formattedConversation.length > 0
+        ? `\n\nRECENT CONVERSATION STATE:\n${formattedConversation}`
         : "";
       prompt = `${systemRole}${conversationContext}\n\nUSER QUERY:\n${rawQuery}\n\nANSWER:`;
     } else {
