@@ -1558,12 +1558,14 @@ ${new Error().stack}
     }
   };
 
+  const isAnswerReady = Boolean(responseData?.answer?.summary?.trim());
+
   useEffect(() => {
     const providerId = contextPacket?.providerId;
     const timelineMediaLens = contextPacket?.mediaLens;
     const isSupported = providerId?.startsWith("tmdb::movie::") || providerId?.startsWith("tmdb::tv::");
 
-    if (!spoilerPolicy || !isSupported || (timelineMediaLens !== "movies" && timelineMediaLens !== "tv") || !responseData?.answer?.summary?.trim()) {
+    if (!spoilerPolicy || !isSupported || (timelineMediaLens !== "movies" && timelineMediaLens !== "tv") || !isAnswerReady) {
       setTimeline(null);
       setTimelineStatus("idle");
       setTimelineSeasonNumber(null);
@@ -1599,6 +1601,7 @@ ${new Error().stack}
         if (cancelled) return;
         const nextTimeline = payload?.timeline as StoryTimeline | undefined;
         if (!nextTimeline || !Array.isArray(nextTimeline.events)) throw new Error("Invalid timeline response.");
+        if (nextTimeline.providerId && nextTimeline.providerId !== providerId) return;
         setTimeline(nextTimeline);
         setTimelineStatus(nextTimeline.events.length > 0 ? "success" : "empty");
       })
@@ -1612,7 +1615,7 @@ ${new Error().stack}
       cancelled = true;
       controller.abort();
     };
-  }, [contextPacket?.providerId, contextPacket?.mediaLens, responseData?.answer?.summary, spoilerPolicy, timelineRetry, timelineSeasonNumber]);
+  }, [contextPacket?.providerId, contextPacket?.mediaLens, isAnswerReady, spoilerPolicy, timelineRetry, timelineSeasonNumber]);
 
   useEffect(() => {
     if (!contextIsValid || isAmbiguous || !resolvedItem) {

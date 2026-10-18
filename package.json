@@ -19,7 +19,8 @@
     "test:search-reliability-regression": "tsx scripts/search-reliability-regression.ts",
     "test:conversation-integrity": "tsx scripts/conversation-integrity-check.ts",
     "test:restoration-integrity": "tsx scripts/restoration-integrity-check.ts",
-    "test:regression": "npm run test:phase1a && npm run test:phase1b && npm run test:security && npm run test:character-details && npm run test:ownership && npm run test:game-resolution && npm run test:visual-lookup && npm run test:search-reliability && npm run test:search-candidates && npm run test:search-targeted && npm run test:search-reliability-regression && npm run test:conversation-integrity && npm run test:restoration-integrity",
+    "test:timeline": "tsx scripts/timeline-check.ts",
+    "test:regression": "npm run test:phase1a && npm run test:phase1b && npm run test:security && npm run test:character-details && npm run test:ownership && npm run test:game-resolution && npm run test:visual-lookup && npm run test:search-reliability && npm run test:search-candidates && npm run test:search-targeted && npm run test:search-reliability-regression && npm run test:conversation-integrity && npm run test:restoration-integrity && npm run test:timeline",
     "dev": "vite"
   },
   "dependencies": {
