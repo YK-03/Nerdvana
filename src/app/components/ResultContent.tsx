@@ -60,6 +60,12 @@ export default function ResultContent({
     return null;
   }
 
+  const mediaLens = contextPacket?.mediaLens;
+  const providerId = contextPacket?.providerId;
+  const isTimelineSupported =
+    (mediaLens === "movies" || mediaLens === "tv") &&
+    Boolean(providerId?.startsWith("tmdb::movie::") || providerId?.startsWith("tmdb::tv::"));
+
   return (
     <motion.div
       key={responseData ? `${fullQuestion}-${responseData.answer.summary.length}` : `empty-${fullQuestion}`}
@@ -73,13 +79,17 @@ export default function ResultContent({
         disableProgressiveReveal
       />
 
-      <TimelineSection
-        spoilerMode={spoilerMode}
-        status={timelineStatus}
-        timeline={timeline}
-        onRetry={onTimelineRetry}
-        onSeasonChange={onTimelineSeasonChange}
-      />
+      {isTimelineSupported && (
+        <TimelineSection
+          spoilerMode={spoilerMode}
+          status={timelineStatus}
+          timeline={timeline}
+          mediaLens={mediaLens}
+          isSupported={isTimelineSupported}
+          onRetry={onTimelineRetry}
+          onSeasonChange={onTimelineSeasonChange}
+        />
+      )}
 
       {/* Exploration Sections */}
       <CharacterSection

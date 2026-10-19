@@ -535,8 +535,14 @@ export default function AskPage({
       const saved = typeof window !== "undefined" ? localStorage.getItem("nerdvana_active_session") : null;
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.topic && parsed.topic.trim().toLowerCase() === targetQuestion.trim().toLowerCase()) {
-          const restoredAnswer = parsed.answer || { summary: "", categories: [], spoilers: "" };
+        if (
+          parsed.topic &&
+          parsed.topic.trim().toLowerCase() === targetQuestion.trim().toLowerCase() &&
+          parsed.answer &&
+          typeof parsed.answer.summary === "string" &&
+          parsed.answer.summary.trim().length > 0
+        ) {
+          const restoredAnswer = parsed.answer;
           const restoredResults = parsed.results || [];
 
           setResults(restoredResults);
@@ -742,13 +748,13 @@ export default function AskPage({
   }, [fullQuestion, attemptRestoration]);
 
   useEffect(() => {
-    if (!fullQuestion) return;
+    if (!fullQuestion || !responseData?.answer?.summary?.trim()) return;
 
     localStorage.setItem(
       "nerdvana_active_session",
       JSON.stringify({
         topic: fullQuestion,
-        answer: responseData?.answer || { summary: "", categories: [], spoilers: "" },
+        answer: responseData.answer,
         results,
         conversation,
         contextPacket,
@@ -1609,7 +1615,21 @@ ${new Error().stack}
     const timelineMediaLens = contextPacket?.mediaLens;
     const isSupported = providerId?.startsWith("tmdb::movie::") || providerId?.startsWith("tmdb::tv::");
 
-    if (!spoilerPolicy || !isSupported || (timelineMediaLens !== "movies" && timelineMediaLens !== "tv") || !isAnswerReady) {
+    if (!isAnswerReady) {
+      setTimeline(null);
+      setTimelineStatus("idle");
+      setTimelineSeasonNumber(null);
+      return;
+    }
+
+    if (!isSupported || (timelineMediaLens !== "movies" && timelineMediaLens !== "tv")) {
+      setTimeline(null);
+      setTimelineStatus("empty");
+      setTimelineSeasonNumber(null);
+      return;
+    }
+
+    if (!spoilerPolicy) {
       setTimeline(null);
       setTimelineStatus("idle");
       setTimelineSeasonNumber(null);

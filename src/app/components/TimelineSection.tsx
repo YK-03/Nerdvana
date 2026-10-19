@@ -9,6 +9,8 @@ interface TimelineSectionProps {
   spoilerMode: boolean;
   status: TimelineStatus;
   timeline: StoryTimeline | null;
+  mediaLens?: string;
+  isSupported?: boolean;
   onRetry: () => void;
   onSeasonChange: (seasonNumber: number) => void;
 }
@@ -55,9 +57,14 @@ export default function TimelineSection({
   spoilerMode,
   status,
   timeline,
+  mediaLens,
+  isSupported,
   onRetry,
   onSeasonChange,
 }: TimelineSectionProps) {
+  if (isSupported === false || (mediaLens && mediaLens !== "movies" && mediaLens !== "tv")) {
+    return null;
+  }
   const [selectedIndex, setSelectedIndex] = useState(0);
   const eventButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const timelineKey = timeline?.events.map((event) => event.id).join("|") ?? "";
@@ -67,6 +74,16 @@ export default function TimelineSection({
     eventButtonRefs.current = [];
   }, [timelineKey]);
 
+  if (status === "empty") {
+    return (
+      <ExploreSection title="Story Timeline">
+        <div className="border-y py-5 text-[0.82rem] opacity-75" style={{ borderColor: "var(--nerdvana-border)" }} data-testid="timeline-empty">
+          No reliable story timeline is available for this title.
+        </div>
+      </ExploreSection>
+    );
+  }
+
   if (!spoilerMode) {
     return (
       <ExploreSection title="Story Timeline">
@@ -75,7 +92,7 @@ export default function TimelineSection({
     );
   }
 
-  if (status === "idle" || status === "loading") {
+  if (status === "loading") {
     return (
       <ExploreSection title="Story Timeline">
         <div className="border-y py-5 animate-pulse" style={{ borderColor: "var(--nerdvana-border)" }} data-testid="timeline-loading">
@@ -100,7 +117,7 @@ export default function TimelineSection({
     );
   }
 
-  if (status === "empty" || !timeline || timeline.events.length === 0) {
+  if (status === "idle" || !timeline || timeline.events.length === 0) {
     return (
       <ExploreSection title="Story Timeline">
         <div className="border-y py-5 text-[0.82rem] opacity-75" style={{ borderColor: "var(--nerdvana-border)" }} data-testid="timeline-empty">

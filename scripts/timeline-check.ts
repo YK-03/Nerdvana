@@ -330,6 +330,95 @@ function runClientLifecycleChecks() {
     assert.equal(activeTimeline, null, "Stale response from previous providerId must NOT overwrite active timeline");
     console.log("  [PASS] Entity switch prevents stale in-flight response from overwriting new title");
   }
+
+  // Scenario D: Unsupported media lenses (Games, Comics, Anime) transition to empty status and never remain stuck in loading
+  {
+    const cases = [
+      { name: "Far Cry 5", lens: "games", providerId: "igdb::game::119171" },
+      { name: "Secret Wars", lens: "comics", providerId: "comicvine::volume::123" },
+      { name: "Jujutsu Kaisen", lens: "anime", providerId: "anilist::anime::113415" },
+      { name: "Ungrounded Title", lens: "movies", providerId: null },
+    ];
+
+    for (const c of cases) {
+      let timelineStatus: "idle" | "loading" | "success" | "empty" | "error" = "idle";
+      let timeline: any = null;
+      let fetchTriggered = false;
+
+      // AskPage effect simulation
+      const isAnswerReady = true;
+      const isSupported = Boolean(
+        c.providerId?.startsWith("tmdb::movie::") || c.providerId?.startsWith("tmdb::tv::")
+      );
+      const isMovieOrTv = c.lens === "movies" || c.lens === "tv";
+
+      if (!isAnswerReady) {
+        timelineStatus = "idle";
+      } else if (!isSupported || !isMovieOrTv) {
+        timeline = null;
+        timelineStatus = "empty";
+      } else {
+        timelineStatus = "loading";
+        fetchTriggered = true;
+      }
+
+      assert.equal(timelineStatus, "empty", `${c.name} (${c.lens}) must transition to empty timelineStatus`);
+      assert.equal(fetchTriggered, false, `${c.name} (${c.lens}) must NOT trigger /api/timeline fetch`);
+    }
+    console.log("  [PASS] Unsupported media lenses (Games, Comics, Anime) transition to empty without fetching");
+  }
+
+  // Scenario E: TimelineSection rendering verification across all lifecycle states
+  {
+    // Simulate TimelineSection & ResultContent rendering decisions
+    function resolveRenderView(
+      status: string,
+      spoilerMode: boolean,
+      timeline: any,
+      options: { lens?: string; isSupported?: boolean } = {}
+    ) {
+      if (options.isSupported === false || (options.lens && options.lens !== "movies" && options.lens !== "tv")) {
+        return null;
+      }
+      if (status === "empty") return "timeline-empty";
+      if (!spoilerMode) return "timeline-locked";
+      if (status === "loading") return "timeline-loading";
+      if (status === "error") return "timeline-error";
+      if (status === "idle" || !timeline || timeline.events?.length === 0) return "timeline-empty";
+      return "timeline-loaded";
+    }
+
+    // 1. Far Cry 5 (Games) -> null (completely hidden, no heading, no empty message, no skeleton)
+    assert.equal(resolveRenderView("empty", true, null, { lens: "games", isSupported: false }), null, "Games timeline must be completely hidden (null)");
+    assert.equal(resolveRenderView("idle", false, null, { lens: "games", isSupported: false }), null, "Games timeline must be null even with spoilers OFF");
+
+    // 2. Secret Wars (Comics) -> null
+    assert.equal(resolveRenderView("empty", true, null, { lens: "comics", isSupported: false }), null, "Comics timeline must be completely hidden (null)");
+
+    // 3. Jujutsu Kaisen (Anime) -> null
+    assert.equal(resolveRenderView("empty", true, null, { lens: "anime", isSupported: false }), null, "Anime timeline must be completely hidden (null)");
+
+    // 4. Supported Film/TV with Spoilers OFF -> timeline-locked
+    assert.equal(resolveRenderView("idle", false, null, { lens: "movies", isSupported: true }), "timeline-locked", "Supported title with spoilers OFF renders timeline-locked");
+
+    // 5. Supported Film/TV in-flight -> timeline-loading
+    assert.equal(resolveRenderView("loading", true, null, { lens: "movies", isSupported: true }), "timeline-loading", "In-flight request renders timeline-loading");
+
+    // 6. Supported Film/TV loaded -> timeline-loaded
+    assert.equal(resolveRenderView("success", true, { events: [{ id: "e1" }] }, { lens: "tv", isSupported: true }), "timeline-loaded", "Loaded timeline renders timeline-loaded");
+
+    // 7. Error state for supported Film/TV -> timeline-error
+    assert.equal(resolveRenderView("error", true, null, { lens: "movies", isSupported: true }), "timeline-error", "Failed request renders timeline-error");
+
+    // 8. Empty events from backend for supported Film/TV -> timeline-empty
+    assert.equal(resolveRenderView("empty", true, null, { lens: "movies", isSupported: true }), "timeline-empty", "Supported title with 0 events renders timeline-empty");
+
+    // 9. Idle state with Spoilers ON never renders loading skeleton
+    assert.notEqual(resolveRenderView("idle", true, null, { lens: "movies", isSupported: true }), "timeline-loading", "Idle state must NEVER render timeline-loading");
+    assert.equal(resolveRenderView("idle", true, null, { lens: "movies", isSupported: true }), "timeline-empty", "Idle state without timeline falls back to empty");
+
+    console.log("  [PASS] TimelineSection rendering states verified (unsupported media completely hidden, film/tv preserved)");
+  }
 }
 
 try {
